@@ -43,4 +43,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+
+    // FirebaseUI (Google + Phone login)
+    implementation("com.firebaseui:firebase-ui-auth:9.0.0")
 }
