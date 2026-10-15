@@ -1,4 +1,4 @@
-name: Get Debug SHA-1
+name: Get SHA-1 from Repo Keystore
 
 on:
   workflow_dispatch:
@@ -16,24 +16,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Generate debug keystore
+      - name: Print SHA-1 from repo keystore
         run: |
-          mkdir -p ~/.android
-          keytool -genkeypair -v \
-            -keystore ~/.android/debug.keystore \
-            -storepass android -alias androiddebugkey \
-            -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
-          echo "===== SHA-1 ====="
-          keytool -list -v -keystore ~/.android/debug.keystore \
+          echo "===== SHA-1 (COPY INI) ====="
+          keytool -list -v -keystore debug.keystore \
             -alias androiddebugkey -storepass android -keypass android \
             | grep "SHA1:"
           echo "===== END ====="
-          cp ~/.android/debug.keystore ./debug.keystore
-
-      - name: Upload keystore
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-keystore
-          path: debug.keystore
-          retention-days: 30
