@@ -268,94 +268,72 @@
         </LinearLayout>
 
         <!-- TENTANG -->
-        <LinearLayout
-            android:layout_width="match_parent"
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_menu_card"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="20dp"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tentang"
+        android:textColor="@color/hayu_text"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="20dp"
-            android:padding="16dp">
+            android:text="👤 Umur:"
+            android:textColor="@color/hayu_text_secondary"
+            android:textSize="13sp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Tentang"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tv_about_age"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" 0"
+            android:textColor="@color/hayu_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="12dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="👤 Umur:"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="13sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌏 Negara:"
+            android:textColor="@color/hayu_text_secondary"
+            android:textSize="13sp" />
 
-                <TextView
-                    android:id="@+id/tv_about_age"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" 0"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+        <TextView
+            android:id="@+id/tv_about_country"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" -"
+            android:textColor="@color/hayu_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌏 Negara:"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tv_about_country"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" -"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🎂 Umur:"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tv_about_gender"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" -"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-        </LinearLayout>
+</LinearLayout>
+        
 
         <!-- LAPORKAN & BLOKIR -->
         <TextView
