@@ -22,6 +22,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Copy debug keystore
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
       - name: Generate gradle wrapper
         run: gradle wrapper --gradle-version 8.7
 
