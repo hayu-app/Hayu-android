@@ -39,6 +39,13 @@ class UserAdapter(
             }
             tvGenderAge.text = "$genderIcon${user.age}"
 
+            // Set warna background badge sesuai gender
+            if (user.gender.lowercase() == "wanita") {
+                tvGenderAge.setBackgroundResource(R.drawable.bg_gender_female)
+            } else {
+                tvGenderAge.setBackgroundResource(R.drawable.bg_gender_male)
+            }
+
             tvCountry.text = if (user.country.isEmpty()) "🌏 -" else user.country
 
             tvBio.text = if (user.bio.isEmpty()) "Belum ada bio" else user.bio
