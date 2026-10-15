@@ -11,13 +11,11 @@
         android:orientation="vertical"
         android:paddingBottom="32dp">
 
-        <!-- HEADER dengan tombol back -->
-        <LinearLayout
+        <!-- COVER + HEADER -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="16dp"
-            android:background="@drawable/bg_home_header">
+            android:layout_height="260dp"
+            android:background="@drawable/bg_cover_gradient">
 
             <TextView
                 android:id="@+id/btn_back"
@@ -25,206 +23,391 @@
                 android:layout_height="40dp"
                 android:text="←"
                 android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 android:gravity="center"
+                android:layout_margin="12dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true" />
 
-            <TextView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Profil"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="center_vertical"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:layout_gravity="bottom"
+                android:padding="16dp">
 
-        <!-- FOTO PROFIL BESAR -->
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp">
+                <ImageView
+                    android:id="@+id/img_profile_avatar"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:src="@drawable/ic_profile"
+                    android:background="@drawable/bg_input"
+                    android:padding="20dp"
+                    android:contentDescription="Foto Profil" />
 
-            <ImageView
-                android:id="@+id/img_profile_avatar"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/ic_profile"
-                android:background="@drawable/bg_input"
-                android:padding="26dp"
-                android:contentDescription="Foto Profil" />
+                <TextView
+                    android:id="@+id/tv_profile_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nama User"
+                    android:textColor="#FFFFFF"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
 
-            <TextView
-                android:id="@+id/tv_profile_level"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Lv. 1"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:background="@drawable/bg_level_badge"
-                android:layout_gravity="bottom|end" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_profile_gender_age"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="♂️25"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingBottom="3dp"
+                        android:background="@drawable/bg_gender_male" />
+
+                    <TextView
+                        android:id="@+id/tv_profile_user_id"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ID: 0000000"
+                        android:textColor="#E0E7FF"
+                        android:textSize="12sp"
+                        android:layout_marginStart="10dp" />
+
+                    <TextView
+                        android:id="@+id/tv_profile_country"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌏 Indonesia"
+                        android:textColor="#E0E7FF"
+                        android:textSize="12sp"
+                        android:layout_marginStart="10dp" />
+                </LinearLayout>
+            </LinearLayout>
         </FrameLayout>
 
-        <!-- NAMA -->
-        <TextView
-            android:id="@+id/tv_profile_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nama User"
-            android:textColor="@color/hayu_text"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp" />
-
-        <!-- GENDER + UMUR -->
+        <!-- STATS + JOIN DATE -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_following_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="@color/hayu_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ikuti"
+                        android:textColor="@color/hayu_text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginStart="32dp">
+
+                    <TextView
+                        android:id="@+id/tv_followers_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="@color/hayu_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Penggemar"
+                        android:textColor="@color/hayu_text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_joined_days"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📅 Hari bergabung: 1 hari"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/tv_profile_bio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Belum ada bio"
+                android:textColor="@color/hayu_text"
+                android:textSize="13sp"
+                android:layout_marginTop="12dp" />
+        </LinearLayout>
+
+        <!-- TAB PROFIL / MOMEN -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_gravity="center_horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:id="@+id/tab_profile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profil"
+                android:textColor="@color/hayu_text"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:paddingBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tab_momen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Momen"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="16sp"
+                android:layout_marginStart="24dp"
+                android:paddingBottom="8dp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#2A2A45" />
+
+        <!-- JUDUL -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌟  Judul"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="20dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_menu_card"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:layout_marginTop="8dp">
 
             <TextView
-                android:id="@+id/tv_profile_gender_age"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="👦 20"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:background="@drawable/bg_level_badge" />
-
-            <TextView
-                android:id="@+id/tv_profile_country"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🌏 Indonesia"
+                android:text="Belum ada judul"
                 android:textColor="@color/hayu_text_secondary"
-                android:textSize="12sp"
-                android:layout_marginStart="8dp"
-                android:gravity="center_vertical" />
+                android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- ID USER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:src="@drawable/ic_profile"
+                    android:background="@drawable/bg_input"
+                    android:padding="10dp" />
+
+                <TextView
+                    android:id="@+id/tv_special_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kamu"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💗"
+                android:textSize="24sp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:id="@+id/btn_special_invite">
+
+                <TextView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:text="+"
+                    android:textColor="#8B5CF6"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:background="@drawable/bg_input" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Undang"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- LENCANA -->
         <TextView
-            android:id="@+id/tv_profile_user_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID: 0000000"
-            android:textColor="@color/hayu_text_secondary"
-            android:textSize="12sp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="6dp" />
-
-        <!-- BIO -->
-        <TextView
-            android:id="@+id/tv_profile_bio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Belum ada bio"
+            android:text="🏆  Lencana"
             android:textColor="@color/hayu_text"
-            android:textSize="13sp"
-            android:gravity="center"
-            android:paddingStart="32dp"
-            android:paddingEnd="32dp"
-            android:layout_marginTop="16dp" />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="20dp" />
 
-        <!-- STATS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingTop="20dp"
-            android:paddingBottom="20dp"
-            android:layout_marginTop="16dp">
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="8dp">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:text="Belum ada"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginEnd="6dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Teman"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="2dp" />
-            </LinearLayout>
-
-            <LinearLayout
+            <TextView
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:text="Belum ada"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="6dp" />
+        </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+        <!-- KENDARAAN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🚗  Kendaraan"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="20dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mengikuti"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="2dp" />
-            </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_menu_card"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp">
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:text="Belum ada kendaraan"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+        <!-- HADIAH -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎁  Hadiah"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="20dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Penggemar"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="2dp" />
-            </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_menu_card"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Belum ada hadiah"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <!-- TOMBOL AKSI -->
@@ -234,22 +417,7 @@
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:paddingTop="8dp">
-
-            <TextView
-                android:id="@+id/btn_add_friend"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:text="👥  Tambah Teman"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:background="@drawable/bg_button_primary"
-                android:layout_marginEnd="6dp"
-                android:clickable="true"
-                android:focusable="true" />
+            android:layout_marginTop="24dp">
 
             <TextView
                 android:id="@+id/btn_chat"
@@ -258,115 +426,72 @@
                 android:layout_weight="1"
                 android:text="💬  Chat"
                 android:textColor="@color/hayu_text"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:background="@drawable/bg_input"
-                android:layout_marginStart="6dp"
+                android:layout_marginEnd="4dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_add_friend"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="👥  Tambah"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_button_primary"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_follow"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="❤️  Ikuti"
+                android:textColor="@color/hayu_text"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_input"
+                android:layout_marginStart="4dp"
                 android:clickable="true"
                 android:focusable="true" />
         </LinearLayout>
 
-        <!-- TENTANG -->
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/bg_menu_card"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
-    android:layout_marginTop="20dp"
-    android:padding="16dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tentang"
-        android:textColor="@color/hayu_text"
-        android:textSize="14sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="👤 Umur:"
-            android:textColor="@color/hayu_text_secondary"
-            android:textSize="13sp" />
-
-        <TextView
-            android:id="@+id/tv_about_age"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" 0"
-            android:textColor="@color/hayu_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🌏 Negara:"
-            android:textColor="@color/hayu_text_secondary"
-            android:textSize="13sp" />
-
-        <TextView
-            android:id="@+id/tv_about_country"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" -"
-            android:textColor="@color/hayu_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-</LinearLayout>
-        
-
-        <!-- LAPORKAN & BLOKIR -->
-        <TextView
-            android:id="@+id/btn_report"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="🚨  Laporkan User"
-            android:textColor="#EF4444"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <TextView
-            android:id="@+id/btn_block"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="🚫  Blokir User"
-            android:textColor="#EF4444"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="8dp"
-            android:clickable="true"
-            android:focusable="true" />
-
     </LinearLayout>
 </ScrollView>
+
+        <!-- HUBUNGAN SPESIAL -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="💕  Hubungan Spesial"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toko  >"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
