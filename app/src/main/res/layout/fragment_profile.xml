@@ -291,7 +291,7 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- QUICK MENU (4 ikon) -->
+        <!-- QUICK MENU -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -411,7 +411,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- MENU LIST -->
+        <!-- MENU LIST 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -437,7 +437,10 @@
                 android:clickable="true"
                 android:focusable="true" />
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2A2A45" />
 
             <TextView
                 android:id="@+id/menu_family"
@@ -451,7 +454,10 @@
                 android:clickable="true"
                 android:focusable="true" />
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2A2A45" />
 
             <TextView
                 android:id="@+id/menu_kartu_pass"
@@ -465,7 +471,10 @@
                 android:clickable="true"
                 android:focusable="true" />
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2A2A45" />
 
             <TextView
                 android:id="@+id/menu_invite"
@@ -479,7 +488,10 @@
                 android:clickable="true"
                 android:focusable="true" />
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2A2A45" />
 
             <TextView
                 android:id="@+id/menu_gift"
@@ -496,8 +508,4 @@
 
         <!-- MENU BAWAH -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_menu_card"
-           
+            android:la
