@@ -84,8 +84,11 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
             finishAffinity()
         } else {
+            val code = result.idpResponse?.error?.errorCode ?: -999
             val err = result.idpResponse?.error?.message ?: "dibatalkan"
-            Toast.makeText(this, "Login gagal: $err", Toast.LENGTH_LONG).show()
+            val detail = "Code: $code | $err"
+            android.util.Log.e("HAYU_DEBUG", detail)
+            Toast.makeText(this, detail, Toast.LENGTH_LONG).show()
         }
     }
 }
