@@ -2,6 +2,7 @@ package com.hayu.app
 
 import android.os.Bundle
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -34,7 +35,7 @@ class EditProfileActivity : AppCompatActivity() {
 
             val btnBack = findViewById<TextView>(R.id.btn_back)
             val imgAvatar = findViewById<ImageView>(R.id.img_edit_avatar)
-            val btnChangePhoto = findViewById<LinearLayout>(R.id.btn_change_photo)
+            val btnChangePhoto = findViewById<FrameLayout>(R.id.btn_change_photo)
             val etNickname = findViewById<EditText>(R.id.et_edit_nickname)
             val etAge = findViewById<EditText>(R.id.et_edit_age)
             val tvGender = findViewById<TextView>(R.id.tv_edit_gender)
