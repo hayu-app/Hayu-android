@@ -32,6 +32,7 @@ class ProfileFragment : Fragment() {
         val tvNickname = view.findViewById<TextView>(R.id.tv_nickname)
         val tvUserId = view.findViewById<TextView>(R.id.tv_user_id)
         val tvEmail = view.findViewById<TextView>(R.id.tv_email)
+        val tvProfileGenderAge = view.findViewById<TextView>(R.id.tv_profile_gender_age)
         val tvLevelBadge = view.findViewById<TextView>(R.id.tv_level_badge)
         val tvCoins = view.findViewById<TextView>(R.id.tv_coins)
         val btnEditProfile = view.findViewById<TextView>(R.id.btn_edit_profile)
@@ -52,7 +53,22 @@ class ProfileFragment : Fragment() {
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
                 tvNickname.text = nickname
 
-                // Ambil userId (angka) dari Firestore
+                val age = (doc.getLong("age") ?: 0L).toInt()
+                val gender = doc.getString("gender") ?: ""
+
+                val genderIcon = when (gender.lowercase()) {
+                    "pria" -> "♂️"
+                    "wanita" -> "♀️"
+                    else -> "👤"
+                }
+                tvProfileGenderAge.text = "$genderIcon$age"
+
+                if (gender.lowercase() == "wanita") {
+                    tvProfileGenderAge.setBackgroundResource(R.drawable.bg_gender_female)
+                } else {
+                    tvProfileGenderAge.setBackgroundResource(R.drawable.bg_gender_male)
+                }
+
                 val userId = doc.getLong("userId") ?: 0L
                 if (userId > 0) {
                     tvUserId.text = "ID: $userId"
@@ -74,27 +90,21 @@ class ProfileFragment : Fragment() {
         btnEditProfile.setOnClickListener { notif("Edit Profil segera hadir! ✏️") }
         btnLogout.setOnClickListener { doLogout() }
 
-        // Quick menu
         view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { notif("Lencana segera hadir! 🏆") }
         view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { notif("Toko segera hadir! 🏪") }
         view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
         view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { notif("Level segera hadir! 👑") }
 
-        // Kartu SVIP/VIP
         view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
         view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
-
-        // Dompet
         view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener { notif("Dompet segera hadir! 💰") }
 
-        // Menu list
         view.findViewById<TextView>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
         view.findViewById<TextView>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
         view.findViewById<TextView>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<TextView>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<TextView>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
-        // Menu bawah
         view.findViewById<TextView>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
         view.findViewById<TextView>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
         view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
