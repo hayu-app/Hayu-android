@@ -69,14 +69,36 @@
                 android:textSize="12sp"
                 android:layout_marginTop="4dp" />
 
-            <TextView
-                android:id="@+id/tv_email"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="email@example.com"
-                android:textColor="#C7D2FE"
-                android:textSize="11sp"
-                android:layout_marginTop="2dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/tv_profile_gender_age"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="♂️20"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="3dp"
+                    android:paddingBottom="3dp"
+                    android:background="@drawable/bg_gender_male" />
+
+                <TextView
+                    android:id="@+id/tv_email"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="email@example.com"
+                    android:textColor="#C7D2FE"
+                    android:textSize="11sp"
+                    android:layout_marginStart="10dp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/btn_edit_profile"
@@ -176,7 +198,7 @@
                     android:layout_marginTop="2dp" />
             </LinearLayout>
         </LinearLayout>
-
+        
         <!-- SVIP + VIP -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -411,7 +433,7 @@
             </LinearLayout>
         </LinearLayout>
 
-                <!-- MENU LIST 1 -->
+        <!-- MENU LIST -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
