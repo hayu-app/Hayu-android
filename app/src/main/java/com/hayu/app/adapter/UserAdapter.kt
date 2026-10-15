@@ -33,11 +33,11 @@ class UserAdapter(
             tvName.text = if (user.nickname.isEmpty()) "Pengguna HAYU" else user.nickname
 
             val genderIcon = when (user.gender.lowercase()) {
-                "pria" -> "👦"
-                "wanita" -> "👧"
+                "pria" -> "♂️"
+                "wanita" -> "♀️"
                 else -> "👤"
             }
-            tvGenderAge.text = "$genderIcon ${user.age}"
+            tvGenderAge.text = "$genderIcon${user.age}"
 
             tvCountry.text = if (user.country.isEmpty()) "🌏 -" else user.country
 
