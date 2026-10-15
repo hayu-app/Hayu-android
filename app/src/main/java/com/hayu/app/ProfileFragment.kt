@@ -47,8 +47,60 @@ class ProfileFragment : Fragment() {
 
         tvEmail.text = currentUser.email ?: ""
 
-        db.collection("users").document(currentUser.uid)
-            .get()
+        loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
+
+        // Tombol Edit Profil → buka EditProfileActivity
+        btnEditProfile.setOnClickListener {
+            startActivity(Intent(requireContext(), EditProfileActivity::class.java))
+        }
+
+        btnLogout.setOnClickListener { doLogout() }
+
+        // Quick menu
+        view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { notif("Lencana segera hadir! 🏆") }
+        view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { notif("Toko segera hadir! 🏪") }
+        view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
+        view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { notif("Level segera hadir! 👑") }
+
+        view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
+        view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
+        view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener { notif("Dompet segera hadir! 💰") }
+
+        view.findViewById<TextView>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
+        view.findViewById<TextView>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
+        view.findViewById<TextView>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
+        view.findViewById<TextView>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
+        view.findViewById<TextView>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
+
+        view.findViewById<TextView>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
+        view.findViewById<TextView>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
+        view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
+            Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh data setiap balik dari Edit Profile
+        view?.let {
+            val tvNickname = it.findViewById<TextView>(R.id.tv_nickname)
+            val tvUserId = it.findViewById<TextView>(R.id.tv_user_id)
+            val tvProfileGenderAge = it.findViewById<TextView>(R.id.tv_profile_gender_age)
+            val tvLevelBadge = it.findViewById<TextView>(R.id.tv_level_badge)
+            val tvCoins = it.findViewById<TextView>(R.id.tv_coins)
+            loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
+        }
+    }
+
+    private fun loadProfile(
+        tvNickname: TextView,
+        tvUserId: TextView,
+        tvProfileGenderAge: TextView,
+        tvLevelBadge: TextView,
+        tvCoins: TextView
+    ) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
                 tvNickname.text = nickname
@@ -86,30 +138,6 @@ class ProfileFragment : Fragment() {
                 tvNickname.text = "Pengguna HAYU"
                 tvUserId.text = "ID: -"
             }
-
-        btnEditProfile.setOnClickListener { notif("Edit Profil segera hadir! ✏️") }
-        btnLogout.setOnClickListener { doLogout() }
-
-        view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { notif("Lencana segera hadir! 🏆") }
-        view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { notif("Toko segera hadir! 🏪") }
-        view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
-        view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { notif("Level segera hadir! 👑") }
-
-        view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
-        view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
-        view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener { notif("Dompet segera hadir! 💰") }
-
-        view.findViewById<TextView>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
-        view.findViewById<TextView>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
-        view.findViewById<TextView>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
-        view.findViewById<TextView>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
-        view.findViewById<TextView>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
-
-        view.findViewById<TextView>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
-        view.findViewById<TextView>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
-        view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
-            Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
-        }
     }
 
     private fun notif(msg: String) {
