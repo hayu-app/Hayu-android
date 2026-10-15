@@ -8,7 +8,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
 
         <!-- HEADER PROFIL -->
         <LinearLayout
@@ -17,17 +18,37 @@
             android:orientation="vertical"
             android:gravity="center"
             android:paddingTop="32dp"
-            android:paddingBottom="24dp"
+            android:paddingBottom="20dp"
             android:background="@drawable/bg_profile_header">
 
-            <ImageView
-                android:id="@+id/img_avatar"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:src="@drawable/ic_profile"
-                android:background="@drawable/bg_input"
-                android:padding="20dp"
-                android:contentDescription="Foto Profil" />
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/img_avatar"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/ic_profile"
+                    android:background="@drawable/bg_input"
+                    android:padding="22dp"
+                    android:contentDescription="Foto Profil" />
+
+                <TextView
+                    android:id="@+id/tv_level_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lv. 1"
+                    android:textColor="#FFFFFF"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:background="@drawable/bg_level_badge"
+                    android:layout_gravity="bottom|end" />
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tv_nickname"
@@ -40,25 +61,34 @@
                 android:layout_marginTop="12dp" />
 
             <TextView
+                android:id="@+id/tv_user_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID: 000000"
+                android:textColor="#E0E7FF"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
+
+            <TextView
                 android:id="@+id/tv_email"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="email@example.com"
-                android:textColor="#E0E7FF"
-                android:textSize="13sp"
-                android:layout_marginTop="4dp" />
+                android:textColor="#C7D2FE"
+                android:textSize="11sp"
+                android:layout_marginTop="2dp" />
 
             <TextView
                 android:id="@+id/btn_edit_profile"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Edit Profil"
+                android:layout_height="36dp"
+                android:text="✏️  Edit Profil"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
                 android:background="@drawable/bg_button_primary"
                 android:layout_marginTop="16dp" />
         </LinearLayout>
@@ -68,8 +98,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingTop="20dp"
-            android:paddingBottom="20dp">
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -84,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textColor="@color/hayu_text"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -92,7 +122,7 @@
                     android:layout_height="wrap_content"
                     android:text="Teman"
                     android:textColor="@color/hayu_text_secondary"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:layout_marginTop="2dp" />
             </LinearLayout>
 
@@ -109,7 +139,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textColor="@color/hayu_text"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -117,7 +147,7 @@
                     android:layout_height="wrap_content"
                     android:text="Mengikuti"
                     android:textColor="@color/hayu_text_secondary"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:layout_marginTop="2dp" />
             </LinearLayout>
 
@@ -134,7 +164,7 @@
                     android:layout_height="wrap_content"
                     android:text="0"
                     android:textColor="@color/hayu_text"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -142,8 +172,242 @@
                     android:layout_height="wrap_content"
                     android:text="Penggemar"
                     android:textColor="@color/hayu_text_secondary"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- SVIP + VIP -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <LinearLayout
+                android:id="@+id/card_svip"
+                android:layout_width="0dp"
+                android:layout_height="70dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_card_category"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👑"
+                    android:textSize="22sp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SVIP"
+                    android:textColor="#FBBF24"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/card_vip"
+                android:layout_width="0dp"
+                android:layout_height="70dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_card_category"
+                android:layout_marginStart="6dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⭐"
+                    android:textSize="22sp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VIP"
+                    android:textColor="#FBBF24"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- DOMPET -->
+        <LinearLayout
+            android:id="@+id/card_wallet"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/bg_menu_card"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💰"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dompet"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:id="@+id/tv_coins"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🪙 100"
+                android:textColor="#FBBF24"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" >"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- QUICK MENU (4 ikon) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp">
+
+            <LinearLayout
+                android:id="@+id/quick_badge"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginEnd="4dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏆"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lencana"
+                    android:textColor="@color/hayu_text"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/quick_shop"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏪"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Toko"
+                    android:textColor="@color/hayu_text"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/quick_relations"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🤝"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hubungan"
+                    android:textColor="@color/hayu_text"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/quick_level"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="4dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👑"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Level"
+                    android:textColor="@color/hayu_text"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -152,80 +416,88 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
-
-            <TextView
-                android:id="@+id/menu_settings"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="⚙️  Pengaturan"
-                android:textColor="@color/hayu_text"
-                android:textSize="15sp"
-                android:gravity="center_vertical"
-                android:paddingStart="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
-
-            <TextView
-                android:id="@+id/menu_help"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="❓  Bantuan"
-                android:textColor="@color/hayu_text"
-                android:textSize="15sp"
-                android:gravity="center_vertical"
-                android:paddingStart="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
-
-            <TextView
-                android:id="@+id/menu_about"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="ℹ️  Tentang HAYU"
-                android:textColor="@color/hayu_text"
-                android:textSize="15sp"
-                android:gravity="center_vertical"
-                android:paddingStart="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
-
-        </LinearLayout>
-
-        <!-- LOGOUT -->
-        <TextView
-            android:id="@+id/btn_logout"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="Logout"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:background="@drawable/bg_button_primary"
+            android:background="@drawable/bg_menu_card"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="32dp" />
+            android:layout_marginTop="16dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
 
-    </LinearLayout>
-</ScrollView>
+            <TextView
+                android:id="@+id/menu_tugas"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="📋  Tugas"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+
+            <TextView
+                android:id="@+id/menu_family"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="👨‍👩‍👧  Family Saya"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+
+            <TextView
+                android:id="@+id/menu_kartu_pass"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="🎫  Kartu Pass"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+
+            <TextView
+                android:id="@+id/menu_invite"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="👥  Invite Friends"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2A2A45" />
+
+            <TextView
+                android:id="@+id/menu_gift"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="🎁  Kotak Hadiah"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- MENU BAWAH -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_menu_card"
+           
