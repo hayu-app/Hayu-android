@@ -45,14 +45,20 @@ class ProfileFragment : Fragment() {
         }
 
         tvEmail.text = currentUser.email ?: ""
-        val shortId = currentUser.uid.take(6).uppercase()
-        tvUserId.text = "ID: $shortId"
 
         db.collection("users").document(currentUser.uid)
             .get()
             .addOnSuccessListener { doc ->
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
                 tvNickname.text = nickname
+
+                // Ambil userId (angka) dari Firestore
+                val userId = doc.getLong("userId") ?: 0L
+                if (userId > 0) {
+                    tvUserId.text = "ID: $userId"
+                } else {
+                    tvUserId.text = "ID: -"
+                }
 
                 val coins = (doc.getLong("coins") ?: 100L).toInt()
                 tvCoins.text = "🪙 $coins"
@@ -62,6 +68,7 @@ class ProfileFragment : Fragment() {
             }
             .addOnFailureListener {
                 tvNickname.text = "Pengguna HAYU"
+                tvUserId.text = "ID: -"
             }
 
         btnEditProfile.setOnClickListener { notif("Edit Profil segera hadir! ✏️") }
