@@ -50,16 +50,21 @@ class RegisterActivity : AppCompatActivity() {
                         "email" to email,
                         "nickname" to nickname,
                         "age" to 0,
+                        "gender" to "",
+                        "country" to "",
                         "bio" to "",
                         "photoUrl" to "",
+                        "coins" to 100,
+                        "level" to 1,
                         "online" to true,
                         "lastSeen" to System.currentTimeMillis(),
-                        "createdAt" to System.currentTimeMillis()
+                        "createdAt" to System.currentTimeMillis(),
+                        "onboarded" to false
                     )
                     db.collection("users").document(uid).set(userData)
                         .addOnSuccessListener {
-                            Toast.makeText(this, "Akun berhasil dibuat! 🎉", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this, MainActivity::class.java))
+                            Toast.makeText(this, "Akun dibuat! Lengkapi profil dulu 🎉", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this, OnboardingActivity::class.java))
                             finishAffinity()
                         }
                         .addOnFailureListener { e ->
