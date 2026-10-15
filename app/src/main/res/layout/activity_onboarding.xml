@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/hayu_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- JUDUL -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Isi Informasi"
+            android:textColor="@color/hayu_text"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lengkapi profil untuk mulai berteman"
+            android:textColor="@color/hayu_text_secondary"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp" />
+
+        <!-- FOTO PROFIL -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <ImageView
+                android:id="@+id/img_onboarding_avatar"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:src="@drawable/ic_profile"
+                android:background="@drawable/bg_input"
+                android:padding="24dp"
+                android:contentDescription="Foto Profil" />
+
+            <TextView
+                android:id="@+id/btn_change_avatar"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="✏️"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:background="@drawable/bg_button_primary"
+                android:layout_gravity="bottom|end" />
+        </FrameLayout>
+
+        <!-- JENIS KELAMIN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pilih Jenis Kelamin Anda"
+            android:textColor="@color/hayu_text"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginTop="32dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hanya dapat diubah satu kali dalam 30 hari"
+            android:textColor="@color/hayu_text_secondary"
+            android:textSize="11sp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btn_gender_male"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="👦  Pria"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_button_primary"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/btn_gender_female"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="👧  Wanita"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_input"
+                android:layout_marginStart="6dp" />
+        </LinearLayout>
+
+        <!-- NAMA PANGGILAN -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👤"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/et_nickname"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Nama panggilan"
+                android:textColorHint="@color/hayu_text_secondary"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:inputType="textPersonName"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:id="@+id/btn_random_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔄"
+                android:textSize="16sp"
+                android:padding="4dp" />
+        </LinearLayout>
+
+        <!-- UMUR -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎂"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/et_age"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="Umur"
+                android:textColorHint="@color/hayu_text_secondary"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:background="@android:color/transparent"
+                android:inputType="number"
+                android:maxLength="2"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=">"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- NEGARA -->
+        <LinearLayout
+            android:id="@+id/btn_country"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌏"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tv_country"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Pilih Negara"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="14sp"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=">"
+                android:textColor="@color/hayu_text_secondary"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- TOMBOL SELESAI -->
+        <TextView
+            android:id="@+id/btn_finish_onboarding"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Berikutnya"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginTop="32dp" />
+
+    </LinearLayout>
+</ScrollView>
