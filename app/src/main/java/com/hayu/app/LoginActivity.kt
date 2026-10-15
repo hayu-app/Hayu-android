@@ -15,9 +15,16 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+
+        // CEK DULU: kalau sudah login, langsung lanjut
+        if (auth.currentUser != null) {
+            checkUserData(auth.currentUser!!.uid)
+            return
+        }
+
+        setContentView(R.layout.activity_login)
 
         val etEmail = findViewById<TextView>(R.id.et_email)
         val etPassword = findViewById<TextView>(R.id.et_password)
@@ -55,14 +62,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // Cek data user — generate userId kalau belum ada, cek onboarding
     private fun checkUserData(uid: String) {
         val userRef = db.collection("users").document(uid)
 
         userRef.get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
-                    // User tidak punya data di Firestore (kasus aneh) → ke onboarding
                     startActivity(Intent(this, OnboardingActivity::class.java))
                     finishAffinity()
                     return@addOnSuccessListener
@@ -72,21 +77,17 @@ class LoginActivity : AppCompatActivity() {
                 val onboarded = doc.getBoolean("onboarded") ?: false
 
                 if (userId == 0L) {
-                    // User lama — generate userId baru
                     generateUniqueIdForUser(uid, userRef, onboarded)
                 } else {
-                    // Sudah punya userId
                     navigateBasedOnOnboarding(onboarded)
                 }
             }
             .addOnFailureListener {
-                // Kalau gagal baca, langsung ke MainActivity
                 startActivity(Intent(this, MainActivity::class.java))
                 finishAffinity()
             }
     }
 
-    // Generate ID unik untuk user lama
     private fun generateUniqueIdForUser(
         uid: String,
         userRef: com.google.firebase.firestore.DocumentReference,
@@ -100,7 +101,6 @@ class LoginActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
-                    // ID belum dipakai → simpan
                     userRef.update("userId", candidateId)
                         .addOnSuccessListener {
                             navigateBasedOnOnboarding(onboarded)
@@ -109,17 +109,14 @@ class LoginActivity : AppCompatActivity() {
                             navigateBasedOnOnboarding(onboarded)
                         }
                 } else {
-                    // ID sudah dipakai → coba lagi
                     generateUniqueIdForUser(uid, userRef, onboarded)
                 }
             }
             .addOnFailureListener {
-                // Kalau gagal cek, tetap lanjut
                 navigateBasedOnOnboarding(onboarded)
             }
     }
 
-    // Navigasi sesuai status onboarding
     private fun navigateBasedOnOnboarding(onboarded: Boolean) {
         val target = if (onboarded) MainActivity::class.java else OnboardingActivity::class.java
         startActivity(Intent(this, target))
