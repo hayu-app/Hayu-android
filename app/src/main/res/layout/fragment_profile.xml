@@ -411,7 +411,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- MENU LIST 1 -->
+                <!-- MENU LIST 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -508,4 +508,79 @@
 
         <!-- MENU BAWAH -->
         <LinearLayout
-            android:la
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_menu_card"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/menu_settings"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="⚙️  Pengaturan"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2A2A45" />
+
+            <TextView
+                android:id="@+id/menu_help"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="❓  Bantuan"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2A2A45" />
+
+            <TextView
+                android:id="@+id/menu_about"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="ℹ️  Tentang HAYU"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- LOGOUT -->
+        <TextView
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="🚪  Logout"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+</ScrollView>
