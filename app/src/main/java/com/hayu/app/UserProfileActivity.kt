@@ -1,7 +1,6 @@
 package com.hayu.app
 
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -37,7 +36,6 @@ class UserProfileActivity : AppCompatActivity() {
         val tvBio = findViewById<TextView>(R.id.tv_profile_bio)
         val tvAboutAge = findViewById<TextView>(R.id.tv_about_age)
         val tvAboutCountry = findViewById<TextView>(R.id.tv_about_country)
-        val tvAboutGender = findViewById<TextView>(R.id.tv_about_gender)
         val btnAddFriend = findViewById<TextView>(R.id.btn_add_friend)
         val btnChat = findViewById<TextView>(R.id.btn_chat)
         val btnReport = findViewById<TextView>(R.id.btn_report)
@@ -45,7 +43,6 @@ class UserProfileActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        // Ambil data user
         db.collection("users").document(targetUid!!).get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
@@ -67,13 +64,12 @@ class UserProfileActivity : AppCompatActivity() {
                 tvLevel.text = "Lv. $level"
 
                 val genderIcon = when (gender.lowercase()) {
-                    "pria" -> "👦"
-                    "wanita" -> "👧"
+                    "pria" -> "♂️"
+                    "wanita" -> "♀️"
                     else -> "👤"
                 }
-                tvGenderAge.text = "$genderIcon $age"
+                tvGenderAge.text = "$genderIcon$age"
                 tvAboutAge.text = " $age"
-                tvAboutGender.text = " ${gender.replaceFirstChar { it.uppercase() }}"
 
                 if (country.isEmpty()) {
                     tvCountry.text = "🌏 -"
@@ -102,7 +98,6 @@ class UserProfileActivity : AppCompatActivity() {
                 finish()
             }
 
-        // Tombol Aksi
         btnAddFriend.setOnClickListener {
             Toast.makeText(this, "Fitur Tambah Teman segera hadir! 👥", Toast.LENGTH_SHORT).show()
         }
