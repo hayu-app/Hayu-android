@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="countries">
+        <item>🇮🇩 Indonesia</item>
+        <item>🇲🇾 Malaysia</item>
+        <item>🇸🇬 Singapura</item>
+        <item>🇧🇳 Brunei</item>
+        <item>🇵🇭 Filipina</item>
+        <item>🇹🇭 Thailand</item>
+        <item>🇻🇳 Vietnam</item>
+        <item>🇱🇦 Laos</item>
+        <item>🇰🇭 Kamboja</item>
+        <item>🇲🇲 Myanmar</item>
+        <item>🇹🇱 Timor Leste</item>
+        <item>🌏 Lainnya</item>
+    </string-array>
+</resources>
