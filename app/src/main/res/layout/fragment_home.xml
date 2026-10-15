@@ -29,12 +29,12 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🎁"
-                android:textSize="20sp"
-                android:padding="4dp" />
+            <ImageView
+                android:id="@+id/btn_add_room_header"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_add_room"
+                android:contentDescription="Buat Room" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -42,7 +42,7 @@
                 android:text="🔍"
                 android:textSize="20sp"
                 android:padding="4dp"
-                android:layout_marginStart="8dp" />
+                android:layout_marginStart="12dp" />
         </LinearLayout>
 
         <!-- BANNER EVENT -->
@@ -205,7 +205,7 @@
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 
-        <!-- EMPTY STATE -->
+        <!-- EMPTY STATE (tanpa tombol besar) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -234,25 +234,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Jadilah yang pertama membuat room\ndan mengundang teman!"
+                android:text="Tap ikon rumah di atas untuk membuat room baru"
                 android:textColor="@color/hayu_text_secondary"
                 android:textSize="13sp"
                 android:gravity="center"
                 android:layout_marginTop="8dp" />
-
-            <TextView
-                android:id="@+id/btn_create_room"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="+ Buat Room"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:background="@drawable/bg_button_primary"
-                android:layout_marginTop="24dp" />
         </LinearLayout>
 
     </LinearLayout>
