@@ -3,7 +3,6 @@ package com.hayu.app
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -42,15 +41,12 @@ class OnboardingActivity : AppCompatActivity() {
         val btnChangeAvatar = findViewById<TextView>(R.id.btn_change_avatar)
         val btnFinish = findViewById<TextView>(R.id.btn_finish_onboarding)
 
-        // Set nama random pertama kali
         etNickname.setText(randomNames.random() + (1..999).random())
 
-        // Tombol ganti nama random
         btnRandomName.setOnClickListener {
             etNickname.setText(randomNames.random() + (1..999).random())
         }
 
-        // Pilih gender
         btnGenderMale.setOnClickListener {
             selectedGender = "pria"
             btnGenderMale.setBackgroundResource(R.drawable.bg_button_primary)
@@ -67,7 +63,6 @@ class OnboardingActivity : AppCompatActivity() {
             btnGenderMale.setTextColor(getColor(R.color.hayu_text_secondary))
         }
 
-        // Pilih negara via dialog
         btnCountry.setOnClickListener {
             val countries = resources.getStringArray(R.array.countries)
             AlertDialog.Builder(this)
@@ -80,12 +75,10 @@ class OnboardingActivity : AppCompatActivity() {
                 .show()
         }
 
-        // Ganti foto (placeholder dulu)
         btnChangeAvatar.setOnClickListener {
             Toast.makeText(this, "Upload foto segera hadir! 📷", Toast.LENGTH_SHORT).show()
         }
 
-        // Tombol selesai
         btnFinish.setOnClickListener {
             val nickname = etNickname.text.toString().trim()
             val ageStr = etAge.text.toString().trim()
@@ -128,7 +121,8 @@ class OnboardingActivity : AppCompatActivity() {
             "onboarded" to true
         )
 
-        db.collection("users").document(uid).update(updates)
+        // Pakai set() dengan merge — kalau dokumen belum ada, dibuat baru
+        db.collection("users").document(uid).set(updates, com.google.firebase.firestore.SetOptions.merge())
             .addOnSuccessListener {
                 Toast.makeText(this, "Profil siap! Selamat datang 🎉", Toast.LENGTH_SHORT).show()
                 startActivity(Intent(this, MainActivity::class.java))
