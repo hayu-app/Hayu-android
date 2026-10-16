@@ -41,5 +41,9 @@
             android:name=".EditProfileActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".CreateRoomActivity"
+            android:exported="false" />
+
     </application>
 </manifest>
