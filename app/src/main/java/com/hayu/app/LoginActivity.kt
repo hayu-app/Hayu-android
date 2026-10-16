@@ -2,6 +2,7 @@ package com.hayu.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +13,7 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private var isPasswordVisible: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,8 +30,23 @@ class LoginActivity : AppCompatActivity() {
 
         val etEmail = findViewById<TextView>(R.id.et_email)
         val etPassword = findViewById<TextView>(R.id.et_password)
+        val btnTogglePassword = findViewById<TextView>(R.id.btn_toggle_password)
         val btnLogin = findViewById<TextView>(R.id.btn_login)
         val tvRegister = findViewById<TextView>(R.id.tv_register)
+
+        // Toggle show/hide password
+        btnTogglePassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            if (isPasswordVisible) {
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                btnTogglePassword.text = "🙈"
+            } else {
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                btnTogglePassword.text = "👁️"
+            }
+            // Pindahkan kursor ke akhir teks
+            etPassword.setSelection(etPassword.text.length)
+        }
 
         btnLogin.setOnClickListener {
             val email = etEmail.text.toString().trim()
