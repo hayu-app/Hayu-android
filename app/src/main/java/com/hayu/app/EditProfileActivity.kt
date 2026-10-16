@@ -32,6 +32,10 @@ class EditProfileActivity : AppCompatActivity() {
         if (uri != null) {
             selectedImageUri = uri
             val imgAvatar = findViewById<ImageView>(R.id.img_edit_avatar)
+            // FOTO FULL: hapus padding + scale center crop
+            imgAvatar.setPadding(0, 0, 0, 0)
+            imgAvatar.scaleType = ImageView.ScaleType.CENTER_CROP
+            imgAvatar.clipToOutline = true
             imgAvatar.setImageURI(uri)
             Toast.makeText(this, "Foto siap diupload 📷", Toast.LENGTH_SHORT).show()
         }
@@ -103,7 +107,11 @@ class EditProfileActivity : AppCompatActivity() {
 
                         etBio.setText(bio)
 
+                        // Load foto lama dengan full + rounded
                         if (photoUrl.isNotEmpty()) {
+                            imgAvatar.setPadding(0, 0, 0, 0)
+                            imgAvatar.scaleType = ImageView.ScaleType.CENTER_CROP
+                            imgAvatar.clipToOutline = true
                             imgAvatar.load(photoUrl) { crossfade(true) }
                         }
                     } catch (e: Exception) {
