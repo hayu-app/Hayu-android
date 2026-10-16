@@ -15,13 +15,19 @@ class UserProfileActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private var targetUid: String? = null
+    private var isFollowing: Boolean = false
+    private var isSelf: Boolean = false
+
+    private lateinit var tvFollowingCount: TextView
+    private lateinit var tvFollowersCount: TextView
+    private lateinit var btnFollow: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
 
         db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
+        auth = FirebaseFirestore.getInstance()
         targetUid = intent.getStringExtra("uid")
 
         if (targetUid.isNullOrEmpty()) {
@@ -30,7 +36,7 @@ class UserProfileActivity : AppCompatActivity() {
             return
         }
 
-        val isSelf = targetUid == auth.currentUser?.uid
+        isSelf = targetUid == auth.currentUser?.uid
 
         val btnBack = findViewById<TextView>(R.id.btn_back)
         val imgAvatar = findViewById<ImageView>(R.id.img_profile_avatar)
@@ -45,16 +51,17 @@ class UserProfileActivity : AppCompatActivity() {
         val tabMomen = findViewById<TextView>(R.id.tab_momen)
         val btnChat = findViewById<TextView>(R.id.btn_chat)
         val btnAddFriend = findViewById<TextView>(R.id.btn_add_friend)
-        val btnFollow = findViewById<TextView>(R.id.btn_follow)
+        btnFollow = findViewById<TextView>(R.id.btn_follow)
         val btnSpecialInvite = findViewById<LinearLayout>(R.id.btn_special_invite)
+        tvFollowingCount = findViewById(R.id.tv_following_count)
+        tvFollowersCount = findViewById(R.id.tv_followers_count)
 
         btnBack.setOnClickListener { finish() }
 
-        // Kalau ini diri sendiri → tombol jadi "Ini Kamu" & disabled
+        // Kalau ini diri sendiri → disable tombol
         if (isSelf) {
             btnChat.isEnabled = false
             btnChat.alpha = 0.5f
-            btnChat.text = "💬  Chat"
 
             btnAddFriend.isEnabled = false
             btnAddFriend.alpha = 0.5f
@@ -125,6 +132,12 @@ class UserProfileActivity : AppCompatActivity() {
                 } else {
                     imgAvatar.setImageResource(R.drawable.ic_profile)
                 }
+
+                // Setelah data user diload, cek status follow
+                if (!isSelf) {
+                    checkFollowStatus()
+                }
+                loadFollowCounts()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Gagal memuat profil", Toast.LENGTH_SHORT).show()
@@ -147,7 +160,7 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
         }
 
-        // Tombol aksi — hanya jalan kalau bukan diri sendiri
+        // Tombol aksi
         btnChat.setOnClickListener {
             if (!isSelf) Toast.makeText(this, "Fitur Chat segera hadir! 💬", Toast.LENGTH_SHORT).show()
         }
@@ -157,11 +170,106 @@ class UserProfileActivity : AppCompatActivity() {
         }
 
         btnFollow.setOnClickListener {
-            if (!isSelf) Toast.makeText(this, "Fitur Ikuti segera hadir! ❤️", Toast.LENGTH_SHORT).show()
+            if (!isSelf) toggleFollow()
         }
 
         btnSpecialInvite.setOnClickListener {
             if (!isSelf) Toast.makeText(this, "Fitur Hubungan Spesial segera hadir! 💕", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // Cek apakah user sudah follow target
+    private fun checkFollowStatus() {
+        val myUid = auth.currentUser?.uid ?: return
+        val followId = "${myUid}_${targetUid}"
+
+        db.collection("follows").document(followId).get()
+            .addOnSuccessListener { doc ->
+                isFollowing = doc.exists()
+                updateFollowButton()
+            }
+            .addOnFailureListener {
+                isFollowing = false
+                updateFollowButton()
+            }
+    }
+
+    private fun updateFollowButton() {
+        if (isFollowing) {
+            btnFollow.text = "❤️  Mengikuti"
+            btnFollow.background = getDrawable(R.drawable.bg_button_primary)
+            btnFollow.setTextColor(0xFFFFFFFF.toInt())
+        } else {
+            btnFollow.text = "🤍  Ikuti"
+            btnFollow.background = getDrawable(R.drawable.bg_input)
+            btnFollow.setTextColor(getColor(R.color.hayu_text))
+        }
+    }
+
+    // Toggle follow/unfollow
+    private fun toggleFollow() {
+        val myUid = auth.currentUser?.uid ?: return
+        val followId = "${myUid}_${targetUid}"
+        val followRef = db.collection("follows").document(followId)
+
+        btnFollow.isEnabled = false
+
+        if (isFollowing) {
+            // Unfollow
+            followRef.delete()
+                .addOnSuccessListener {
+                    isFollowing = false
+                    updateFollowButton()
+                    loadFollowCounts()
+                    Toast.makeText(this, "Berhenti mengikuti", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+                .addOnCompleteListener {
+                    btnFollow.isEnabled = true
+                }
+        } else {
+            // Follow
+            val followData = hashMapOf(
+                "followerUid" to myUid,
+                "followingUid" to targetUid,
+                "createdAt" to System.currentTimeMillis()
+            )
+            followRef.set(followData)
+                .addOnSuccessListener {
+                    isFollowing = true
+                    updateFollowButton()
+                    loadFollowCounts()
+                    Toast.makeText(this, "Berhasil mengikuti! ❤️", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+                .addOnCompleteListener {
+                    btnFollow.isEnabled = true
+                }
+        }
+    }
+
+    // Hitung jumlah following & followers target user
+    private fun loadFollowCounts() {
+        val uid = targetUid ?: return
+
+        // Following: user ini mengikuti berapa orang
+        db.collection("follows")
+            .whereEqualTo("followerUid", uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                tvFollowingCount.text = snapshot.size().toString()
+            }
+
+        // Followers: berapa orang mengikuti user ini
+        db.collection("follows")
+            .whereEqualTo("followingUid", uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                tvFollowersCount.text = snapshot.size().toString()
+            }
     }
 }
