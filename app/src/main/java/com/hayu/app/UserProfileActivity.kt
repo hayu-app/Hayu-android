@@ -2,6 +2,7 @@ package com.hayu.app
 
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,21 +29,23 @@ class UserProfileActivity : AppCompatActivity() {
 
         val btnBack = findViewById<TextView>(R.id.btn_back)
         val imgAvatar = findViewById<ImageView>(R.id.img_profile_avatar)
-        val tvLevel = findViewById<TextView>(R.id.tv_profile_level)
         val tvName = findViewById<TextView>(R.id.tv_profile_name)
         val tvGenderAge = findViewById<TextView>(R.id.tv_profile_gender_age)
         val tvCountry = findViewById<TextView>(R.id.tv_profile_country)
         val tvUserId = findViewById<TextView>(R.id.tv_profile_user_id)
         val tvBio = findViewById<TextView>(R.id.tv_profile_bio)
-        val tvAboutAge = findViewById<TextView>(R.id.tv_about_age)
-        val tvAboutCountry = findViewById<TextView>(R.id.tv_about_country)
-        val btnAddFriend = findViewById<TextView>(R.id.btn_add_friend)
+        val tvJoinedDays = findViewById<TextView>(R.id.tv_joined_days)
+        val tvSpecialName = findViewById<TextView>(R.id.tv_special_name)
+        val tabProfile = findViewById<TextView>(R.id.tab_profile)
+        val tabMomen = findViewById<TextView>(R.id.tab_momen)
         val btnChat = findViewById<TextView>(R.id.btn_chat)
-        val btnReport = findViewById<TextView>(R.id.btn_report)
-        val btnBlock = findViewById<TextView>(R.id.btn_block)
+        val btnAddFriend = findViewById<TextView>(R.id.btn_add_friend)
+        val btnFollow = findViewById<TextView>(R.id.btn_follow)
+        val btnSpecialInvite = findViewById<LinearLayout>(R.id.btn_special_invite)
 
         btnBack.setOnClickListener { finish() }
 
+        // Load data user
         db.collection("users").document(targetUid!!).get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
@@ -57,36 +60,49 @@ class UserProfileActivity : AppCompatActivity() {
                 val country = doc.getString("country") ?: ""
                 val bio = doc.getString("bio") ?: ""
                 val photoUrl = doc.getString("photoUrl") ?: ""
-                val level = (doc.getLong("level") ?: 1L).toInt()
                 val userId = (doc.getLong("userId") ?: 0L)
+                val createdAt = (doc.getLong("createdAt") ?: 0L)
 
                 tvName.text = nickname
-                tvLevel.text = "Lv. $level"
+                tvSpecialName.text = nickname
 
+                // Gender badge
                 val genderIcon = when (gender.lowercase()) {
                     "pria" -> "♂️"
                     "wanita" -> "♀️"
                     else -> "👤"
                 }
                 tvGenderAge.text = "$genderIcon$age"
-                tvAboutAge.text = " $age"
 
-                if (country.isEmpty()) {
-                    tvCountry.text = "🌏 -"
-                    tvAboutCountry.text = " -"
+                if (gender.lowercase() == "wanita") {
+                    tvGenderAge.setBackgroundResource(R.drawable.bg_gender_female)
                 } else {
-                    tvCountry.text = country
-                    tvAboutCountry.text = " $country"
+                    tvGenderAge.setBackgroundResource(R.drawable.bg_gender_male)
                 }
 
+                // Country
+                tvCountry.text = if (country.isEmpty()) "🌏 -" else country
+
+                // ID
                 if (userId > 0) {
                     tvUserId.text = "ID: $userId"
                 } else {
                     tvUserId.text = "ID: -"
                 }
 
+                // Bio
                 tvBio.text = if (bio.isEmpty()) "Belum ada bio" else bio
 
+                // Hari bergabung
+                if (createdAt > 0) {
+                    val days = ((System.currentTimeMillis() - createdAt) / 86400000L).toInt()
+                    val dayText = if (days <= 0) "1 hari" else "$days hari"
+                    tvJoinedDays.text = "📅 Hari bergabung: $dayText"
+                } else {
+                    tvJoinedDays.text = "📅 Hari bergabung: 1 hari"
+                }
+
+                // Foto
                 if (photoUrl.isNotEmpty()) {
                     imgAvatar.load(photoUrl) { crossfade(true) }
                 } else {
@@ -98,20 +114,38 @@ class UserProfileActivity : AppCompatActivity() {
                 finish()
             }
 
-        btnAddFriend.setOnClickListener {
-            Toast.makeText(this, "Fitur Tambah Teman segera hadir! 👥", Toast.LENGTH_SHORT).show()
+        // Tab Profil / Momen
+        tabProfile.setOnClickListener {
+            tabProfile.setTextColor(getColor(R.color.hayu_text))
+            tabProfile.setTypeface(null, android.graphics.Typeface.BOLD)
+            tabMomen.setTextColor(getColor(R.color.hayu_text_secondary))
+            tabMomen.setTypeface(null, android.graphics.Typeface.NORMAL)
+            Toast.makeText(this, "Tab Profil", Toast.LENGTH_SHORT).show()
         }
 
+        tabMomen.setOnClickListener {
+            tabMomen.setTextColor(getColor(R.color.hayu_text))
+            tabMomen.setTypeface(null, android.graphics.Typeface.BOLD)
+            tabProfile.setTextColor(getColor(R.color.hayu_text_secondary))
+            tabProfile.setTypeface(null, android.graphics.Typeface.NORMAL)
+            Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
+        }
+
+        // Tombol aksi
         btnChat.setOnClickListener {
             Toast.makeText(this, "Fitur Chat segera hadir! 💬", Toast.LENGTH_SHORT).show()
         }
 
-        btnReport.setOnClickListener {
-            Toast.makeText(this, "Fitur Laporkan segera hadir! 🚨", Toast.LENGTH_SHORT).show()
+        btnAddFriend.setOnClickListener {
+            Toast.makeText(this, "Fitur Tambah Teman segera hadir! 👥", Toast.LENGTH_SHORT).show()
         }
 
-        btnBlock.setOnClickListener {
-            Toast.makeText(this, "Fitur Blokir segera hadir! 🚫", Toast.LENGTH_SHORT).show()
+        btnFollow.setOnClickListener {
+            Toast.makeText(this, "Fitur Ikuti segera hadir! ❤️", Toast.LENGTH_SHORT).show()
+        }
+
+        btnSpecialInvite.setOnClickListener {
+            Toast.makeText(this, "Fitur Hubungan Spesial segera hadir! 💕", Toast.LENGTH_SHORT).show()
         }
     }
 }
