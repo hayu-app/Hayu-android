@@ -1,97 +1,69 @@
-package com.hayu.app
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/hayu_dark">
 
-import android.content.Intent
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.hayu.app.adapter.ChatListAdapter
-import com.hayu.app.model.DMChat
+    <!-- HEADER -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_home_header">
 
-class ChatFragment : Fragment() {
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Pesan"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
-    private lateinit var db: FirebaseFirestore
-    private lateinit var auth: FirebaseAuth
-    private lateinit var adapter: ChatListAdapter
+    <!-- DAFTAR CHAT -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_chat_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false" />
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_chat, container, false)
-    }
+    <!-- EMPTY STATE -->
+    <LinearLayout
+        android:id="@+id/layout_empty_chat"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💬"
+            android:textSize="64sp" />
 
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Belum Ada Percakapan"
+            android:textColor="@color/hayu_text"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
 
-        val rvChats = view.findViewById<RecyclerView>(R.id.rv_chat_list)
-        val layoutEmpty = view.findViewById<LinearLayout>(R.id.layout_empty_chat)
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mulai chat dari profil user lain"
+            android:textColor="@color/hayu_text_secondary"
+            android:textSize="13sp"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
 
-        adapter = ChatListAdapter { chat ->
-            val intent = Intent(requireContext(), ChatActivity::class.java)
-            intent.putExtra("peerUid", chat.peerUid)
-            startActivity(intent)
-        }
-
-        rvChats.layoutManager = LinearLayoutManager(requireContext())
-        rvChats.adapter = adapter
-
-        loadChats(layoutEmpty)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        view?.let {
-            val layoutEmpty = it.findViewById<LinearLayout>(R.id.layout_empty_chat)
-            loadChats(layoutEmpty)
-        }
-    }
-
-    private fun loadChats(layoutEmpty: LinearLayout) {
-        val myUid = auth.currentUser?.uid ?: return
-
-        db.collection("dm_chats")
-            .whereEqualTo("user1Uid", myUid)
-            .get()
-            .addOnSuccessListener { snapshot1 ->
-                val list1 = snapshot1.documents.mapNotNull { doc ->
-                    doc.data?.let { DMChat.fromDoc(doc.id, it, myUid) }
-                }
-
-                db.collection("dm_chats")
-                    .whereEqualTo("user2Uid", myUid)
-                    .get()
-                    .addOnSuccessListener { snapshot2 ->
-                        val list2 = snapshot2.documents.mapNotNull { doc ->
-                            doc.data?.let { DMChat.fromDoc(doc.id, it, myUid) }
-                        }
-
-                        val allChats = (list1 + list2)
-                            .distinctBy { it.chatId }
-                            .sortedByDescending { it.lastTimestamp }
-
-                        adapter.submitList(allChats)
-
-                        if (allChats.isEmpty()) {
-                            layoutEmpty.visibility = View.VISIBLE
-                        } else {
-                            layoutEmpty.visibility = View.GONE
-                        }
-                    }
-                    .addOnFailureListener {
-                        layoutEmpty.visibility = View.VISIBLE
-                    }
-            }
-            .addOnFailureListener {
-                layoutEmpty.visibility = View.VISIBLE
-            }
-    }
-}
+</LinearLayout>
