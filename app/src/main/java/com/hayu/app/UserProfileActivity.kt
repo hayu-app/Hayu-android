@@ -1,5 +1,6 @@
 package com.hayu.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -15,8 +16,8 @@ class UserProfileActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private var targetUid: String? = null
-    private var isFollowing: Boolean = false      // A follow B
-    private var isFollowedBy: Boolean = false     // B follow A (mutual)
+    private var isFollowing: Boolean = false
+    private var isFollowedBy: Boolean = false
     private var isSelf: Boolean = false
 
     private lateinit var tvFollowingCount: TextView
@@ -157,8 +158,13 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
         }
 
+        // TOMBOL CHAT — buka ChatActivity dengan user ini
         btnChat.setOnClickListener {
-            if (!isSelf) Toast.makeText(this, "Fitur Chat segera hadir! 💬", Toast.LENGTH_SHORT).show()
+            if (!isSelf) {
+                val intent = Intent(this, ChatActivity::class.java)
+                intent.putExtra("peerUid", targetUid)
+                startActivity(intent)
+            }
         }
 
         btnAddFriend.setOnClickListener {
@@ -178,18 +184,15 @@ class UserProfileActivity : AppCompatActivity() {
         }
     }
 
-    // Cek apakah saya follow target, dan apakah target follow saya
     private fun checkFollowStatus() {
         val myUid = auth.currentUser?.uid ?: return
-        val followId = "${myUid}_${targetUid}"      // saya follow target
-        val reverseId = "${targetUid}_${myUid}"     // target follow saya
+        val followId = "${myUid}_${targetUid}"
+        val reverseId = "${targetUid}_${myUid}"
 
-        // Cek 1: apakah saya follow target?
         db.collection("follows").document(followId).get()
             .addOnSuccessListener { doc ->
                 isFollowing = doc.exists()
 
-                // Cek 2: apakah target follow saya?
                 db.collection("follows").document(reverseId).get()
                     .addOnSuccessListener { doc2 ->
                         isFollowedBy = doc2.exists()
@@ -206,23 +209,19 @@ class UserProfileActivity : AppCompatActivity() {
             }
     }
 
-    // Update tampilan tombol (3 state)
     private fun updateFollowButton() {
         when {
             isFollowing && isFollowedBy -> {
-                // Mutual → Teman
                 btnFollow.text = "👥  Teman"
                 btnFollow.background = getDrawable(R.drawable.bg_button_primary)
                 btnFollow.setTextColor(0xFFFFFFFF.toInt())
             }
             isFollowing -> {
-                // Sudah follow, tapi belum follow balik
                 btnFollow.text = "❤️  Mengikuti"
                 btnFollow.background = getDrawable(R.drawable.bg_button_primary)
                 btnFollow.setTextColor(0xFFFFFFFF.toInt())
             }
             else -> {
-                // Belum follow
                 btnFollow.text = "🤍  Ikuti"
                 btnFollow.background = getDrawable(R.drawable.bg_input)
                 btnFollow.setTextColor(getColor(R.color.hayu_text))
@@ -238,11 +237,10 @@ class UserProfileActivity : AppCompatActivity() {
         btnFollow.isEnabled = false
 
         if (isFollowing) {
-            // Unfollow
             followRef.delete()
                 .addOnSuccessListener {
                     isFollowing = false
-                    checkFollowStatus()  // refresh
+                    checkFollowStatus()
                     loadFollowCounts()
                     Toast.makeText(this, "Berhenti mengikuti", Toast.LENGTH_SHORT).show()
                 }
@@ -253,7 +251,6 @@ class UserProfileActivity : AppCompatActivity() {
                     btnFollow.isEnabled = true
                 }
         } else {
-            // Follow
             val followData = hashMapOf(
                 "followerUid" to myUid,
                 "followingUid" to targetUid,
@@ -262,7 +259,6 @@ class UserProfileActivity : AppCompatActivity() {
             followRef.set(followData)
                 .addOnSuccessListener {
                     isFollowing = true
-                    // Cek apakah sekarang jadi mutual
                     checkFollowStatus()
                     loadFollowCounts()
                     sendFollowNotification(myUid)
@@ -276,7 +272,6 @@ class UserProfileActivity : AppCompatActivity() {
         }
     }
 
-    // Kirim notifikasi — cek apakah mutual (jadi teman) atau cuma follow
     private fun sendFollowNotification(myUid: String) {
         val reverseId = "${targetUid}_${myUid}"
 
@@ -302,7 +297,6 @@ class UserProfileActivity : AppCompatActivity() {
                         )
                         db.collection("notifications").add(notifData)
 
-                        // Toast ke user yang tap
                         Toast.makeText(
                             this,
                             if (isMutualNow) "Kalian sekarang berteman! 👥" else "Berhasil mengikuti! ❤️",
