@@ -154,11 +154,9 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    // Hitung 3 angka: Teman (mutual), Mengikuti, Penggemar
     private fun loadFollowStats(tvFriends: TextView, tvFollowing: TextView, tvFollowers: TextView) {
         val uid = auth.currentUser?.uid ?: return
 
-        // STEP 1: Ambil daftar yang saya follow
         db.collection("follows")
             .whereEqualTo("followerUid", uid)
             .get()
@@ -166,7 +164,6 @@ class ProfileFragment : Fragment() {
                 val followingUids = snapshot.documents.mapNotNull { it.getString("followingUid") }
                 tvFollowing.text = followingUids.size.toString()
 
-                // STEP 2: Ambil daftar yang follow saya
                 db.collection("follows")
                     .whereEqualTo("followingUid", uid)
                     .get()
@@ -174,5 +171,29 @@ class ProfileFragment : Fragment() {
                         val followerUids = snapshot2.documents.mapNotNull { it.getString("followerUid") }
                         tvFollowers.text = followerUids.size.toString()
 
-                        // STEP 3: Hitung mutual (teman)
-                        // Teman = yang ada di following
+                        val mutualCount = followingUids.intersect(followerUids.toSet()).size
+                        tvFriends.text = mutualCount.toString()
+                    }
+                    .addOnFailureListener {
+                        tvFollowers.text = "0"
+                        tvFriends.text = "0"
+                    }
+            }
+            .addOnFailureListener {
+                tvFollowing.text = "0"
+                tvFollowers.text = "0"
+                tvFriends.text = "0"
+            }
+    }
+
+    private fun notif(msg: String) {
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun doLogout() {
+        auth.signOut()
+        Toast.makeText(requireContext(), "Berhasil logout 👋", Toast.LENGTH_SHORT).show()
+        startActivity(Intent(requireContext(), LoginActivity::class.java))
+        requireActivity().finishAffinity()
+    }
+}
