@@ -15,7 +15,6 @@ class CreateRoomActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var selectedPrivacy: String = "publik"
-    private var selectedMaxUsers: Int = 10
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +29,6 @@ class CreateRoomActivity : AppCompatActivity() {
         val btnPrivacy = findViewById<LinearLayout>(R.id.btn_privacy)
         val tvPrivacy = findViewById<TextView>(R.id.tv_privacy)
         val etRoomTopic = findViewById<EditText>(R.id.et_room_topic)
-        val btnMax5 = findViewById<TextView>(R.id.btn_max_5)
-        val btnMax10 = findViewById<TextView>(R.id.btn_max_10)
-        val btnMax20 = findViewById<TextView>(R.id.btn_max_20)
-        val btnMax50 = findViewById<TextView>(R.id.btn_max_50)
         val btnCreate = findViewById<TextView>(R.id.btn_create_room)
 
         btnClose.setOnClickListener { finish() }
@@ -58,29 +53,6 @@ class CreateRoomActivity : AppCompatActivity() {
                 }
                 .show()
         }
-
-        // Pilih max user
-        val updateMaxUI = { selected: Int ->
-            selectedMaxUsers = selected
-            val unselected = listOf(btnMax5, btnMax10, btnMax20, btnMax50)
-            unselected.forEach {
-                it.setBackgroundResource(R.drawable.bg_quick_item)
-                it.setTextColor(getColor(R.color.hayu_text))
-            }
-            val target = when (selected) {
-                5 -> btnMax5
-                10 -> btnMax10
-                20 -> btnMax20
-                else -> btnMax50
-            }
-            target.setBackgroundResource(R.drawable.bg_button_primary)
-            target.setTextColor(0xFFFFFFFF.toInt())
-        }
-
-        btnMax5.setOnClickListener { updateMaxUI(5) }
-        btnMax10.setOnClickListener { updateMaxUI(10) }
-        btnMax20.setOnClickListener { updateMaxUI(20) }
-        btnMax50.setOnClickListener { updateMaxUI(50) }
 
         // Tombol buat room
         btnCreate.setOnClickListener {
@@ -124,7 +96,7 @@ class CreateRoomActivity : AppCompatActivity() {
         val roomData = hashMapOf(
             "name" to name,
             "topic" to topic,
-            "maxUsers" to selectedMaxUsers,
+            "maxUsers" to 9999,
             "currentUsers" to 1,
             "ownerUid" to ownerUid,
             "ownerName" to ownerName,
