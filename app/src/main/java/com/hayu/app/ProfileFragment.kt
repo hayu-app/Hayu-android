@@ -56,7 +56,7 @@ class ProfileFragment : Fragment() {
             startActivity(intent)
         }
 
-        // Tombol Edit Profil → buka EditProfileActivity
+        // Tombol Edit Profil
         btnEditProfile.setOnClickListener {
             startActivity(Intent(requireContext(), EditProfileActivity::class.java))
         }
@@ -69,16 +69,23 @@ class ProfileFragment : Fragment() {
         view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
         view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { notif("Level segera hadir! 👑") }
 
+        // Kartu SVIP/VIP
         view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
         view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
-        view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener { notif("Dompet segera hadir! 💰") }
 
+        // DOMPET → buka DailyCoinActivity (Klaim Koin Harian)
+        view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener {
+            startActivity(Intent(requireContext(), DailyCoinActivity::class.java))
+        }
+
+        // Menu list
         view.findViewById<TextView>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
         view.findViewById<TextView>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
         view.findViewById<TextView>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<TextView>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<TextView>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
+        // Menu bawah
         view.findViewById<TextView>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
         view.findViewById<TextView>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
         view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
@@ -88,7 +95,7 @@ class ProfileFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh data setiap balik dari Edit Profile
+        // Refresh data setiap balik dari Edit Profile / Klaim Koin
         view?.let {
             val tvNickname = it.findViewById<TextView>(R.id.tv_nickname)
             val tvUserId = it.findViewById<TextView>(R.id.tv_user_id)
