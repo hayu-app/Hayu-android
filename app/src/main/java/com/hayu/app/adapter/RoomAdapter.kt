@@ -23,14 +23,15 @@ class RoomAdapter(
     inner class RoomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvRoomName: TextView = itemView.findViewById(R.id.tv_room_name)
         val tvRoomTopic: TextView = itemView.findViewById(R.id.tv_room_topic)
+        val tvRoomMic: TextView = itemView.findViewById(R.id.tv_room_mic)
         val tvRoomUsers: TextView = itemView.findViewById(R.id.tv_room_users)
         val tvRoomPrivacy: TextView = itemView.findViewById(R.id.tv_room_privacy)
 
         fun bind(room: Room) {
             tvRoomName.text = if (room.name.isEmpty()) "Room Tanpa Nama" else room.name
             tvRoomTopic.text = if (room.topic.isEmpty()) "Belum ada topik" else room.topic
+            tvRoomMic.text = "🪑 ${room.maxMic}"
             tvRoomUsers.text = "👤 ${room.currentUsers}"
-
             tvRoomPrivacy.text = if (room.privacy == "privat") "🔒 Privat" else "🌍 Publik"
 
             itemView.setOnClickListener { onClick(room) }
