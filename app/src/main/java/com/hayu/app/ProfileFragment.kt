@@ -35,6 +35,7 @@ class ProfileFragment : Fragment() {
         val tvProfileGenderAge = view.findViewById<TextView>(R.id.tv_profile_gender_age)
         val tvLevelBadge = view.findViewById<TextView>(R.id.tv_level_badge)
         val tvCoins = view.findViewById<TextView>(R.id.tv_coins)
+        val tvFriendsCount = view.findViewById<TextView>(R.id.tv_friends_count)
         val tvFollowingCount = view.findViewById<TextView>(R.id.tv_following_count)
         val tvFollowersCount = view.findViewById<TextView>(R.id.tv_followers_count)
         val btnEditProfile = view.findViewById<TextView>(R.id.btn_edit_profile)
@@ -50,7 +51,7 @@ class ProfileFragment : Fragment() {
         tvEmail.text = currentUser.email ?: ""
 
         loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
-        loadFollowStats(tvFollowingCount, tvFollowersCount)
+        loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
 
         tvNickname.setOnClickListener {
             val intent = Intent(requireContext(), UserProfileActivity::class.java)
@@ -97,10 +98,11 @@ class ProfileFragment : Fragment() {
             val tvProfileGenderAge = it.findViewById<TextView>(R.id.tv_profile_gender_age)
             val tvLevelBadge = it.findViewById<TextView>(R.id.tv_level_badge)
             val tvCoins = it.findViewById<TextView>(R.id.tv_coins)
+            val tvFriendsCount = it.findViewById<TextView>(R.id.tv_friends_count)
             val tvFollowingCount = it.findViewById<TextView>(R.id.tv_following_count)
             val tvFollowersCount = it.findViewById<TextView>(R.id.tv_followers_count)
             loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
-            loadFollowStats(tvFollowingCount, tvFollowersCount)
+            loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
         }
     }
 
@@ -152,35 +154,25 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    // Hitung jumlah following & followers
-    private fun loadFollowStats(tvFollowing: TextView, tvFollowers: TextView) {
+    // Hitung 3 angka: Teman (mutual), Mengikuti, Penggemar
+    private fun loadFollowStats(tvFriends: TextView, tvFollowing: TextView, tvFollowers: TextView) {
         val uid = auth.currentUser?.uid ?: return
 
-        // Following: berapa orang yang saya ikuti
+        // STEP 1: Ambil daftar yang saya follow
         db.collection("follows")
             .whereEqualTo("followerUid", uid)
             .get()
             .addOnSuccessListener { snapshot ->
-                tvFollowing.text = snapshot.size().toString()
-            }
+                val followingUids = snapshot.documents.mapNotNull { it.getString("followingUid") }
+                tvFollowing.text = followingUids.size.toString()
 
-        // Followers: berapa orang yang mengikuti saya
-        db.collection("follows")
-            .whereEqualTo("followingUid", uid)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                tvFollowers.text = snapshot.size().toString()
-            }
-    }
+                // STEP 2: Ambil daftar yang follow saya
+                db.collection("follows")
+                    .whereEqualTo("followingUid", uid)
+                    .get()
+                    .addOnSuccessListener { snapshot2 ->
+                        val followerUids = snapshot2.documents.mapNotNull { it.getString("followerUid") }
+                        tvFollowers.text = followerUids.size.toString()
 
-    private fun notif(msg: String) {
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun doLogout() {
-        auth.signOut()
-        Toast.makeText(requireContext(), "Berhasil logout 👋", Toast.LENGTH_SHORT).show()
-        startActivity(Intent(requireContext(), LoginActivity::class.java))
-        requireActivity().finishAffinity()
-    }
-}
+                        // STEP 3: Hitung mutual (teman)
+                        // Teman = yang ada di following
