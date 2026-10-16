@@ -1,5 +1,6 @@
 package com.hayu.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -124,12 +125,18 @@ class CreateRoomActivity : AppCompatActivity() {
             "privacy" to selectedPrivacy,
             "coverColor" to "purple",
             "active" to true,
+            "lastActiveAt" to System.currentTimeMillis(),
             "createdAt" to System.currentTimeMillis()
         )
 
         db.collection("rooms").add(roomData)
-            .addOnSuccessListener {
+            .addOnSuccessListener { documentReference ->
                 Toast.makeText(this, "Room berhasil dibuat! 🎉", Toast.LENGTH_SHORT).show()
+
+                // Langsung masuk ke room
+                val intent = Intent(this, RoomActivity::class.java)
+                intent.putExtra("roomId", documentReference.id)
+                startActivity(intent)
                 finish()
             }
             .addOnFailureListener { e ->
