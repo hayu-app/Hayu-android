@@ -49,6 +49,13 @@ class ProfileFragment : Fragment() {
 
         loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
 
+        // Tap nama → buka profil sendiri (view-only)
+        tvNickname.setOnClickListener {
+            val intent = Intent(requireContext(), UserProfileActivity::class.java)
+            intent.putExtra("uid", currentUser.uid)
+            startActivity(intent)
+        }
+
         // Tombol Edit Profil → buka EditProfileActivity
         btnEditProfile.setOnClickListener {
             startActivity(Intent(requireContext(), EditProfileActivity::class.java))
