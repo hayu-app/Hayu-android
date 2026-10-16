@@ -26,6 +26,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 kotlin {
@@ -47,4 +51,7 @@ dependencies {
 
     // Coil (untuk load foto profil)
     implementation("io.coil-kt:coil:2.7.0")
+
+    // OkHttp (untuk upload gambar ke imgbb)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
