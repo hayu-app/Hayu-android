@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/hayu_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/btn_close"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="✕"
+                android:textColor="@color/hayu_text"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Buat Room"
+                android:textColor="@color/hayu_text"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:gravity="center_vertical"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- FOTO ROOM + NAMA -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input"
+            android:padding="16dp"
+            android:layout_marginTop="20dp">
+
+            <LinearLayout
+                android:id="@+id/btn_change_cover"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_button_primary"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📷"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cover"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+
+                <EditText
+                    android:id="@+id/et_room_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Nama Ruangan"
+                    android:textColorHint="@color/hayu_text_secondary"
+                    android:textColor="@color/hayu_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:background="@android:color/transparent"
+                    android:inputType="text"
+                    android:maxLength="30" />
+
+                <LinearLayout
+                    android:id="@+id/btn_privacy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:background="@drawable/bg_quick_item"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌍"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tv_privacy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Publik"
+                        android:textColor="@color/hayu_text"
+                        android:textSize="13sp"
+                        android:layout_marginStart="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" ▼"
+                        android:textColor="@color/hayu_text_secondary"
+                        android:textSize="10sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- TOPIK -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📝  Topik / Deskripsi"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <EditText
+            android:id="@+id/et_room_topic"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:hint="Ceritakan tentang room kamu..."
+            android:textColorHint="@color/hayu_text_secondary"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:background="@drawable/bg_input"
+            android:padding="16dp"
+            android:layout_marginTop="8dp"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:maxLength="150" />
+
+        <!-- MAX USER -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👥  Maksimal User"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/btn_max_5"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="5"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_max_10"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="10"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_button_primary"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_max_20"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="20"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btn_max_50"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="50"
+                android:textColor="@color/hayu_text"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="6dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- SPACER -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="40dp" />
+
+        <!-- TOMBOL BUAT ROOM -->
+        <TextView
+            android:id="@+id/btn_create_room"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="🎉  Buat Room Sekarang"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginTop="32dp" />
+
+    </LinearLayout>
+</ScrollView>
