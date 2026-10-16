@@ -21,6 +21,7 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
+        // Cek kalau sudah login, langsung lanjut
         if (auth.currentUser != null) {
             checkUserData(auth.currentUser!!.uid)
             return
@@ -125,7 +126,7 @@ class LoginActivity : AppCompatActivity() {
                             navigateBasedOnOnboarding(onboarded)
                         }
                 } else {
-                    generateUniqueIdForUser(uid, userRef, candidateId)
+                    generateUniqueIdForUser(uid, userRef, onboarded)
                 }
             }
             .addOnFailureListener {
