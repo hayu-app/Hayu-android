@@ -2,6 +2,7 @@ package com.hayu.app
 
 import android.os.Bundle
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -15,6 +16,7 @@ class CreateRoomActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var selectedPrivacy: String = "publik"
+    private var selectedMic: Int = 5
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +31,9 @@ class CreateRoomActivity : AppCompatActivity() {
         val btnPrivacy = findViewById<LinearLayout>(R.id.btn_privacy)
         val tvPrivacy = findViewById<TextView>(R.id.tv_privacy)
         val etRoomTopic = findViewById<EditText>(R.id.et_room_topic)
+        val btnMic5 = findViewById<FrameLayout>(R.id.btn_mic_5)
+        val btnMic10 = findViewById<FrameLayout>(R.id.btn_mic_10)
+        val btnMic15 = findViewById<FrameLayout>(R.id.btn_mic_15)
         val btnCreate = findViewById<TextView>(R.id.btn_create_room)
 
         btnClose.setOnClickListener { finish() }
@@ -54,6 +59,23 @@ class CreateRoomActivity : AppCompatActivity() {
                 .show()
         }
 
+        // Pilih slot mic
+        val updateMicUI = { selected: Int ->
+            selectedMic = selected
+            val all = listOf(btnMic5 to 5, btnMic10 to 10, btnMic15 to 15)
+            all.forEach { (btn, value) ->
+                if (value == selected) {
+                    btn.setBackgroundResource(R.drawable.bg_button_primary)
+                } else {
+                    btn.setBackgroundResource(R.drawable.bg_quick_item)
+                }
+            }
+        }
+
+        btnMic5.setOnClickListener { updateMicUI(5) }
+        btnMic10.setOnClickListener { updateMicUI(10) }
+        btnMic15.setOnClickListener { updateMicUI(15) }
+
         // Tombol buat room
         btnCreate.setOnClickListener {
             val roomName = etRoomName.text.toString().trim()
@@ -74,7 +96,6 @@ class CreateRoomActivity : AppCompatActivity() {
             btnCreate.isEnabled = false
             btnCreate.text = "Membuat room..."
 
-            // Ambil nickname owner
             db.collection("users").document(currentUser.uid).get()
                 .addOnSuccessListener { doc ->
                     val ownerName = doc.getString("nickname") ?: "Pengguna HAYU"
@@ -96,7 +117,7 @@ class CreateRoomActivity : AppCompatActivity() {
         val roomData = hashMapOf(
             "name" to name,
             "topic" to topic,
-            "maxUsers" to 9999,
+            "maxMic" to selectedMic,
             "currentUsers" to 1,
             "ownerUid" to ownerUid,
             "ownerName" to ownerName,
