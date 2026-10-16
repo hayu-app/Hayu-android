@@ -3,6 +3,7 @@ package com.hayu.app
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +21,6 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
-        // CEK DULU: kalau sudah login, langsung lanjut
         if (auth.currentUser != null) {
             checkUserData(auth.currentUser!!.uid)
             return
@@ -28,8 +28,8 @@ class LoginActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_login)
 
-        val etEmail = findViewById<TextView>(R.id.et_email)
-        val etPassword = findViewById<TextView>(R.id.et_password)
+        val etEmail = findViewById<EditText>(R.id.et_email)
+        val etPassword = findViewById<EditText>(R.id.et_password)
         val btnTogglePassword = findViewById<TextView>(R.id.btn_toggle_password)
         val btnLogin = findViewById<TextView>(R.id.btn_login)
         val tvRegister = findViewById<TextView>(R.id.tv_register)
@@ -44,7 +44,6 @@ class LoginActivity : AppCompatActivity() {
                 etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 btnTogglePassword.text = "👁️"
             }
-            // Pindahkan kursor ke akhir teks
             etPassword.setSelection(etPassword.text.length)
         }
 
@@ -126,7 +125,7 @@ class LoginActivity : AppCompatActivity() {
                             navigateBasedOnOnboarding(onboarded)
                         }
                 } else {
-                    generateUniqueIdForUser(uid, userRef, onboarded)
+                    generateUniqueIdForUser(uid, userRef, candidateId)
                 }
             }
             .addOnFailureListener {
