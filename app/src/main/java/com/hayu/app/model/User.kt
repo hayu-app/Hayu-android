@@ -14,6 +14,8 @@ data class User(
     val totalCoinsEarned: Int = 0,
     val lastDailyClaim: Long = 0L,
     val level: Int = 1,
+    val role: String = "user",        // user, bd, cs, admin, superadmin, developer
+    val banned: Boolean = false,
     val online: Boolean = false,
     val onboarded: Boolean = false
 ) {
@@ -33,6 +35,8 @@ data class User(
             totalCoinsEarned = (map["totalCoinsEarned"] as? Number)?.toInt() ?: 0,
             lastDailyClaim = (map["lastDailyClaim"] as? Number)?.toLong() ?: 0L,
             level = (map["level"] as? Number)?.toInt() ?: 1,
+            role = map["role"] as? String ?: "user",
+            banned = map["banned"] as? Boolean ?: false,
             online = map["online"] as? Boolean ?: false,
             onboarded = map["onboarded"] as? Boolean ?: false
         )
