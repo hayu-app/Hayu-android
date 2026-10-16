@@ -11,11 +11,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.hayu.app.util.SessionManager
 
 class CreateRoomActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private lateinit var session: SessionManager
     private var selectedPrivacy: String = "publik"
     private var selectedMic: Int = 5
 
@@ -25,6 +27,7 @@ class CreateRoomActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+        session = SessionManager(this)
 
         val btnClose = findViewById<TextView>(R.id.btn_close)
         val btnChangeCover = findViewById<LinearLayout>(R.id.btn_change_cover)
@@ -43,7 +46,6 @@ class CreateRoomActivity : AppCompatActivity() {
             Toast.makeText(this, "Upload cover segera hadir! 📷", Toast.LENGTH_SHORT).show()
         }
 
-        // Dropdown privasi
         btnPrivacy.setOnClickListener {
             val options = arrayOf("🌍 Publik", "🔒 Privat")
             AlertDialog.Builder(this)
@@ -60,7 +62,6 @@ class CreateRoomActivity : AppCompatActivity() {
                 .show()
         }
 
-        // Pilih slot mic
         val updateMicUI = { selected: Int ->
             selectedMic = selected
             val all = listOf(btnMic5 to 5, btnMic10 to 10, btnMic15 to 15)
@@ -77,7 +78,6 @@ class CreateRoomActivity : AppCompatActivity() {
         btnMic10.setOnClickListener { updateMicUI(10) }
         btnMic15.setOnClickListener { updateMicUI(15) }
 
-        // Tombol buat room
         btnCreate.setOnClickListener {
             val roomName = etRoomName.text.toString().trim()
             val roomTopic = etRoomTopic.text.toString().trim()
@@ -133,7 +133,10 @@ class CreateRoomActivity : AppCompatActivity() {
             .addOnSuccessListener { documentReference ->
                 Toast.makeText(this, "Room berhasil dibuat! 🎉", Toast.LENGTH_SHORT).show()
 
-                // Langsung masuk ke room
+                // Simpan ke session (untuk floating icon)
+                session.setActiveRoomId(documentReference.id)
+                session.setActiveRoomName(name)
+
                 val intent = Intent(this, RoomActivity::class.java)
                 intent.putExtra("roomId", documentReference.id)
                 startActivity(intent)
