@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:background="@color/hayu_dark">
 
+    <!-- HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -68,6 +69,7 @@
             android:background="@drawable/bg_quick_item" />
     </LinearLayout>
 
+    <!-- MIC SLOTS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -176,6 +178,7 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- CHAT AREA -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_messages"
         android:layout_width="match_parent"
@@ -185,6 +188,7 @@
         android:paddingTop="8dp"
         android:paddingBottom="8dp" />
 
+    <!-- BOTTOM BAR — tampil default -->
     <LinearLayout
         android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
@@ -278,6 +282,7 @@
             android:focusable="true" />
     </LinearLayout>
 
+    <!-- CHAT INPUT — muncul saat "Ayo chat!" diklik -->
     <LinearLayout
         android:id="@+id/chat_input_bar"
         android:layout_width="match_parent"
