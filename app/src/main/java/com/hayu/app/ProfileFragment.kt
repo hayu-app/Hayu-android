@@ -5,12 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import coil.load
 
 class ProfileFragment : Fragment() {
 
@@ -50,7 +52,7 @@ class ProfileFragment : Fragment() {
 
         tvEmail.text = currentUser.email ?: ""
 
-        loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
+        loadProfile(view, tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
         loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
 
         tvNickname.setOnClickListener {
@@ -101,12 +103,13 @@ class ProfileFragment : Fragment() {
             val tvFriendsCount = it.findViewById<TextView>(R.id.tv_friends_count)
             val tvFollowingCount = it.findViewById<TextView>(R.id.tv_following_count)
             val tvFollowersCount = it.findViewById<TextView>(R.id.tv_followers_count)
-            loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
+            loadProfile(it, tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
             loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
         }
     }
 
     private fun loadProfile(
+        rootView: View,
         tvNickname: TextView,
         tvUserId: TextView,
         tvProfileGenderAge: TextView,
@@ -114,6 +117,8 @@ class ProfileFragment : Fragment() {
         tvCoins: TextView
     ) {
         val uid = auth.currentUser?.uid ?: return
+        val imgAvatar = rootView.findViewById<ImageView>(R.id.img_avatar)
+
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
@@ -147,6 +152,18 @@ class ProfileFragment : Fragment() {
 
                 val level = (doc.getLong("level") ?: 1L).toInt()
                 tvLevelBadge.text = "Lv. $level"
+
+                // FOTO PROFIL: full + rounded corner
+                val photoUrl = doc.getString("photoUrl") ?: ""
+                if (photoUrl.isNotEmpty()) {
+                    imgAvatar.setPadding(0, 0, 0, 0)
+                    imgAvatar.scaleType = ImageView.ScaleType.CENTER_CROP
+                    imgAvatar.clipToOutline = true
+                    imgAvatar.load(photoUrl) { crossfade(true) }
+                } else {
+                    // Belum ada foto → tampilkan ikon default
+                    imgAvatar.setImageResource(R.drawable.ic_profile)
+                }
             }
             .addOnFailureListener {
                 tvNickname.text = "Pengguna HAYU"
