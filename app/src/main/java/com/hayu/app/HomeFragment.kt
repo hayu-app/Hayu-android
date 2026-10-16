@@ -64,6 +64,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // Cek room user — auto-recover kalau ada room lama
     private fun checkUserRoom() {
         val uid = auth.currentUser?.uid ?: run {
             Toast.makeText(requireContext(), "Sesi habis, login ulang", Toast.LENGTH_SHORT).show()
@@ -80,31 +81,52 @@ class HomeFragment : Fragment() {
                 val allMyRooms = snapshot.documents
                     .mapNotNull { doc -> doc.data?.let { Room.fromDoc(doc.id, it) } }
 
+                // 1. Room aktif & masih fresh → langsung masuk
                 val activeRoom = allMyRooms.firstOrNull {
                     it.active && it.lastActiveAt > fiveMinutesAgo
                 }
 
-                allMyRooms.filter { it.active && it.lastActiveAt <= fiveMinutesAgo }
-                    .forEach { oldRoom ->
-                        db.collection("rooms").document(oldRoom.roomId)
-                            .update("active", false)
-                    }
-
                 if (activeRoom != null) {
-                    val session = SessionManager(requireContext())
-                    session.setActiveRoomId(activeRoom.roomId)
-                    session.setActiveRoomName(activeRoom.name)
-
-                    val intent = Intent(requireContext(), RoomActivity::class.java)
-                    intent.putExtra("roomId", activeRoom.roomId)
-                    startActivity(intent)
-                } else {
-                    startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
+                    masukRoom(activeRoom)
+                    return@addOnSuccessListener
                 }
+
+                // 2. Ada room lama (tidak aktif) → REAKTIFKAN
+                val oldRoom = allMyRooms.maxByOrNull { it.createdAt }
+
+                if (oldRoom != null) {
+                    db.collection("rooms").document(oldRoom.roomId)
+                        .update(
+                            "active", true,
+                            "lastActiveAt", System.currentTimeMillis()
+                        )
+                        .addOnSuccessListener {
+                            Toast.makeText(requireContext(), "Room lama diaktifkan kembali! 🔄", Toast.LENGTH_SHORT).show()
+                            masukRoom(oldRoom.copy(active = true, lastActiveAt = System.currentTimeMillis()))
+                        }
+                        .addOnFailureListener {
+                            // Kalau gagal reaktifkan, fallback ke form buat room
+                            startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
+                        }
+                    return@addOnSuccessListener
+                }
+
+                // 3. Tidak punya room sama sekali → form buat room
+                startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
             }
             .addOnFailureListener {
                 startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
             }
+    }
+
+    private fun masukRoom(room: Room) {
+        val session = SessionManager(requireContext())
+        session.setActiveRoomId(room.roomId)
+        session.setActiveRoomName(room.name)
+
+        val intent = Intent(requireContext(), RoomActivity::class.java)
+        intent.putExtra("roomId", room.roomId)
+        startActivity(intent)
     }
 
     private fun loadRooms(layoutEmpty: LinearLayout) {
