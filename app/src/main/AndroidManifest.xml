@@ -49,5 +49,9 @@
             android:name=".RoomActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".DailyCoinActivity"
+            android:exported="false" />
+
     </application>
 </manifest>
