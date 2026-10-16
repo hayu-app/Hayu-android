@@ -1,6 +1,9 @@
 package com.hayu.app
 
+import android.content.Context
 import android.os.Bundle
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -9,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.hayu.app.adapter.RoomMessageAdapter
@@ -24,6 +28,10 @@ class RoomActivity : AppCompatActivity() {
     private var roomName: String = "Room"
     private lateinit var adapter: RoomMessageAdapter
     private lateinit var rvMessages: RecyclerView
+
+    private lateinit var bottomBar: LinearLayout
+    private lateinit var chatInputBar: LinearLayout
+    private lateinit var etMessage: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,10 +52,18 @@ class RoomActivity : AppCompatActivity() {
         val tvRoomName = findViewById<TextView>(R.id.tv_room_name)
         val tvRoomOwner = findViewById<TextView>(R.id.tv_room_owner)
         val tvRoomUsers = findViewById<TextView>(R.id.tv_room_users)
-        val btnDice = findViewById<TextView>(R.id.btn_dice)
         rvMessages = findViewById(R.id.rv_messages)
-        val etMessage = findViewById<EditText>(R.id.et_message)
+
+        bottomBar = findViewById(R.id.bottom_bar)
+        chatInputBar = findViewById(R.id.chat_input_bar)
+        etMessage = findViewById(R.id.et_message)
         val btnSend = findViewById<TextView>(R.id.btn_send)
+
+        val btnOpenChat = findViewById<LinearLayout>(R.id.btn_open_chat)
+        val btnVolume = findViewById<TextView>(R.id.btn_volume)
+        val btnNotif = findViewById<TextView>(R.id.btn_notif)
+        val btnMenu = findViewById<TextView>(R.id.btn_menu)
+        val btnGift = findViewById<TextView>(R.id.btn_gift)
 
         btnBack.setOnClickListener { showLeaveDialog() }
 
@@ -85,11 +101,8 @@ class RoomActivity : AppCompatActivity() {
 
         // Slot mic
         val micSlots = listOf(
-            R.id.mic_slot_1,
-            R.id.mic_slot_2,
-            R.id.mic_slot_3,
-            R.id.mic_slot_4,
-            R.id.mic_slot_5
+            R.id.mic_slot_1, R.id.mic_slot_2, R.id.mic_slot_3,
+            R.id.mic_slot_4, R.id.mic_slot_5
         )
         micSlots.forEachIndexed { index, id ->
             findViewById<LinearLayout>(id).setOnClickListener {
@@ -97,32 +110,89 @@ class RoomActivity : AppCompatActivity() {
             }
         }
 
-        // Dadu
-        btnDice.setOnClickListener { rollDice() }
+        // Ayo chat → buka input + keyboard
+        btnOpenChat.setOnClickListener {
+            bottomBar.visibility = View.GONE
+            chatInputBar.visibility = View.VISIBLE
+            etMessage.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(etMessage, InputMethodManager.SHOW_IMPLICIT)
+        }
 
         btnSend.setOnClickListener {
             val text = etMessage.text.toString().trim()
             if (text.isEmpty()) return@setOnClickListener
-            sendMessage(text, etMessage)
+            sendMessage(text)
+        }
+
+        // Bottom bar tombol
+        btnVolume.setOnClickListener {
+            Toast.makeText(this, "Pengaturan suara segera hadir! 🔊", Toast.LENGTH_SHORT).show()
+        }
+
+        btnNotif.setOnClickListener {
+            Toast.makeText(this, "Notifikasi segera hadir! 🔔", Toast.LENGTH_SHORT).show()
+        }
+
+        btnMenu.setOnClickListener { showRoomMenu() }
+
+        btnGift.setOnClickListener {
+            Toast.makeText(this, "Fitur gift segera hadir! 🎁", Toast.LENGTH_SHORT).show()
         }
 
         listenMessages()
     }
 
-    private fun showLeaveDialog() {
-        val options = arrayOf("🔽  Minimize", "🚪  Keluar Room")
+    private fun showRoomMenu() {
+        val sheet = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.sheet_room_menu, null)
+        sheet.setContentView(view)
+
+        view.findViewById<LinearLayout>(R.id.menu_dice).setOnClickListener {
+            sheet.dismiss()
+            rollDice()
+        }
+
+        view.findViewById<LinearLayout>(R.id.menu_vote).setOnClickListener {
+            sheet.dismiss()
+            Toast.makeText(this, "Fitur Vote segera hadir! 🗳️", Toast.LENGTH_SHORT).show()
+        }
+
+        view.findViewById<LinearLayout>(R.id.menu_undian).setOnClickListener {
+            sheet.dismiss()
+            Toast.makeText(this, "Fitur Undian segera hadir! ❓", Toast.LENGTH_SHORT).show()
+        }
+
+        view.findViewById<LinearLayout>(R.id.menu_clear_chat).setOnClickListener {
+            sheet.dismiss()
+            clearChat()
+        }
+
+        view.findViewById<LinearLayout>(R.id.menu_settings).setOnClickListener {
+            sheet.dismiss()
+            Toast.makeText(this, "Pengaturan room segera hadir! ⚙️", Toast.LENGTH_SHORT).show()
+        }
+
+        sheet.show()
+    }
+
+    private fun clearChat() {
         AlertDialog.Builder(this)
-            .setTitle("Keluar dari Room?")
-            .setItems(options) { _, which ->
-                if (which == 0) {
-                    Toast.makeText(this, "Room di-minimize. Tap ikon 🎙️ untuk balik!", Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    session.clearActiveRoom()
-                    Toast.makeText(this, "Kamu keluar dari room", Toast.LENGTH_SHORT).show()
-                    finish()
+            .setTitle("Bersihkan Chat?")
+            .setMessage("Semua pesan di room ini akan dihapus. Lanjutkan?")
+            .setPositiveButton("Ya, Hapus") { _, _ ->
+                roomId?.let { id ->
+                    db.collection("rooms").document(id).collection("messages")
+                        .get()
+                        .addOnSuccessListener { snapshot ->
+                            for (doc in snapshot.documents) {
+                                doc.reference.delete()
+                            }
+                            Toast.makeText(this, "Chat dibersihkan! 🧹", Toast.LENGTH_SHORT).show()
+                        }
                 }
             }
+            .setNegativeButton("Batal", null)
             .show()
     }
 
@@ -153,6 +223,23 @@ class RoomActivity : AppCompatActivity() {
                         .add(msg)
                 }
             }
+    }
+
+    private fun showLeaveDialog() {
+        val options = arrayOf("🔽  Minimize", "🚪  Keluar Room")
+        AlertDialog.Builder(this)
+            .setTitle("Keluar dari Room?")
+            .setItems(options) { _, which ->
+                if (which == 0) {
+                    Toast.makeText(this, "Room di-minimize. Tap ikon 🎙️ untuk balik!", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    session.clearActiveRoom()
+                    Toast.makeText(this, "Kamu keluar dari room", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .show()
     }
 
     override fun onDestroy() {
@@ -186,9 +273,15 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendMessage(text: String, etMessage: EditText) {
+    private fun sendMessage(text: String) {
         val uid = auth.currentUser?.uid ?: return
         etMessage.setText("")
+
+        // Balik ke bottom bar
+        bottomBar.visibility = View.VISIBLE
+        chatInputBar.visibility = View.GONE
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(etMessage.windowToken, 0)
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { userDoc ->
