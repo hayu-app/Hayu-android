@@ -164,30 +164,103 @@
             android:inputType="textMultiLine"
             android:maxLength="150" />
 
-        <!-- INFO -->
+        <!-- JUMLAH SLOT MIC -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🪑  Jumlah Slot Mic"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/bg_menu_card"
-            android:padding="14dp"
-            android:layout_marginTop="24dp">
+            android:layout_marginTop="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="👥"
-                android:textSize="18sp" />
-
-            <TextView
+            <FrameLayout
+                android:id="@+id/btn_mic_5"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="80dp"
                 android:layout_weight="1"
-                android:text="Tanpa batas user — siapa saja bisa bergabung"
-                android:textColor="@color/hayu_text_secondary"
-                android:textSize="13sp"
-                android:layout_marginStart="10dp" />
+                android:background="@drawable/bg_button_primary"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="🪑"
+                    android:textSize="44sp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="5"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btn_mic_10"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="🪑"
+                    android:textSize="44sp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="10"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btn_mic_15"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_quick_item"
+                android:layout_marginStart="6dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="🪑"
+                    android:textSize="44sp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="15"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+            </FrameLayout>
         </LinearLayout>
 
         <!-- SPACER -->
