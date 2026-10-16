@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.hayu.app.adapter.RoomAdapter
 import com.hayu.app.model.Room
 
@@ -36,7 +35,6 @@ class HomeFragment : Fragment() {
         val rvRooms = view.findViewById<RecyclerView>(R.id.rv_rooms)
         val layoutEmpty = view.findViewById<LinearLayout>(R.id.layout_empty)
 
-        // Setup grid 2 kolom
         rvRooms.layoutManager = GridLayoutManager(requireContext(), 2)
         adapter = RoomAdapter { room ->
             Toast.makeText(requireContext(), "Fitur masuk room segera hadir! 🎉", Toast.LENGTH_SHORT).show()
@@ -52,7 +50,6 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh setiap balik dari Buat Room
         view?.let {
             val layoutEmpty = it.findViewById<LinearLayout>(R.id.layout_empty)
             loadRooms(layoutEmpty)
@@ -61,14 +58,13 @@ class HomeFragment : Fragment() {
 
     private fun loadRooms(layoutEmpty: LinearLayout) {
         db.collection("rooms")
-            .whereEqualTo("active", true)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(50)
             .get()
             .addOnSuccessListener { snapshot ->
-                val rooms = snapshot.documents.mapNotNull { doc ->
-                    doc.data?.let { Room.fromDoc(doc.id, it) }
-                }
+                val rooms = snapshot.documents
+                    .mapNotNull { doc -> doc.data?.let { Room.fromDoc(doc.id, it) } }
+                    .filter { it.active }
+                    .sortedByDescending { it.createdAt }
 
                 adapter.submitList(rooms)
 
