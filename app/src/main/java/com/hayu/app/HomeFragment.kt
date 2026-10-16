@@ -39,9 +39,7 @@ class HomeFragment : Fragment() {
         // Setup grid 2 kolom
         rvRooms.layoutManager = GridLayoutManager(requireContext(), 2)
         adapter = RoomAdapter { room ->
-            val intent = Intent(requireContext(), RoomActivity::class.java)
-            intent.putExtra("roomId", room.roomId)
-            startActivity(intent)
+            Toast.makeText(requireContext(), "Fitur masuk room segera hadir! 🎉", Toast.LENGTH_SHORT).show()
         }
         rvRooms.adapter = adapter
 
