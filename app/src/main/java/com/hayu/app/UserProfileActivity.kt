@@ -58,6 +58,11 @@ class UserProfileActivity : AppCompatActivity() {
         tvFollowingCount = findViewById(R.id.tv_following_count)
         tvFollowersCount = findViewById(R.id.tv_followers_count)
 
+        // FOTO PROFIL: full + rounded corner sejak awal
+        imgAvatar.setPadding(0, 0, 0, 0)
+        imgAvatar.scaleType = ImageView.ScaleType.CENTER_CROP
+        imgAvatar.clipToOutline = true
+
         btnBack.setOnClickListener { finish() }
 
         if (isSelf) {
@@ -127,10 +132,13 @@ class UserProfileActivity : AppCompatActivity() {
                     tvJoinedDays.text = "📅 Hari bergabung: 1 hari"
                 }
 
+                // Load foto — full + rounded
                 if (photoUrl.isNotEmpty()) {
                     imgAvatar.load(photoUrl) { crossfade(true) }
                 } else {
                     imgAvatar.setImageResource(R.drawable.ic_profile)
+                    // Kembalikan padding untuk ikon default
+                    imgAvatar.setPadding(30, 30, 30, 30)
                 }
 
                 if (!isSelf) {
@@ -158,7 +166,7 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
         }
 
-        // TOMBOL CHAT — buka ChatActivity dengan user ini
+        // TOMBOL CHAT — buka ChatActivity
         btnChat.setOnClickListener {
             if (!isSelf) {
                 val intent = Intent(this, ChatActivity::class.java)
