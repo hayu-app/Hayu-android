@@ -17,6 +17,7 @@ class UserProfileActivity : AppCompatActivity() {
     private var targetUid: String? = null
     private var isFollowing: Boolean = false
     private var isSelf: Boolean = false
+    private var targetName: String = "Pengguna HAYU"
 
     private lateinit var tvFollowingCount: TextView
     private lateinit var tvFollowersCount: TextView
@@ -27,7 +28,7 @@ class UserProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_user_profile)
 
         db = FirebaseFirestore.getInstance()
-        auth = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
         targetUid = intent.getStringExtra("uid")
 
         if (targetUid.isNullOrEmpty()) {
@@ -58,7 +59,6 @@ class UserProfileActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        // Kalau ini diri sendiri → disable tombol
         if (isSelf) {
             btnChat.isEnabled = false
             btnChat.alpha = 0.5f
@@ -75,7 +75,6 @@ class UserProfileActivity : AppCompatActivity() {
             btnSpecialInvite.alpha = 0.5f
         }
 
-        // Load data user
         db.collection("users").document(targetUid!!).get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
@@ -93,6 +92,7 @@ class UserProfileActivity : AppCompatActivity() {
                 val userId = (doc.getLong("userId") ?: 0L)
                 val createdAt = (doc.getLong("createdAt") ?: 0L)
 
+                targetName = nickname
                 tvName.text = nickname
                 tvSpecialName.text = nickname
 
@@ -133,7 +133,6 @@ class UserProfileActivity : AppCompatActivity() {
                     imgAvatar.setImageResource(R.drawable.ic_profile)
                 }
 
-                // Setelah data user diload, cek status follow
                 if (!isSelf) {
                     checkFollowStatus()
                 }
@@ -144,7 +143,6 @@ class UserProfileActivity : AppCompatActivity() {
                 finish()
             }
 
-        // Tab Profil / Momen
         tabProfile.setOnClickListener {
             tabProfile.setTextColor(getColor(R.color.hayu_text))
             tabProfile.setTypeface(null, android.graphics.Typeface.BOLD)
@@ -160,7 +158,6 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
         }
 
-        // Tombol aksi
         btnChat.setOnClickListener {
             if (!isSelf) Toast.makeText(this, "Fitur Chat segera hadir! 💬", Toast.LENGTH_SHORT).show()
         }
@@ -178,7 +175,6 @@ class UserProfileActivity : AppCompatActivity() {
         }
     }
 
-    // Cek apakah user sudah follow target
     private fun checkFollowStatus() {
         val myUid = auth.currentUser?.uid ?: return
         val followId = "${myUid}_${targetUid}"
@@ -206,7 +202,6 @@ class UserProfileActivity : AppCompatActivity() {
         }
     }
 
-    // Toggle follow/unfollow
     private fun toggleFollow() {
         val myUid = auth.currentUser?.uid ?: return
         val followId = "${myUid}_${targetUid}"
@@ -230,7 +225,7 @@ class UserProfileActivity : AppCompatActivity() {
                     btnFollow.isEnabled = true
                 }
         } else {
-            // Follow
+            // Follow + buat notifikasi
             val followData = hashMapOf(
                 "followerUid" to myUid,
                 "followingUid" to targetUid,
@@ -241,6 +236,7 @@ class UserProfileActivity : AppCompatActivity() {
                     isFollowing = true
                     updateFollowButton()
                     loadFollowCounts()
+                    sendFollowNotification(myUid)
                     Toast.makeText(this, "Berhasil mengikuti! ❤️", Toast.LENGTH_SHORT).show()
                 }
                 .addOnFailureListener { e ->
@@ -252,11 +248,27 @@ class UserProfileActivity : AppCompatActivity() {
         }
     }
 
-    // Hitung jumlah following & followers target user
+    // Buat notifikasi untuk user yang di-follow
+    private fun sendFollowNotification(myUid: String) {
+        db.collection("users").document(myUid).get()
+            .addOnSuccessListener { myDoc ->
+                val myName = myDoc.getString("nickname") ?: "Pengguna HAYU"
+                val notifData = hashMapOf(
+                    "userId" to targetUid,
+                    "type" to "follow",
+                    "fromUid" to myUid,
+                    "fromName" to myName,
+                    "message" to "mulai mengikuti kamu",
+                    "read" to false,
+                    "timestamp" to System.currentTimeMillis()
+                )
+                db.collection("notifications").add(notifData)
+            }
+    }
+
     private fun loadFollowCounts() {
         val uid = targetUid ?: return
 
-        // Following: user ini mengikuti berapa orang
         db.collection("follows")
             .whereEqualTo("followerUid", uid)
             .get()
@@ -264,7 +276,6 @@ class UserProfileActivity : AppCompatActivity() {
                 tvFollowingCount.text = snapshot.size().toString()
             }
 
-        // Followers: berapa orang mengikuti user ini
         db.collection("follows")
             .whereEqualTo("followingUid", uid)
             .get()
