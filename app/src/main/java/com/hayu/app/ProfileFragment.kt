@@ -35,6 +35,8 @@ class ProfileFragment : Fragment() {
         val tvProfileGenderAge = view.findViewById<TextView>(R.id.tv_profile_gender_age)
         val tvLevelBadge = view.findViewById<TextView>(R.id.tv_level_badge)
         val tvCoins = view.findViewById<TextView>(R.id.tv_coins)
+        val tvFollowingCount = view.findViewById<TextView>(R.id.tv_following_count)
+        val tvFollowersCount = view.findViewById<TextView>(R.id.tv_followers_count)
         val btnEditProfile = view.findViewById<TextView>(R.id.btn_edit_profile)
         val btnLogout = view.findViewById<TextView>(R.id.btn_logout)
 
@@ -48,44 +50,38 @@ class ProfileFragment : Fragment() {
         tvEmail.text = currentUser.email ?: ""
 
         loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
+        loadFollowStats(tvFollowingCount, tvFollowersCount)
 
-        // Tap nama → buka profil sendiri (view-only)
         tvNickname.setOnClickListener {
             val intent = Intent(requireContext(), UserProfileActivity::class.java)
             intent.putExtra("uid", currentUser.uid)
             startActivity(intent)
         }
 
-        // Tombol Edit Profil
         btnEditProfile.setOnClickListener {
             startActivity(Intent(requireContext(), EditProfileActivity::class.java))
         }
 
         btnLogout.setOnClickListener { doLogout() }
 
-        // Quick menu
         view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { notif("Lencana segera hadir! 🏆") }
         view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { notif("Toko segera hadir! 🏪") }
         view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
         view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { notif("Level segera hadir! 👑") }
 
-        // Kartu SVIP/VIP
         view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
         view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
 
-        // DOMPET → buka DailyCoinActivity (Klaim Koin Harian)
         view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener {
             startActivity(Intent(requireContext(), DailyCoinActivity::class.java))
         }
 
-        // Menu list
         view.findViewById<TextView>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
         view.findViewById<TextView>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
         view.findViewById<TextView>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<TextView>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<TextView>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
-        // Menu bawah
         view.findViewById<TextView>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
         view.findViewById<TextView>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
         view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
@@ -95,14 +91,16 @@ class ProfileFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh data setiap balik dari Edit Profile / Klaim Koin
         view?.let {
             val tvNickname = it.findViewById<TextView>(R.id.tv_nickname)
             val tvUserId = it.findViewById<TextView>(R.id.tv_user_id)
             val tvProfileGenderAge = it.findViewById<TextView>(R.id.tv_profile_gender_age)
             val tvLevelBadge = it.findViewById<TextView>(R.id.tv_level_badge)
             val tvCoins = it.findViewById<TextView>(R.id.tv_coins)
+            val tvFollowingCount = it.findViewById<TextView>(R.id.tv_following_count)
+            val tvFollowersCount = it.findViewById<TextView>(R.id.tv_followers_count)
             loadProfile(tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
+            loadFollowStats(tvFollowingCount, tvFollowersCount)
         }
     }
 
@@ -151,6 +149,27 @@ class ProfileFragment : Fragment() {
             .addOnFailureListener {
                 tvNickname.text = "Pengguna HAYU"
                 tvUserId.text = "ID: -"
+            }
+    }
+
+    // Hitung jumlah following & followers
+    private fun loadFollowStats(tvFollowing: TextView, tvFollowers: TextView) {
+        val uid = auth.currentUser?.uid ?: return
+
+        // Following: berapa orang yang saya ikuti
+        db.collection("follows")
+            .whereEqualTo("followerUid", uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                tvFollowing.text = snapshot.size().toString()
+            }
+
+        // Followers: berapa orang yang mengikuti saya
+        db.collection("follows")
+            .whereEqualTo("followingUid", uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                tvFollowers.text = snapshot.size().toString()
             }
     }
 
