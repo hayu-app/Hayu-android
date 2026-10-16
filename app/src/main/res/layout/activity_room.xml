@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/hayu_dark">
 
     <!-- HEADER -->
     <LinearLayout
+        android:id="@+id/header_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="12dp"
-        android:background="@drawable/bg_home_header">
+        android:background="@drawable/bg_home_header"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/btn_back"
@@ -71,13 +74,15 @@
 
     <!-- MIC SLOTS -->
     <LinearLayout
+        android:id="@+id/mic_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:paddingTop="12dp"
-        android:paddingBottom="8dp">
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/header_section">
 
         <LinearLayout
             android:id="@+id/mic_slot_1"
@@ -183,12 +188,13 @@
         android:id="@+id/rv_messages"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingTop="8dp"
-        android:paddingBottom="8dp" />
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/mic_section"
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
 
-    <!-- BOTTOM BAR (default) -->
+    <!-- BOTTOM BAR — di paling bawah layar -->
     <LinearLayout
         android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
@@ -199,7 +205,8 @@
         android:paddingEnd="12dp"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
-        android:background="#1A1A2E">
+        android:background="#1A1A2E"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:id="@+id/btn_open_chat"
@@ -282,7 +289,7 @@
             android:focusable="true" />
     </LinearLayout>
 
-    <!-- CHAT INPUT (muncul setelah tap "Ayo chat!") -->
+    <!-- CHAT INPUT — di paling bawah layar (menggantikan bottom bar saat aktif) -->
     <LinearLayout
         android:id="@+id/chat_input_bar"
         android:layout_width="match_parent"
@@ -294,7 +301,8 @@
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
         android:background="#1A1A2E"
-        android:visibility="gone">
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <EditText
             android:id="@+id/et_message"
@@ -329,4 +337,4 @@
             android:focusable="true" />
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
