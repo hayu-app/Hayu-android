@@ -63,7 +63,6 @@ class NotificationFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh saat balik ke tab
         view?.let {
             val layoutEmpty = it.findViewById<LinearLayout>(R.id.layout_empty_notif)
             loadNotifications(layoutEmpty)
