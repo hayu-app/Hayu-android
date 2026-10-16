@@ -188,151 +188,103 @@
         android:paddingTop="8dp"
         android:paddingBottom="8dp" />
 
-    <!-- BOTTOM AREA: FrameLayout — bottom bar & chat input TUMPUK di sini -->
-    <FrameLayout
+    <!-- BOTTOM BAR: Input + Ikon dalam 1 baris -->
+    <LinearLayout
+        android:id="@+id/bottom_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:background="#1A1A2E">
 
-        <!-- BOTTOM BAR (default) -->
-        <LinearLayout
-            android:id="@+id/bottom_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:background="#1A1A2E">
+        <!-- Input pesan -->
+        <EditText
+            android:id="@+id/et_message"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:hint="Tulis pesan..."
+            android:textColorHint="@color/hayu_text_secondary"
+            android:textColor="@color/hayu_text"
+            android:textSize="14sp"
+            android:background="@drawable/bg_input"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:inputType="text"
+            android:maxLength="200" />
 
-            <LinearLayout
-                android:id="@+id/btn_open_chat"
-                android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:background="@drawable/bg_quick_item"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💬"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="  Ayo chat!"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-            <TextView
-                android:id="@+id/btn_volume"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="🔊"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <TextView
-                android:id="@+id/btn_notif"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="🔔"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <TextView
-                android:id="@+id/btn_menu"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="⚙️"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <TextView
-                android:id="@+id/btn_gift"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="🎁"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:background="@drawable/bg_button_primary"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true" />
-        </LinearLayout>
-
-        <!-- CHAT INPUT (muncul saat "Ayo chat!" diklik) — tumpuk di atas bottom_bar -->
-        <LinearLayout
-            android:id="@+id/chat_input_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+        <!-- Tombol Kirim -->
+        <TextView
+            android:id="@+id/btn_send"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:text="Kirim"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:gravity="center"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:background="#1A1A2E"
-            android:visibility="gone">
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true" />
 
-            <EditText
-                android:id="@+id/et_message"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:hint="Tulis pesan..."
-                android:textColorHint="@color/hayu_text_secondary"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:background="@drawable/bg_input"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:inputType="text"
-                android:maxLength="200" />
+        <!-- Ikon Volume -->
+        <TextView
+            android:id="@+id/btn_volume"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="🔊"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_item"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true" />
 
-            <TextView
-                android:id="@+id/btn_send"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Kirim"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:background="@drawable/bg_button_primary"
-                android:layout_marginStart="8dp"
-                android:clickable="true"
-                android:focusable="true" />
-        </LinearLayout>
-    </FrameLayout>
+        <!-- Ikon Notif -->
+        <TextView
+            android:id="@+id/btn_notif"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="🔔"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_item"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Ikon Menu -->
+        <TextView
+            android:id="@+id/btn_menu"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="⚙️"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_item"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Ikon Gift -->
+        <TextView
+            android:id="@+id/btn_gift"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="🎁"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
 
 </LinearLayout>
