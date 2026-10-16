@@ -29,8 +29,9 @@ class RoomAdapter(
         fun bind(room: Room) {
             tvRoomName.text = if (room.name.isEmpty()) "Room Tanpa Nama" else room.name
             tvRoomTopic.text = if (room.topic.isEmpty()) "Belum ada topik" else room.topic
-            tvRoomUsers.text = "👤 ${room.currentUsers}/${room.maxUsers}"
-            tvRoomPrivacy.text = "🌍 Publik"
+            tvRoomUsers.text = "👤 ${room.currentUsers}"
+
+            tvRoomPrivacy.text = if (room.privacy == "privat") "🔒 Privat" else "🌍 Publik"
 
             itemView.setOnClickListener { onClick(room) }
         }
