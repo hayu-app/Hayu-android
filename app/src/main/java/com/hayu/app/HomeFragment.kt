@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.hayu.app.adapter.RoomAdapter
 import com.hayu.app.model.Room
+import com.hayu.app.util.SessionManager
 
 class HomeFragment : Fragment() {
 
@@ -40,6 +41,10 @@ class HomeFragment : Fragment() {
 
         rvRooms.layoutManager = GridLayoutManager(requireContext(), 2)
         adapter = RoomAdapter { room ->
+            val session = SessionManager(requireContext())
+            session.setActiveRoomId(room.roomId)
+            session.setActiveRoomName(room.name)
+
             val intent = Intent(requireContext(), RoomActivity::class.java)
             intent.putExtra("roomId", room.roomId)
             startActivity(intent)
@@ -75,12 +80,10 @@ class HomeFragment : Fragment() {
                 val allMyRooms = snapshot.documents
                     .mapNotNull { doc -> doc.data?.let { Room.fromDoc(doc.id, it) } }
 
-                // Room aktif & masih fresh
                 val activeRoom = allMyRooms.firstOrNull {
                     it.active && it.lastActiveAt > fiveMinutesAgo
                 }
 
-                // Tutup room lama user (yang tidak fresh)
                 allMyRooms.filter { it.active && it.lastActiveAt <= fiveMinutesAgo }
                     .forEach { oldRoom ->
                         db.collection("rooms").document(oldRoom.roomId)
@@ -88,6 +91,10 @@ class HomeFragment : Fragment() {
                     }
 
                 if (activeRoom != null) {
+                    val session = SessionManager(requireContext())
+                    session.setActiveRoomId(activeRoom.roomId)
+                    session.setActiveRoomName(activeRoom.name)
+
                     val intent = Intent(requireContext(), RoomActivity::class.java)
                     intent.putExtra("roomId", activeRoom.roomId)
                     startActivity(intent)
