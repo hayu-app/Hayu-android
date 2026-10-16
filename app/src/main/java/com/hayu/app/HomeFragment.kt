@@ -40,16 +40,13 @@ class HomeFragment : Fragment() {
 
         rvRooms.layoutManager = GridLayoutManager(requireContext(), 2)
         adapter = RoomAdapter { room ->
-            // Tap room → masuk room
             val intent = Intent(requireContext(), RoomActivity::class.java)
             intent.putExtra("roomId", room.roomId)
             startActivity(intent)
         }
         rvRooms.adapter = adapter
 
-        btnAddRoomHeader.setOnClickListener {
-            checkUserRoom()
-        }
+        btnAddRoomHeader.setOnClickListener { checkUserRoom() }
 
         loadRooms(layoutEmpty)
     }
@@ -62,46 +59,57 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // Cek apakah user sudah punya room aktif
     private fun checkUserRoom() {
         val uid = auth.currentUser?.uid ?: run {
             Toast.makeText(requireContext(), "Sesi habis, login ulang", Toast.LENGTH_SHORT).show()
             return
         }
 
+        val fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000)
+
         db.collection("rooms")
             .whereEqualTo("ownerUid", uid)
             .limit(20)
             .get()
             .addOnSuccessListener { snapshot ->
-                val myRoom = snapshot.documents
+                val allMyRooms = snapshot.documents
                     .mapNotNull { doc -> doc.data?.let { Room.fromDoc(doc.id, it) } }
-                    .firstOrNull { it.active }
 
-                if (myRoom != null) {
-                    // Sudah punya room → langsung masuk room
+                // Room aktif & masih fresh
+                val activeRoom = allMyRooms.firstOrNull {
+                    it.active && it.lastActiveAt > fiveMinutesAgo
+                }
+
+                // Tutup room lama user (yang tidak fresh)
+                allMyRooms.filter { it.active && it.lastActiveAt <= fiveMinutesAgo }
+                    .forEach { oldRoom ->
+                        db.collection("rooms").document(oldRoom.roomId)
+                            .update("active", false)
+                    }
+
+                if (activeRoom != null) {
                     val intent = Intent(requireContext(), RoomActivity::class.java)
-                    intent.putExtra("roomId", myRoom.roomId)
+                    intent.putExtra("roomId", activeRoom.roomId)
                     startActivity(intent)
                 } else {
-                    // Belum punya room → form buat room
                     startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
                 }
             }
             .addOnFailureListener {
-                // Kalau gagal cek, tetap buka form
                 startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
             }
     }
 
     private fun loadRooms(layoutEmpty: LinearLayout) {
+        val fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000)
+
         db.collection("rooms")
             .limit(50)
             .get()
             .addOnSuccessListener { snapshot ->
                 val rooms = snapshot.documents
                     .mapNotNull { doc -> doc.data?.let { Room.fromDoc(doc.id, it) } }
-                    .filter { it.active }
+                    .filter { it.active && it.lastActiveAt > fiveMinutesAgo }
                     .sortedByDescending { it.createdAt }
 
                 adapter.submitList(rooms)
