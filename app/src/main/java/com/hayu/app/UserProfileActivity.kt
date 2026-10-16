@@ -6,12 +6,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import coil.load
 
 class UserProfileActivity : AppCompatActivity() {
 
     private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
     private var targetUid: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +21,7 @@ class UserProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_user_profile)
 
         db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
         targetUid = intent.getStringExtra("uid")
 
         if (targetUid.isNullOrEmpty()) {
@@ -26,6 +29,8 @@ class UserProfileActivity : AppCompatActivity() {
             finish()
             return
         }
+
+        val isSelf = targetUid == auth.currentUser?.uid
 
         val btnBack = findViewById<TextView>(R.id.btn_back)
         val imgAvatar = findViewById<ImageView>(R.id.img_profile_avatar)
@@ -44,6 +49,24 @@ class UserProfileActivity : AppCompatActivity() {
         val btnSpecialInvite = findViewById<LinearLayout>(R.id.btn_special_invite)
 
         btnBack.setOnClickListener { finish() }
+
+        // Kalau ini diri sendiri → tombol jadi "Ini Kamu" & disabled
+        if (isSelf) {
+            btnChat.isEnabled = false
+            btnChat.alpha = 0.5f
+            btnChat.text = "💬  Chat"
+
+            btnAddFriend.isEnabled = false
+            btnAddFriend.alpha = 0.5f
+            btnAddFriend.text = "✨  Ini Kamu"
+
+            btnFollow.isEnabled = false
+            btnFollow.alpha = 0.5f
+            btnFollow.text = "✨  Ini Kamu"
+
+            btnSpecialInvite.isEnabled = false
+            btnSpecialInvite.alpha = 0.5f
+        }
 
         // Load data user
         db.collection("users").document(targetUid!!).get()
@@ -66,7 +89,6 @@ class UserProfileActivity : AppCompatActivity() {
                 tvName.text = nickname
                 tvSpecialName.text = nickname
 
-                // Gender badge
                 val genderIcon = when (gender.lowercase()) {
                     "pria" -> "♂️"
                     "wanita" -> "♀️"
@@ -80,20 +102,16 @@ class UserProfileActivity : AppCompatActivity() {
                     tvGenderAge.setBackgroundResource(R.drawable.bg_gender_male)
                 }
 
-                // Country
                 tvCountry.text = if (country.isEmpty()) "🌏 -" else country
 
-                // ID
                 if (userId > 0) {
                     tvUserId.text = "ID: $userId"
                 } else {
                     tvUserId.text = "ID: -"
                 }
 
-                // Bio
                 tvBio.text = if (bio.isEmpty()) "Belum ada bio" else bio
 
-                // Hari bergabung
                 if (createdAt > 0) {
                     val days = ((System.currentTimeMillis() - createdAt) / 86400000L).toInt()
                     val dayText = if (days <= 0) "1 hari" else "$days hari"
@@ -102,7 +120,6 @@ class UserProfileActivity : AppCompatActivity() {
                     tvJoinedDays.text = "📅 Hari bergabung: 1 hari"
                 }
 
-                // Foto
                 if (photoUrl.isNotEmpty()) {
                     imgAvatar.load(photoUrl) { crossfade(true) }
                 } else {
@@ -120,7 +137,6 @@ class UserProfileActivity : AppCompatActivity() {
             tabProfile.setTypeface(null, android.graphics.Typeface.BOLD)
             tabMomen.setTextColor(getColor(R.color.hayu_text_secondary))
             tabMomen.setTypeface(null, android.graphics.Typeface.NORMAL)
-            Toast.makeText(this, "Tab Profil", Toast.LENGTH_SHORT).show()
         }
 
         tabMomen.setOnClickListener {
@@ -131,21 +147,21 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
         }
 
-        // Tombol aksi
+        // Tombol aksi — hanya jalan kalau bukan diri sendiri
         btnChat.setOnClickListener {
-            Toast.makeText(this, "Fitur Chat segera hadir! 💬", Toast.LENGTH_SHORT).show()
+            if (!isSelf) Toast.makeText(this, "Fitur Chat segera hadir! 💬", Toast.LENGTH_SHORT).show()
         }
 
         btnAddFriend.setOnClickListener {
-            Toast.makeText(this, "Fitur Tambah Teman segera hadir! 👥", Toast.LENGTH_SHORT).show()
+            if (!isSelf) Toast.makeText(this, "Fitur Tambah Teman segera hadir! 👥", Toast.LENGTH_SHORT).show()
         }
 
         btnFollow.setOnClickListener {
-            Toast.makeText(this, "Fitur Ikuti segera hadir! ❤️", Toast.LENGTH_SHORT).show()
+            if (!isSelf) Toast.makeText(this, "Fitur Ikuti segera hadir! ❤️", Toast.LENGTH_SHORT).show()
         }
 
         btnSpecialInvite.setOnClickListener {
-            Toast.makeText(this, "Fitur Hubungan Spesial segera hadir! 💕", Toast.LENGTH_SHORT).show()
+            if (!isSelf) Toast.makeText(this, "Fitur Hubungan Spesial segera hadir! 💕", Toast.LENGTH_SHORT).show()
         }
     }
 }
