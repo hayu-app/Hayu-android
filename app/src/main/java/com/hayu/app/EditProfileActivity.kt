@@ -1,5 +1,6 @@
 package com.hayu.app
 
+import android.net.Uri
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -7,17 +8,34 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.hayu.app.util.ImgbbUploader
 import coil.load
+import java.io.File
+import java.io.FileOutputStream
 
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var selectedCountry: String = ""
+    private var selectedImageUri: Uri? = null
+
+    // Picker gambar dari galeri
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            val imgAvatar = findViewById<ImageView>(R.id.img_edit_avatar)
+            imgAvatar.setImageURI(uri)
+            Toast.makeText(this, "Foto siap diupload 📷", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,8 +114,9 @@ class EditProfileActivity : AppCompatActivity() {
                     Toast.makeText(this, "Gagal memuat data profil", Toast.LENGTH_SHORT).show()
                 }
 
+            // BUKA GALERI saat tombol foto diklik
             btnChangePhoto.setOnClickListener {
-                Toast.makeText(this, "Upload foto segera hadir! 📷", Toast.LENGTH_SHORT).show()
+                pickImage.launch("image/*")
             }
 
             btnCountry.setOnClickListener {
@@ -143,24 +162,13 @@ class EditProfileActivity : AppCompatActivity() {
                     btnSave.isEnabled = false
                     btnSave.text = "Menyimpan..."
 
-                    val updates = mapOf(
-                        "nickname" to nickname,
-                        "age" to age,
-                        "country" to selectedCountry,
-                        "bio" to bio
-                    )
-
-                    db.collection("users").document(currentUser.uid)
-                        .update(updates)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "Profil berhasil disimpan! ✅", Toast.LENGTH_SHORT).show()
-                            finish()
-                        }
-                        .addOnFailureListener { e ->
-                            btnSave.isEnabled = true
-                            btnSave.text = "Simpan Perubahan"
-                            Toast.makeText(this, "Gagal simpan: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
+                    if (selectedImageUri != null) {
+                        // Ada foto baru → upload dulu
+                        uploadAndSave(currentUser.uid, nickname, age, bio, btnSave)
+                    } else {
+                        // Tidak ada foto baru → simpan biasa
+                        saveToFirestore(currentUser.uid, nickname, age, bio, null, btnSave)
+                    }
                 } catch (e: Exception) {
                     Toast.makeText(this, "ERROR SAVE: ${e.message}", Toast.LENGTH_LONG).show()
                 }
@@ -169,5 +177,81 @@ class EditProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "ERROR INIT: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
         }
+    }
+
+    // Konversi Uri → File
+    private fun uriToFile(uri: Uri): File? {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri) ?: return null
+            val tempFile = File.createTempFile("upload_", ".jpg", cacheDir)
+            val outputStream = FileOutputStream(tempFile)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            tempFile
+        } catch (e: Exception) {
+            Toast.makeText(this, "Gagal baca file: ${e.message}", Toast.LENGTH_LONG).show()
+            null
+        }
+    }
+
+    // Upload ke imgbb → simpan ke Firestore
+    private fun uploadAndSave(
+        uid: String, nickname: String, age: Int, bio: String, btnSave: TextView
+    ) {
+        val imageFile = uriToFile(selectedImageUri!!)
+
+        if (imageFile == null) {
+            btnSave.isEnabled = true
+            btnSave.text = "Simpan Perubahan"
+            Toast.makeText(this, "Gagal baca gambar", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        btnSave.text = "Upload foto..."
+
+        ImgbbUploader.uploadImage(
+            imageFile = imageFile,
+            onSuccess = { imageUrl ->
+                runOnUiThread {
+                    saveToFirestore(uid, nickname, age, bio, imageUrl, btnSave)
+                }
+            },
+            onError = { errorMsg ->
+                runOnUiThread {
+                    btnSave.isEnabled = true
+                    btnSave.text = "Simpan Perubahan"
+                    Toast.makeText(this, "Gagal upload: $errorMsg", Toast.LENGTH_LONG).show()
+                }
+            }
+        )
+    }
+
+    // Save ke Firestore
+    private fun saveToFirestore(
+        uid: String, nickname: String, age: Int, bio: String,
+        photoUrl: String?, btnSave: TextView
+    ) {
+        val updates = mutableMapOf<String, Any>(
+            "nickname" to nickname,
+            "age" to age,
+            "country" to selectedCountry,
+            "bio" to bio
+        )
+        if (photoUrl != null) {
+            updates["photoUrl"] = photoUrl
+        }
+
+        db.collection("users").document(uid)
+            .update(updates)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Profil berhasil disimpan! ✅", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .addOnFailureListener { e ->
+                btnSave.isEnabled = true
+                btnSave.text = "Simpan Perubahan"
+                Toast.makeText(this, "Gagal simpan: ${e.message}", Toast.LENGTH_LONG).show()
+            }
     }
 }
