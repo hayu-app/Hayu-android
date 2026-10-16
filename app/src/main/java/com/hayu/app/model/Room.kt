@@ -11,6 +11,7 @@ data class Room(
     val privacy: String = "publik",
     val coverColor: String = "purple",
     val active: Boolean = true,
+    val lastActiveAt: Long = 0L,
     val createdAt: Long = 0L
 ) {
     companion object {
@@ -26,6 +27,7 @@ data class Room(
             privacy = map["privacy"] as? String ?: "publik",
             coverColor = map["coverColor"] as? String ?: "purple",
             active = map["active"] as? Boolean ?: true,
+            lastActiveAt = (map["lastActiveAt"] as? Number)?.toLong() ?: 0L,
             createdAt = (map["createdAt"] as? Number)?.toLong() ?: 0L
         )
     }
