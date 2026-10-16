@@ -11,6 +11,8 @@ data class User(
     val bio: String = "",
     val photoUrl: String = "",
     val coins: Int = 0,
+    val totalCoinsEarned: Int = 0,
+    val lastDailyClaim: Long = 0L,
     val level: Int = 1,
     val online: Boolean = false,
     val onboarded: Boolean = false
@@ -28,6 +30,8 @@ data class User(
             bio = map["bio"] as? String ?: "",
             photoUrl = map["photoUrl"] as? String ?: "",
             coins = (map["coins"] as? Number)?.toInt() ?: 0,
+            totalCoinsEarned = (map["totalCoinsEarned"] as? Number)?.toInt() ?: 0,
+            lastDailyClaim = (map["lastDailyClaim"] as? Number)?.toLong() ?: 0L,
             level = (map["level"] as? Number)?.toInt() ?: 1,
             online = map["online"] as? Boolean ?: false,
             onboarded = map["onboarded"] as? Boolean ?: false
