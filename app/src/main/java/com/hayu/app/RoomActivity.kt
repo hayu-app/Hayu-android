@@ -1,9 +1,6 @@
 package com.hayu.app
 
-import android.content.Context
 import android.os.Bundle
-import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -28,9 +25,6 @@ class RoomActivity : AppCompatActivity() {
     private var roomName: String = "Room"
     private lateinit var adapter: RoomMessageAdapter
     private lateinit var rvMessages: RecyclerView
-
-    private lateinit var bottomBar: LinearLayout
-    private lateinit var chatInputBar: LinearLayout
     private lateinit var etMessage: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,13 +47,8 @@ class RoomActivity : AppCompatActivity() {
         val tvRoomOwner = findViewById<TextView>(R.id.tv_room_owner)
         val tvRoomUsers = findViewById<TextView>(R.id.tv_room_users)
         rvMessages = findViewById(R.id.rv_messages)
-
-        bottomBar = findViewById(R.id.bottom_bar)
-        chatInputBar = findViewById(R.id.chat_input_bar)
         etMessage = findViewById(R.id.et_message)
         val btnSend = findViewById<TextView>(R.id.btn_send)
-
-        val btnOpenChat = findViewById<LinearLayout>(R.id.btn_open_chat)
         val btnVolume = findViewById<TextView>(R.id.btn_volume)
         val btnNotif = findViewById<TextView>(R.id.btn_notif)
         val btnMenu = findViewById<TextView>(R.id.btn_menu)
@@ -110,18 +99,13 @@ class RoomActivity : AppCompatActivity() {
             }
         }
 
-        // Ayo chat → buka input + keyboard
-        btnOpenChat.setOnClickListener {
-            bottomBar.visibility = View.GONE
-            chatInputBar.visibility = View.VISIBLE
-            etMessage.requestFocus()
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(etMessage, InputMethodManager.SHOW_IMPLICIT)
-        }
-
+        // Kirim pesan
         btnSend.setOnClickListener {
             val text = etMessage.text.toString().trim()
-            if (text.isEmpty()) return@setOnClickListener
+            if (text.isEmpty()) {
+                Toast.makeText(this, "Pesan kosong", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             sendMessage(text)
         }
 
@@ -276,12 +260,6 @@ class RoomActivity : AppCompatActivity() {
     private fun sendMessage(text: String) {
         val uid = auth.currentUser?.uid ?: return
         etMessage.setText("")
-
-        // Balik ke bottom bar
-        bottomBar.visibility = View.VISIBLE
-        chatInputBar.visibility = View.GONE
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(etMessage.windowToken, 0)
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { userDoc ->
