@@ -40,7 +40,10 @@ class HomeFragment : Fragment() {
 
         rvRooms.layoutManager = GridLayoutManager(requireContext(), 2)
         adapter = RoomAdapter { room ->
-            Toast.makeText(requireContext(), "Fitur masuk room segera hadir! 🎉", Toast.LENGTH_SHORT).show()
+            // Tap room → masuk room
+            val intent = Intent(requireContext(), RoomActivity::class.java)
+            intent.putExtra("roomId", room.roomId)
+            startActivity(intent)
         }
         rvRooms.adapter = adapter
 
@@ -76,9 +79,10 @@ class HomeFragment : Fragment() {
                     .firstOrNull { it.active }
 
                 if (myRoom != null) {
-                    // Sudah punya room aktif → masuk room
-                    Toast.makeText(requireContext(), "Kamu sudah punya room: ${myRoom.name}. Segera hadir! 🎉", Toast.LENGTH_LONG).show()
-                    // Nanti: startActivity(Intent(requireContext(), RoomActivity::class.java).apply { putExtra("roomId", myRoom.roomId) })
+                    // Sudah punya room → langsung masuk room
+                    val intent = Intent(requireContext(), RoomActivity::class.java)
+                    intent.putExtra("roomId", myRoom.roomId)
+                    startActivity(intent)
                 } else {
                     // Belum punya room → form buat room
                     startActivity(Intent(requireContext(), CreateRoomActivity::class.java))
