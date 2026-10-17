@@ -54,6 +54,7 @@ class ProfileFragment : Fragment() {
 
         loadProfile(view, tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
         loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
+        loadRoleBadge(view)
 
         tvNickname.setOnClickListener {
             val intent = Intent(requireContext(), UserProfileActivity::class.java)
@@ -90,6 +91,11 @@ class ProfileFragment : Fragment() {
         view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
         }
+
+        // Menu Panel Role → buka DevPanelActivity
+        view.findViewById<TextView>(R.id.menu_dev_panel).setOnClickListener {
+            startActivity(Intent(requireContext(), DevPanelActivity::class.java))
+        }
     }
 
     override fun onResume() {
@@ -105,9 +111,11 @@ class ProfileFragment : Fragment() {
             val tvFollowersCount = it.findViewById<TextView>(R.id.tv_followers_count)
             loadProfile(it, tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
             loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
+            loadRoleBadge(it)
         }
     }
 
+// LANJUT BAGIAN 2 DI BAWAH INI
     private fun loadProfile(
         rootView: View,
         tvNickname: TextView,
@@ -153,7 +161,6 @@ class ProfileFragment : Fragment() {
                 val level = (doc.getLong("level") ?: 1L).toInt()
                 tvLevelBadge.text = "Lv. $level"
 
-                // FOTO PROFIL: full + rounded corner
                 val photoUrl = doc.getString("photoUrl") ?: ""
                 if (photoUrl.isNotEmpty()) {
                     imgAvatar.setPadding(0, 0, 0, 0)
@@ -161,7 +168,6 @@ class ProfileFragment : Fragment() {
                     imgAvatar.clipToOutline = true
                     imgAvatar.load(photoUrl) { crossfade(true) }
                 } else {
-                    // Belum ada foto → tampilkan ikon default
                     imgAvatar.setImageResource(R.drawable.ic_profile)
                 }
             }
@@ -201,6 +207,57 @@ class ProfileFragment : Fragment() {
                 tvFollowers.text = "0"
                 tvFriends.text = "0"
             }
+    }
+
+    private fun loadRoleBadge(rootView: View) {
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                val role = doc.getString("role")?.lowercase()?.trim() ?: "user"
+                applyRoleToUI(rootView, role)
+            }
+            .addOnFailureListener {
+                applyRoleToUI(rootView, "user")
+            }
+    }
+
+    private fun applyRoleToUI(rootView: View, role: String) {
+        val badge = rootView.findViewById<TextView>(R.id.tvRoleBadgeProfile)
+        val menuPanel = rootView.findViewById<TextView>(R.id.menu_dev_panel)
+
+        badge.visibility = View.GONE
+        menuPanel.visibility = View.GONE
+
+        when (role) {
+            "developer" -> {
+                badge.text = "🛡️ DEVELOPER"
+                badge.visibility = View.VISIBLE
+                menuPanel.visibility = View.VISIBLE
+            }
+            "superadmin" -> {
+                badge.text = "🛡️ SUPERADMIN"
+                badge.visibility = View.VISIBLE
+                menuPanel.visibility = View.VISIBLE
+            }
+            "admin" -> {
+                badge.text = "⭐ ADMIN"
+                badge.visibility = View.VISIBLE
+                menuPanel.visibility = View.VISIBLE
+            }
+            "bd" -> {
+                badge.text = "🏡 BD"
+                badge.visibility = View.VISIBLE
+                menuPanel.visibility = View.VISIBLE
+            }
+            "cs" -> {
+                badge.text = "🎧 CS"
+                badge.visibility = View.VISIBLE
+            }
+            else -> {
+                // user biasa
+            }
+        }
     }
 
     private fun notif(msg: String) {
