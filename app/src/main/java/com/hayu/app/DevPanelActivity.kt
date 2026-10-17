@@ -1,5 +1,6 @@
 package com.hayu.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -61,20 +62,14 @@ class DevPanelActivity : AppCompatActivity() {
         btnBack.setOnClickListener { finish() }
         btnLogout.setOnClickListener { showLogoutDialog() }
 
-        cardMenuUser.setOnClickListener {
-            toastSoon()
-        }
-        cardMenuRoom.setOnClickListener {
-            toastSoon()
-        }
-        cardMenuFamily.setOnClickListener {
-            toastSoon()
-        }
-        cardMenuSystem.setOnClickListener {
-            toastSoon()
-        }
+        cardMenuUser.setOnClickListener { toastSoon() }
+        cardMenuRoom.setOnClickListener { toastSoon() }
+        cardMenuFamily.setOnClickListener { toastSoon() }
+        cardMenuSystem.setOnClickListener { toastSoon() }
+
+        // Menu "Tambah/Ubah Role" → buka RoleManagerActivity
         cardMenuRole.setOnClickListener {
-            showRoleDialog()
+            startActivity(Intent(this, RoleManagerActivity::class.java))
         }
     }
 
@@ -123,7 +118,6 @@ class DevPanelActivity : AppCompatActivity() {
 
 // LANJUT BAGIAN 2 DI BAWAH INI
     private fun applyRoleUI(role: String) {
-        // Set judul, deskripsi, badge sesuai role
         when (role) {
             "developer" -> {
                 tvPanelTitle.text = "Developer Panel"
@@ -170,30 +164,5 @@ class DevPanelActivity : AppCompatActivity() {
                 finish()
             }
         }
-    }
-
-    private fun showRoleDialog() {
-        val allowedRoles = when (currentRole) {
-            "developer" -> arrayOf("🛡️ SuperAdmin", "⭐ Admin", "🎧 CS", "🏡 BD")
-            "superadmin" -> arrayOf("⭐ Admin", "🎧 CS", "🏡 BD")
-            "admin" -> arrayOf("🎧 CS", "🏡 BD")
-            else -> {
-                Toast.makeText(this, "Tidak bisa menambah role", Toast.LENGTH_SHORT).show()
-                return
-            }
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("Pilih Role")
-            .setItems(allowedRoles) { _, which ->
-                val chosen = allowedRoles[which]
-                Toast.makeText(
-                    this,
-                    "Fitur ubah role: $chosen (segera hadir! 🚧)",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
     }
 }
