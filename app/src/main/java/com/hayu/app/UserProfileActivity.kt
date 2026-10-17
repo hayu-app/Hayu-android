@@ -2,6 +2,7 @@ package com.hayu.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -23,6 +24,7 @@ class UserProfileActivity : AppCompatActivity() {
     private lateinit var tvFollowingCount: TextView
     private lateinit var tvFollowersCount: TextView
     private lateinit var btnFollow: TextView
+    private lateinit var tvRoleBadgeUser: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +59,7 @@ class UserProfileActivity : AppCompatActivity() {
         val btnSpecialInvite = findViewById<LinearLayout>(R.id.btn_special_invite)
         tvFollowingCount = findViewById(R.id.tv_following_count)
         tvFollowersCount = findViewById(R.id.tv_followers_count)
+        tvRoleBadgeUser = findViewById(R.id.tv_role_badge_user)
 
         // FOTO PROFIL: full + rounded corner sejak awal
         imgAvatar.setPadding(0, 0, 0, 0)
@@ -97,10 +100,22 @@ class UserProfileActivity : AppCompatActivity() {
                 val photoUrl = doc.getString("photoUrl") ?: ""
                 val userId = (doc.getLong("userId") ?: 0L)
                 val createdAt = (doc.getLong("createdAt") ?: 0L)
+                val role = doc.getString("role")?.lowercase()?.trim() ?: "user"
 
                 tvName.text = nickname
                 tvSpecialName.text = nickname
 
+                // Tampilkan badge role
+                when (role) {
+                    "developer" -> { tvRoleBadgeUser.text = "🛡️ DEVELOPER"; tvRoleBadgeUser.visibility = View.VISIBLE }
+                    "superadmin" -> { tvRoleBadgeUser.text = "🛡️ SUPERADMIN"; tvRoleBadgeUser.visibility = View.VISIBLE }
+                    "admin" -> { tvRoleBadgeUser.text = "⭐ ADMIN"; tvRoleBadgeUser.visibility = View.VISIBLE }
+                    "bd" -> { tvRoleBadgeUser.text = "🏡 BD"; tvRoleBadgeUser.visibility = View.VISIBLE }
+                    "cs" -> { tvRoleBadgeUser.text = "🎧 CS"; tvRoleBadgeUser.visibility = View.VISIBLE }
+                    else -> { tvRoleBadgeUser.visibility = View.GONE }
+                }
+
+// LANJUT BAGIAN 2 DI BAWAH INI
                 val genderIcon = when (gender.lowercase()) {
                     "pria" -> "♂️"
                     "wanita" -> "♀️"
@@ -132,12 +147,10 @@ class UserProfileActivity : AppCompatActivity() {
                     tvJoinedDays.text = "📅 Hari bergabung: 1 hari"
                 }
 
-                // Load foto — full + rounded
                 if (photoUrl.isNotEmpty()) {
                     imgAvatar.load(photoUrl) { crossfade(true) }
                 } else {
                     imgAvatar.setImageResource(R.drawable.ic_profile)
-                    // Kembalikan padding untuk ikon default
                     imgAvatar.setPadding(30, 30, 30, 30)
                 }
 
@@ -166,7 +179,6 @@ class UserProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Momen segera hadir! 📸", Toast.LENGTH_SHORT).show()
         }
 
-        // TOMBOL CHAT — buka ChatActivity
         btnChat.setOnClickListener {
             if (!isSelf) {
                 val intent = Intent(this, ChatActivity::class.java)
