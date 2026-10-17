@@ -28,6 +28,7 @@ class UserAdapter(
         val tvGenderAge: TextView = itemView.findViewById(R.id.tv_user_gender_age)
         val tvCountry: TextView = itemView.findViewById(R.id.tv_user_country)
         val tvBio: TextView = itemView.findViewById(R.id.tv_user_bio)
+        val tvRoleBadge: TextView = itemView.findViewById(R.id.tv_role_badge)
 
         fun bind(user: User) {
             tvName.text = if (user.nickname.isEmpty()) "Pengguna HAYU" else user.nickname
@@ -46,9 +47,36 @@ class UserAdapter(
                 tvGenderAge.setBackgroundResource(R.drawable.bg_gender_male)
             }
 
-            tvCountry.text = if (user.country.isEmpty()) "🌏 -" else user.country
-
+            tvCountry.text = if (user.country.isEmpty()) "🌏 -" else "🌏 ${user.country}"
             tvBio.text = if (user.bio.isEmpty()) "Belum ada bio" else user.bio
+
+            // === BADGE ROLE ===
+            val role = user.role.lowercase().trim()
+            when (role) {
+                "developer" -> {
+                    tvRoleBadge.text = "🛡️ DEV"
+                    tvRoleBadge.visibility = View.VISIBLE
+                }
+                "superadmin" -> {
+                    tvRoleBadge.text = "🛡️ SA"
+                    tvRoleBadge.visibility = View.VISIBLE
+                }
+                "admin" -> {
+                    tvRoleBadge.text = "⭐ ADM"
+                    tvRoleBadge.visibility = View.VISIBLE
+                }
+                "bd" -> {
+                    tvRoleBadge.text = "🏡 BD"
+                    tvRoleBadge.visibility = View.VISIBLE
+                }
+                "cs" -> {
+                    tvRoleBadge.text = "🎧 CS"
+                    tvRoleBadge.visibility = View.VISIBLE
+                }
+                else -> {
+                    tvRoleBadge.visibility = View.GONE
+                }
+            }
 
             if (user.photoUrl.isNotEmpty()) {
                 imgAvatar.load(user.photoUrl) {
