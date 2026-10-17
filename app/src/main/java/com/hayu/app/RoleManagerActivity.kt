@@ -94,3 +94,147 @@ class RoleManagerActivity : AppCompatActivity() {
     }
 
 // LANJUT BAGIAN 2 DI BAWAH INI
+    private fun doSearch() {
+        val query = etSearchUser.text.toString().trim()
+
+        if (query.isEmpty()) {
+            Toast.makeText(this, "Ketik nama atau ID dulu", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        showLoading(true)
+        tvResultInfo.text = ""
+
+        // Cari by userId (angka) atau nickname (prefix)
+        val queryLower = query.lowercase()
+
+        db.collection("users")
+            .whereGreaterThanOrEqualTo("nickname", query)
+            .whereLessThanOrEqualTo("nickname", query + "\uf8ff")
+            .limit(30)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val users = snapshot.documents.mapNotNull { doc ->
+                    val uid = doc.id
+                    val nickname = doc.getString("nickname") ?: ""
+                    val age = (doc.getLong("age") ?: 0L).toInt()
+                    val gender = doc.getString("gender") ?: ""
+                    val country = doc.getString("country") ?: ""
+                    val bio = doc.getString("bio") ?: ""
+                    val photoUrl = doc.getString("photoUrl") ?: ""
+                    val role = doc.getString("role") ?: "user"
+
+                    User(
+                        uid = uid,
+                        nickname = nickname,
+                        age = age,
+                        gender = gender,
+                        country = country,
+                        bio = bio,
+                        photoUrl = photoUrl,
+                        role = role
+                    )
+                }
+
+                showLoading(false)
+
+                if (users.isEmpty()) {
+                    rvRoleUser.visibility = View.GONE
+                    tvEmptyState.visibility = View.VISIBLE
+                    tvEmptyState.text = "User \"$query\" tidak ditemukan 😕"
+                    tvResultInfo.text = ""
+                } else {
+                    rvRoleUser.visibility = View.VISIBLE
+                    tvEmptyState.visibility = View.GONE
+                    tvResultInfo.text = "Ditemukan ${users.size} user"
+                    userAdapter.submitList(users)
+                }
+            }
+            .addOnFailureListener { e ->
+                showLoading(false)
+                Toast.makeText(this, "Gagal cari: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun onUserClicked(user: User) {
+        showRolePicker(user)
+    }
+
+    private fun showRolePicker(targetUser: User) {
+        val allowedRoles = when (currentRole) {
+            "developer" -> arrayOf("superadmin", "admin", "cs", "bd", "user")
+            "superadmin" -> arrayOf("admin", "cs", "bd", "user")
+            "admin" -> arrayOf("cs", "bd", "user")
+            "bd" -> arrayOf("user")
+            else -> {
+                Toast.makeText(this, "Tidak bisa ubah role", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        val labels = allowedRoles.map { role ->
+            when (role) {
+                "superadmin" -> "🛡️ SuperAdmin"
+                "admin" -> "⭐ Admin"
+                "cs" -> "🎧 CS"
+                "bd" -> "🏡 BD"
+                "user" -> "👤 User (Hapus Role)"
+                "developer" -> "👑 Developer"
+                else -> role
+            }
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Ubah role: ${targetUser.nickname}")
+            .setItems(labels) { _, which ->
+                val chosenRole = allowedRoles[which]
+                confirmRoleChange(targetUser, chosenRole)
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun confirmRoleChange(targetUser: User, newRole: String) {
+        val roleLabel = when (newRole) {
+            "superadmin" -> "SuperAdmin"
+            "admin" -> "Admin"
+            "cs" -> "CS"
+            "bd" -> "BD"
+            "user" -> "User biasa (hapus role)"
+            else -> newRole
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Konfirmasi")
+            .setMessage("Ubah role ${targetUser.nickname} menjadi $roleLabel?")
+            .setPositiveButton("Ya") { _, _ ->
+                updateUserRole(targetUser, newRole)
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun updateUserRole(targetUser: User, newRole: String) {
+        showLoading(true)
+
+        db.collection("users").document(targetUser.uid)
+            .update("role", newRole)
+            .addOnSuccessListener {
+                showLoading(false)
+                Toast.makeText(
+                    this,
+                    "✅ Role ${targetUser.nickname} → $newRole",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .addOnFailureListener { e ->
+                showLoading(false)
+                Toast.makeText(this, "Gagal update: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun showLoading(show: Boolean) {
+        progressBarRole.visibility = if (show) View.VISIBLE else View.GONE
+        btnSearch.isEnabled = !show
+    }
+}
