@@ -57,5 +57,10 @@
             android:name=".ChatActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".DevPanelActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
     </application>
 </manifest>
