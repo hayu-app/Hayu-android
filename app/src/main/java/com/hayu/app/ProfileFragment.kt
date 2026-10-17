@@ -92,8 +92,8 @@ class ProfileFragment : Fragment() {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
         }
 
-        // Menu Panel Role → buka DevPanelActivity
-        view.findViewById<TextView>(R.id.menu_dev_panel).setOnClickListener {
+        // Menu Panel Role (dengan pengaman ?. agar tidak crash)
+        view.findViewById<TextView>(R.id.menu_dev_panel)?.setOnClickListener {
             startActivity(Intent(requireContext(), DevPanelActivity::class.java))
         }
     }
@@ -226,33 +226,35 @@ class ProfileFragment : Fragment() {
         val badge = rootView.findViewById<TextView>(R.id.tvRoleBadgeProfile)
         val menuPanel = rootView.findViewById<TextView>(R.id.menu_dev_panel)
 
-        badge.visibility = View.GONE
-        menuPanel.visibility = View.GONE
+        // Sembunyikan default
+        badge?.visibility = View.GONE
+        menuPanel?.visibility = View.GONE
 
         when (role) {
             "developer" -> {
-                badge.text = "🛡️ DEVELOPER"
-                badge.visibility = View.VISIBLE
-                menuPanel.visibility = View.VISIBLE
+                badge?.text = "🛡️ DEVELOPER"
+                badge?.visibility = View.VISIBLE
+                menuPanel?.visibility = View.VISIBLE
             }
             "superadmin" -> {
-                badge.text = "🛡️ SUPERADMIN"
-                badge.visibility = View.VISIBLE
-                menuPanel.visibility = View.VISIBLE
+                badge?.text = "🛡️ SUPERADMIN"
+                badge?.visibility = View.VISIBLE
+                menuPanel?.visibility = View.VISIBLE
             }
             "admin" -> {
-                badge.text = "⭐ ADMIN"
-                badge.visibility = View.VISIBLE
-                menuPanel.visibility = View.VISIBLE
+                badge?.text = "⭐ ADMIN"
+                badge?.visibility = View.VISIBLE
+                menuPanel?.visibility = View.VISIBLE
             }
             "bd" -> {
-                badge.text = "🏡 BD"
-                badge.visibility = View.VISIBLE
-                menuPanel.visibility = View.VISIBLE
+                badge?.text = "🏡 BD"
+                badge?.visibility = View.VISIBLE
+                menuPanel?.visibility = View.VISIBLE
             }
             "cs" -> {
-                badge.text = "🎧 CS"
-                badge.visibility = View.VISIBLE
+                badge?.text = "🎧 CS"
+                badge?.visibility = View.VISIBLE
+                // CS tidak dapat menu panel
             }
             else -> {
                 // user biasa
