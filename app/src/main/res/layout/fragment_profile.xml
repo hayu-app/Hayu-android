@@ -68,6 +68,22 @@
                 android:focusable="true" />
 
             <TextView
+                android:id="@+id/tvRoleBadgeProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:background="@drawable/bg_role_badge"
+                android:text=""
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/tv_user_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -439,8 +455,9 @@
                     android:layout_marginTop="4dp" />
             </LinearLayout>
         </LinearLayout>
-        
-        <!-- MENU LIST -->
+
+<!-- LANJUT BAGIAN 2 DI BAWAH INI -->
+                <!-- MENU LIST -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -506,51 +523,7 @@
                 android:background="#2A2A45" />
 
             <TextView
-                android:id="@+id/menu_invite"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="👥  Invite Friends"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
-
-            <TextView
-                android:id="@+id/menu_gift"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="🎁  Kotak Hadiah"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-        </LinearLayout>
-
-        <!-- MENU BAWAH -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
-
-            <TextView
-                android:id="@+id/menu_settings"
+                android:id="@+id/menu_pengaturan"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:text="⚙️  Pengaturan"
@@ -567,49 +540,19 @@
                 android:background="#2A2A45" />
 
             <TextView
-                android:id="@+id/menu_help"
+                android:id="@+id/menu_dev_panel"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="❓  Bantuan"
-                android:textColor="@color/hayu_text"
+                android:text="🛡️  Panel Role"
+                android:textColor="#BB99DD"
                 android:textSize="14sp"
+                android:textStyle="bold"
                 android:gravity="center_vertical"
                 android:background="?attr/selectableItemBackground"
                 android:clickable="true"
-                android:focusable="true" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
-
-            <TextView
-                android:id="@+id/menu_about"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="ℹ️  Tentang HAYU"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:visibility="gone" />
         </LinearLayout>
-
-        <!-- LOGOUT -->
-        <TextView
-            android:id="@+id/btn_logout"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="🚪  Logout"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:background="@drawable/bg_button_primary"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="24dp" />
 
     </LinearLayout>
 </ScrollView>
