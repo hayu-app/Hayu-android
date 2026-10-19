@@ -2,660 +2,477 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/hayu_dark"
+    android:background="#080818"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="32dp">
+        android:orientation="vertical">
 
-        <!-- HEADER PROFIL -->
-        <LinearLayout
+        <!-- HEADER -->
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="32dp"
-            android:paddingBottom="20dp"
+            android:layout_height="220dp"
             android:background="@drawable/bg_profile_header">
 
-            <FrameLayout
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_cover_gradient"
+                android:alpha="0.6" />
+
+            <ImageView
+                android:id="@+id/btn_settings"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_margin="16dp"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:tint="#FFFFFF"
+                android:padding="4dp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_avatar"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="40dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_default_avatar" />
+
+            <TextView
+                android:id="@+id/tv_level"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:id="@+id/img_avatar"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:src="@drawable/ic_profile"
-                    android:background="@drawable/bg_input"
-                    android:padding="22dp"
-                    android:contentDescription="Foto Profil" />
-
-                <TextView
-                    android:id="@+id/tv_level_badge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Lv. 1"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:background="@drawable/bg_level_badge"
-                    android:layout_gravity="bottom|end" />
-            </FrameLayout>
+                android:layout_height="22dp"
+                android:layout_below="@id/iv_avatar"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_level_badge"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="Lv. 1"
+                android:textColor="#080818"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:gravity="center" />
 
             <TextView
                 android:id="@+id/tv_nickname"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nama User"
+                android:layout_below="@id/tv_level"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="4dp"
+                android:text="Nickname"
                 android:textColor="#FFFFFF"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:layout_marginTop="12dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <TextView
-                android:id="@+id/tvRoleBadgeProfile"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:background="@drawable/bg_role_badge"
-                android:text=""
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                android:textSize="17sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_user_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_below="@id/tv_nickname"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="2dp"
                 android:text="ID: 000000"
-                android:textColor="#E0E7FF"
-                android:textSize="12sp"
-                android:layout_marginTop="4dp" />
+                android:textColor="#A78BFA"
+                android:textSize="11sp" />
+        </RelativeLayout>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    android:id="@+id/tv_profile_gender_age"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="♂️20"
-                    android:textColor="#FFFFFF"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:paddingTop="3dp"
-                    android:paddingBottom="3dp"
-                    android:background="@drawable/bg_gender_male" />
-
-                <TextView
-                    android:id="@+id/tv_email"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="email@example.com"
-                    android:textColor="#C7D2FE"
-                    android:textSize="11sp"
-                    android:layout_marginStart="10dp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/btn_edit_profile"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="✏️  Edit Profil"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:background="@drawable/bg_button_primary"
-                android:layout_marginTop="16dp" />
-        </LinearLayout>
-
-        <!-- STATS -->
+        <!-- STATS ROW -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="70dp"
             android:orientation="horizontal"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp">
+            android:background="#0D0D2E"
+            android:gravity="center">
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center">
-
                 <TextView
                     android:id="@+id/tv_friends_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textColor="@color/hayu_text"
+                    android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Teman"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="2dp" />
+                    android:textColor="#8892AA"
+                    android:textSize="11sp" />
             </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="30dp"
+                android:background="#2E2E50" />
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center">
-
                 <TextView
                     android:id="@+id/tv_following_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textColor="@color/hayu_text"
+                    android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Mengikuti"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="2dp" />
+                    android:textColor="#8892AA"
+                    android:textSize="11sp" />
             </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="30dp"
+                android:background="#2E2E50" />
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center">
-
                 <TextView
                     android:id="@+id/tv_followers_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
-                    android:textColor="@color/hayu_text"
+                    android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Penggemar"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="11sp"
-                    android:layout_marginTop="2dp" />
+                    android:textColor="#8892AA"
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- SVIP + VIP -->
-        <LinearLayout
+        <!-- EDIT PROFIL -->
+        <TextView
+            android:id="@+id/btn_edit_profile"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
-
-            <LinearLayout
-                android:id="@+id/card_svip"
-                android:layout_width="0dp"
-                android:layout_height="70dp"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:background="@drawable/bg_card_category"
-                android:layout_marginEnd="6dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="👑"
-                    android:textSize="22sp"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SVIP"
-                    android:textColor="#FBBF24"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/card_vip"
-                android:layout_width="0dp"
-                android:layout_height="70dp"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:background="@drawable/bg_card_category"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⭐"
-                    android:textSize="22sp"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="VIP"
-                    android:textColor="#FBBF24"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </LinearLayout>
+            android:layout_height="46dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_button_primary"
+            android:gravity="center"
+            android:text="✏️  Edit Profil"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <!-- DOMPET -->
         <LinearLayout
-            android:id="@+id/card_wallet"
+            android:id="@+id/card_dompet"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:orientation="horizontal"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card_category"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true">
-
+            android:paddingEnd="16dp">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="💰"
-                android:textSize="20sp" />
-
+                android:text="🪙"
+                android:textSize="22sp" />
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="12dp"
                 android:text="Dompet"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginStart="12dp" />
-
-            <TextView
-                android:id="@+id/tv_coins"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🪙 100"
-                android:textColor="#FBBF24"
+                android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
-
+            <TextView
+                android:id="@+id/tv_coin_balance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 Koin"
+                android:textColor="#FFD700"
+                android:textSize="13sp"
+                android:textStyle="bold" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" >"
-                android:textColor="@color/hayu_text_secondary"
-                android:textSize="14sp" />
+                android:text=" ›"
+                android:textColor="#8892AA"
+                android:textSize="18sp" />
         </LinearLayout>
 
-        <!-- QUICK MENU -->
+                <!-- QUICK MENU -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card_category"
             android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="16dp">
+            android:padding="12dp">
 
             <LinearLayout
-                android:id="@+id/quick_badge"
+                android:id="@+id/menu_lencana"
                 android:layout_width="0dp"
-                android:layout_height="80dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginEnd="4dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
+                android:gravity="center">
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🏆"
-                    android:textSize="22sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                    android:text="🏅" android:textSize="28sp" />
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lencana"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:text="Lencana" android:textColor="#C4CAFF"
+                    android:textSize="10sp" android:layout_marginTop="4dp" />
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/quick_shop"
+                android:id="@+id/menu_toko"
                 android:layout_width="0dp"
-                android:layout_height="80dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
+                android:gravity="center">
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🏪"
-                    android:textSize="22sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                    android:text="🛍️" android:textSize="28sp" />
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Toko"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:text="Toko" android:textColor="#C4CAFF"
+                    android:textSize="10sp" android:layout_marginTop="4dp" />
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/quick_relations"
+                android:id="@+id/menu_hubungan"
                 android:layout_width="0dp"
-                android:layout_height="80dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
+                android:gravity="center">
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🤝"
-                    android:textSize="22sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                    android:text="🤝" android:textSize="28sp" />
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Hubungan"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:text="Hubungan" android:textColor="#C4CAFF"
+                    android:textSize="10sp" android:layout_marginTop="4dp" />
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/quick_level"
+                android:id="@+id/menu_level"
                 android:layout_width="0dp"
-                android:layout_height="80dp"
+                android:layout_height="70dp"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_quick_item"
-                android:layout_marginStart="4dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
+                android:gravity="center">
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="👑"
-                    android:textSize="22sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                    android:text="👑" android:textSize="28sp" />
+                <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Level"
-                    android:textColor="@color/hayu_text"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp" />
+                    android:text="Level" android:textColor="#C4CAFF"
+                    android:textSize="10sp" android:layout_marginTop="4dp" />
             </LinearLayout>
         </LinearLayout>
 
-<!-- LANJUT BAGIAN 2 DI BAWAH INI -->
-                <!-- MENU LIST UTAMA -->
+        <!-- MENU LIST -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card_category"
             android:orientation="vertical"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="16dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
+            android:padding="4dp">
 
-            <TextView
-                android:id="@+id/menu_tugas"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="📋  Tugas"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_tugas"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="✅" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Tugas" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_family"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="👨‍👩‍👧  Family Saya"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_id_eksklusif"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🆔" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="ID Eksklusif" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_kartu_pass"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="🎫  Kartu Pass"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_family"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="👨‍👩‍👧" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Family Saya" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_invite"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="👥  Invite Friends"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_kartu_pass"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🎫" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Kartu Pass" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🔥 Hot" android:textColor="#EF4444" android:textSize="11sp"
+                    android:background="#2A0A0A" android:paddingStart="6dp" android:paddingEnd="6dp"
+                    android:paddingTop="2dp" android:paddingBottom="2dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text=" ›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_gift"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="🎁  Kotak Hadiah"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
-        </LinearLayout>
+            <LinearLayout android:id="@+id/menu_level_permainan"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🎮" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Level Permainan" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-        <!-- MENU PANEL ROLE (khusus Developer/SuperAdmin/Admin/BD) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_dev_panel"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="🛡️  Panel Role"
-                android:textColor="#BB99DD"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:visibility="gone" />
-        </LinearLayout>
+            <LinearLayout android:id="@+id/menu_invite"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="👥" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Invite Friends" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-        <!-- MENU BAWAH -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_menu_card"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_settings"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="⚙️  Pengaturan"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_hadiah"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🎁" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Kotak Hadiah" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
+                        <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_help"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="❓  Bantuan"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_bantuan"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="💬" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Laporan Balik Masalah" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2A45" />
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <TextView
-                android:id="@+id/menu_about"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="ℹ️  Tentang HAYU"
-                android:textColor="@color/hayu_text"
-                android:textSize="14sp"
-                android:gravity="center_vertical"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true" />
+            <LinearLayout android:id="@+id/menu_pengaturan"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="⚙️" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Pengaturan" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- LOGOUT -->
         <TextView
             android:id="@+id/btn_logout"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="🚪  Logout"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold"
+            android:layout_height="46dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/bg_card_category"
             android:gravity="center"
-            android:background="@drawable/bg_button_primary"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="24dp" />
+            android:text="🚪  Keluar"
+            android:textColor="#EF4444"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </ScrollView>
