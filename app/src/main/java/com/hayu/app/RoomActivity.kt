@@ -47,6 +47,7 @@ class RoomActivity : AppCompatActivity() {
     private var roomId: String? = null
     private var roomName: String = "Room"
     private var roomOwnerUid: String = ""
+    private var roomOwnerName: String = "Owner"
     private var myNickname: String = "Pengguna HAYU"
 
     private lateinit var adapter: RoomMessageAdapter
@@ -112,6 +113,7 @@ class RoomActivity : AppCompatActivity() {
                 roomName     = doc.getString("name") ?: "Room"
                 roomOwnerUid = doc.getString("ownerUid") ?: ""
                 val ownerName    = doc.getString("ownerName") ?: "Pengguna HAYU"
+                roomOwnerName = ownerName
                 val currentUsers = (doc.getLong("currentUsers") ?: 1L).toInt()
 
                 tvRoomName.text  = roomName
@@ -152,9 +154,7 @@ class RoomActivity : AppCompatActivity() {
 
         btnMenu.setOnClickListener { showRoomMenu() }
 
-        btnGift.setOnClickListener {
-            Toast.makeText(this, "Fitur gift segera hadir! 🎁", Toast.LENGTH_SHORT).show()
-        }
+        btnGift.setOnClickListener { openGiftSheet() }
 
         listenMessages()
     }
@@ -407,6 +407,33 @@ class RoomActivity : AppCompatActivity() {
             Toast.makeText(this, "Pengaturan room segera hadir! ⚙️", Toast.LENGTH_SHORT).show()
         }
         sheet.show()
+    }
+
+    private fun openGiftSheet() {
+        val me = auth.currentUser?.uid ?: return
+        val list = ArrayList<Pair<String, String>>()
+        if (roomOwnerUid.isNotEmpty() && roomOwnerUid != me) {
+            list.add(Pair(roomOwnerUid, "$roomOwnerName 👑"))
+        }
+        for (s in micSlots) {
+            if (s.uid.isNotEmpty() && s.uid != me && list.none { it.first == s.uid }) {
+                list.add(Pair(s.uid, s.nickname))
+            }
+        }
+        GiftSheet.show(this, myNickname, list) { text -> sendGiftMessage(text) }
+    }
+
+    private fun sendGiftMessage(text: String) {
+        val uid = auth.currentUser?.uid ?: return
+        val msg = hashMapOf(
+            "senderUid"  to uid,
+            "senderName" to "🎁 GIFT",
+            "text"       to text,
+            "timestamp"  to System.currentTimeMillis()
+        )
+        roomId?.let { id ->
+            db.collection("rooms").document(id).collection("messages").add(msg)
+        }
     }
 
     private fun clearChat() {

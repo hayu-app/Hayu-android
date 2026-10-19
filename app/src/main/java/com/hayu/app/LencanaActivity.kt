@@ -27,6 +27,8 @@ class LencanaActivity : SimplePageActivity() {
             Badge("🌟", "Populer", "Punya 5 pengikut", followers >= 5),
             Badge("💰", "Kolektor", "Kumpulkan 500 koin", coins >= 500),
             Badge("👑", "Level 5", "Capai level 5", level >= 5),
+            Badge("🎁", "Dermawan", "Kirim hadiah di room", (user.getLong("giftsSent") ?: 0L) > 0L),
+            Badge("💝", "Idola", "Terima hadiah di room", (user.getLong("giftsReceived") ?: 0L) > 0L),
             Badge("🛡️", "Staf HAYU", "Anggota tim HAYU", role != "user")
         )
 
