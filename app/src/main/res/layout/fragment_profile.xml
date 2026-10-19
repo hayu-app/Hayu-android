@@ -14,7 +14,7 @@
         <!-- HEADER -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="240dp"
             android:background="@drawable/bg_profile_header">
 
             <View
@@ -35,7 +35,7 @@
                 android:padding="4dp" />
 
             <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/iv_avatar"
+                android:id="@+id/img_avatar"
                 android:layout_width="90dp"
                 android:layout_height="90dp"
                 android:layout_centerHorizontal="true"
@@ -47,10 +47,10 @@
                 app:strokeWidth="2dp" />
 
             <TextView
-                android:id="@+id/tv_level"
+                android:id="@+id/tv_level_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="22dp"
-                android:layout_below="@id/iv_avatar"
+                android:layout_below="@id/img_avatar"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_level_badge"
@@ -66,7 +66,7 @@
                 android:id="@+id/tv_nickname"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/tv_level"
+                android:layout_below="@id/tv_level_badge"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="4dp"
                 android:text="Nickname"
@@ -84,6 +84,46 @@
                 android:text="ID: 000000"
                 android:textColor="#A78BFA"
                 android:textSize="11sp" />
+            <TextView
+                android:id="@+id/tv_profile_gender_age"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@id/tv_nickname"
+                android:layout_toEndOf="@id/tv_nickname"
+                android:layout_marginStart="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tv_email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_user_id"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="2dp"
+                android:textColor="#8892AA"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvRoleBadgeProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_margin="16dp"
+                android:background="@drawable/bg_role_badge"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
         </RelativeLayout>
 
         <!-- STATS ROW -->
@@ -188,7 +228,7 @@
 
         <!-- DOMPET -->
         <LinearLayout
-            android:id="@+id/card_dompet"
+            android:id="@+id/card_wallet"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginStart="20dp"
@@ -214,7 +254,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
             <TextView
-                android:id="@+id/tv_coin_balance"
+                android:id="@+id/tv_coins"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0 Koin"
@@ -229,7 +269,55 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
-                <!-- QUICK MENU -->
+                
+        <!-- SVIP / VIP -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/card_svip"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_card_category"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👑  SVIP"
+                    android:textColor="#FFD700"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <View android:layout_width="12dp" android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/card_vip"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_card_category"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⭐  VIP"
+                    android:textColor="#FFD700"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- QUICK MENU -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -241,7 +329,7 @@
             android:padding="12dp">
 
             <LinearLayout
-                android:id="@+id/menu_lencana"
+                android:id="@+id/quick_badge"
                 android:layout_width="0dp"
                 android:layout_height="70dp"
                 android:layout_weight="1"
@@ -257,7 +345,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/menu_toko"
+                android:id="@+id/quick_shop"
                 android:layout_width="0dp"
                 android:layout_height="70dp"
                 android:layout_weight="1"
@@ -273,7 +361,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/menu_hubungan"
+                android:id="@+id/quick_relations"
                 android:layout_width="0dp"
                 android:layout_height="70dp"
                 android:layout_weight="1"
@@ -289,7 +377,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/menu_level"
+                android:id="@+id/quick_level"
                 android:layout_width="0dp"
                 android:layout_height="70dp"
                 android:layout_weight="1"
@@ -416,7 +504,7 @@
             <View android:layout_width="match_parent" android:layout_height="1dp"
                 android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <LinearLayout android:id="@+id/menu_hadiah"
+            <LinearLayout android:id="@+id/menu_gift"
                 android:layout_width="match_parent" android:layout_height="52dp"
                 android:orientation="horizontal" android:gravity="center_vertical"
                 android:paddingStart="16dp" android:paddingEnd="16dp">
@@ -432,7 +520,7 @@
                         <View android:layout_width="match_parent" android:layout_height="1dp"
                 android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <LinearLayout android:id="@+id/menu_bantuan"
+            <LinearLayout android:id="@+id/menu_help"
                 android:layout_width="match_parent" android:layout_height="52dp"
                 android:orientation="horizontal" android:gravity="center_vertical"
                 android:paddingStart="16dp" android:paddingEnd="16dp">
@@ -448,7 +536,7 @@
             <View android:layout_width="match_parent" android:layout_height="1dp"
                 android:background="#1E1E40" android:layout_marginStart="48dp" />
 
-            <LinearLayout android:id="@+id/menu_pengaturan"
+            <LinearLayout android:id="@+id/menu_settings"
                 android:layout_width="match_parent" android:layout_height="52dp"
                 android:orientation="horizontal" android:gravity="center_vertical"
                 android:paddingStart="16dp" android:paddingEnd="16dp">
@@ -457,6 +545,37 @@
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                     android:layout_weight="1" android:layout_marginStart="12dp"
                     android:text="Pengaturan" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
+
+            <LinearLayout android:id="@+id/menu_about"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="ℹ️" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Tentang HAYU" android:textColor="#F1F5F9" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#1E1E40" android:layout_marginStart="48dp" />
+
+            <LinearLayout android:id="@+id/menu_dev_panel"
+                android:layout_width="match_parent" android:layout_height="52dp"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="16dp" android:paddingEnd="16dp" android:visibility="gone">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="🛡️" android:textSize="20sp" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="12dp"
+                    android:text="Panel Role" android:textColor="#F1F5F9" android:textSize="14sp" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:text="›" android:textColor="#8892AA" android:textSize="18sp" />
             </LinearLayout>

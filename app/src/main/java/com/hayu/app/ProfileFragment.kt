@@ -80,20 +80,20 @@ class ProfileFragment : Fragment() {
             startActivity(Intent(requireContext(), DailyCoinActivity::class.java))
         }
 
-        view.findViewById<TextView>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
-        view.findViewById<TextView>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
-        view.findViewById<TextView>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
-        view.findViewById<TextView>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
-        view.findViewById<TextView>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
+        view.findViewById<View>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
+        view.findViewById<View>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
+        view.findViewById<View>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
+        view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
+        view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
-        view.findViewById<TextView>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
-        view.findViewById<TextView>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
-        view.findViewById<TextView>(R.id.menu_about).setOnClickListener {
+        view.findViewById<View>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
+        view.findViewById<View>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
+        view.findViewById<View>(R.id.menu_about).setOnClickListener {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
         }
 
         // Menu Panel Role (dengan pengaman ?. agar tidak crash)
-        view.findViewById<TextView>(R.id.menu_dev_panel)?.setOnClickListener {
+        view.findViewById<View>(R.id.menu_dev_panel)?.setOnClickListener {
             startActivity(Intent(requireContext(), DevPanelActivity::class.java))
         }
     }
@@ -224,7 +224,7 @@ class ProfileFragment : Fragment() {
 
     private fun applyRoleToUI(rootView: View, role: String) {
         val badge = rootView.findViewById<TextView>(R.id.tvRoleBadgeProfile)
-        val menuPanel = rootView.findViewById<TextView>(R.id.menu_dev_panel)
+        val menuPanel = rootView.findViewById<View>(R.id.menu_dev_panel)
 
         // Sembunyikan default
         badge?.visibility = View.GONE
