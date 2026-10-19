@@ -10,6 +10,7 @@ data class Room(
     val ownerName: String = "",
     val privacy: String = "publik",
     val coverColor: String = "purple",
+    val coverUrl: String = "",
     val active: Boolean = true,
     val lastActiveAt: Long = 0L,
     val createdAt: Long = 0L
@@ -26,6 +27,7 @@ data class Room(
             ownerName = map["ownerName"] as? String ?: "",
             privacy = map["privacy"] as? String ?: "publik",
             coverColor = map["coverColor"] as? String ?: "purple",
+            coverUrl = map["coverUrl"] as? String ?: "",
             active = map["active"] as? Boolean ?: true,
             lastActiveAt = (map["lastActiveAt"] as? Number)?.toLong() ?: 0L,
             createdAt = (map["createdAt"] as? Number)?.toLong() ?: 0L

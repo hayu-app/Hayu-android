@@ -1,5 +1,7 @@
 package com.hayu.app.adapter
 
+import coil.load
+import android.widget.ImageView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +28,8 @@ class RoomAdapter(
         val tvRoomMic: TextView = itemView.findViewById(R.id.tv_room_mic)
         val tvRoomUsers: TextView = itemView.findViewById(R.id.tv_room_users)
         val tvRoomPrivacy: TextView = itemView.findViewById(R.id.tv_room_privacy)
+        val ivCover: ImageView = itemView.findViewById(R.id.iv_room_cover)
+        val tvCoverIcon: TextView = itemView.findViewById(R.id.tv_room_cover_icon)
 
         fun bind(room: Room) {
             tvRoomName.text = if (room.name.isEmpty()) "Room Tanpa Nama" else room.name
@@ -33,6 +37,15 @@ class RoomAdapter(
             tvRoomMic.text = "🪑 ${room.maxMic}"
             tvRoomUsers.text = "👤 ${room.currentUsers}"
             tvRoomPrivacy.text = if (room.privacy == "privat") "🔒 Privat" else "🌍 Publik"
+
+            if (room.coverUrl.isNotBlank()) {
+                ivCover.visibility = View.VISIBLE
+                tvCoverIcon.visibility = View.GONE
+                ivCover.load(room.coverUrl) { crossfade(true) }
+            } else {
+                ivCover.visibility = View.GONE
+                tvCoverIcon.visibility = View.VISIBLE
+            }
 
             itemView.setOnClickListener { onClick(room) }
         }

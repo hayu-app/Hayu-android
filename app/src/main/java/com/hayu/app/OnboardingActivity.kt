@@ -1,5 +1,10 @@
 package com.hayu.app
 
+import com.hayu.app.util.ImgbbUploader
+import com.hayu.app.util.ImageUtil
+import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.ImageView
+import android.net.Uri
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
@@ -17,6 +22,20 @@ class OnboardingActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private var selectedGender: String = "pria"
     private var selectedCountry: String = ""
+    private var selectedImageUri: Uri? = null
+
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            val img = findViewById<ImageView>(R.id.img_onboarding_avatar)
+            img.setPadding(0, 0, 0, 0)
+            img.scaleType = ImageView.ScaleType.CENTER_CROP
+            img.clipToOutline = true
+            img.setImageURI(uri)
+        }
+    }
 
     private val randomNames = listOf(
         "Bunga", "Langit", "Bintang", "Senja", "Angin",
@@ -75,9 +94,8 @@ class OnboardingActivity : AppCompatActivity() {
                 .show()
         }
 
-        btnChangeAvatar.setOnClickListener {
-            Toast.makeText(this, "Upload foto segera hadir! 📷", Toast.LENGTH_SHORT).show()
-        }
+        btnChangeAvatar.setOnClickListener { pickImage.launch("image/*") }
+        findViewById<ImageView>(R.id.img_onboarding_avatar).setOnClickListener { pickImage.launch("image/*") }
 
         btnFinish.setOnClickListener {
             val nickname = etNickname.text.toString().trim()
@@ -101,11 +119,44 @@ class OnboardingActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            saveProfile(nickname, age)
+            uploadThenSave(nickname, age, btnFinish)
         }
     }
 
-    private fun saveProfile(nickname: String, age: Int) {
+    private fun uploadThenSave(nickname: String, age: Int, btn: TextView) {
+        val uri = selectedImageUri
+        if (uri == null) {
+            saveProfile(nickname, age)
+            return
+        }
+        val file = ImageUtil.uriToFile(this, uri)
+        if (file == null) {
+            Toast.makeText(this, "Gagal membaca gambar", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val oldText = btn.text
+        btn.isEnabled = false
+        btn.text = "Upload foto..."
+        ImgbbUploader.uploadImage(
+            imageFile = file,
+            onSuccess = { url ->
+                runOnUiThread {
+                    btn.isEnabled = true
+                    btn.text = oldText
+                    saveProfile(nickname, age, url)
+                }
+            },
+            onError = { err ->
+                runOnUiThread {
+                    btn.isEnabled = true
+                    btn.text = oldText
+                    Toast.makeText(this, "Gagal upload: $err", Toast.LENGTH_LONG).show()
+                }
+            }
+        )
+    }
+
+    private fun saveProfile(nickname: String, age: Int, photoUrl: String? = null) {
         val uid = auth.currentUser?.uid ?: run {
             Toast.makeText(this, "Sesi habis, login ulang", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LoginActivity::class.java))
@@ -113,13 +164,14 @@ class OnboardingActivity : AppCompatActivity() {
             return
         }
 
-        val updates = mapOf(
+        val updates = mutableMapOf<String, Any>(
             "nickname" to nickname,
             "age" to age,
             "gender" to selectedGender,
             "country" to selectedCountry,
             "onboarded" to true
         )
+        if (photoUrl != null) updates["photoUrl"] = photoUrl
 
         // Pakai set() dengan merge — kalau dokumen belum ada, dibuat baru
         db.collection("users").document(uid).set(updates, com.google.firebase.firestore.SetOptions.merge())

@@ -1,5 +1,11 @@
 package com.hayu.app
 
+import com.hayu.app.util.ImgbbUploader
+import com.hayu.app.util.ImageUtil
+import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.ImageView
+import android.view.ViewGroup
+import android.net.Uri
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
@@ -20,6 +26,23 @@ class CreateRoomActivity : AppCompatActivity() {
     private lateinit var session: SessionManager
     private var selectedPrivacy: String = "publik"
     private var selectedMic: Int = 5
+    private var selectedImageUri: Uri? = null
+    private var coverUrl: String = ""
+
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            coverUrl = ""
+            val box = findViewById<LinearLayout>(R.id.btn_change_cover)
+            box.removeAllViews()
+            val iv = ImageView(this)
+            iv.scaleType = ImageView.ScaleType.CENTER_CROP
+            iv.setImageURI(uri)
+            box.addView(iv, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,9 +65,7 @@ class CreateRoomActivity : AppCompatActivity() {
 
         btnClose.setOnClickListener { finish() }
 
-        btnChangeCover.setOnClickListener {
-            Toast.makeText(this, "Upload cover segera hadir! 📷", Toast.LENGTH_SHORT).show()
-        }
+        btnChangeCover.setOnClickListener { pickImage.launch("image/*") }
 
         btnPrivacy.setOnClickListener {
             val options = arrayOf("🌍 Publik", "🔒 Privat")
@@ -94,6 +115,35 @@ class CreateRoomActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val coverUri = selectedImageUri
+            if (coverUri != null && coverUrl.isEmpty()) {
+                val f = ImageUtil.uriToFile(this, coverUri)
+                if (f == null) {
+                    Toast.makeText(this, "Gagal membaca gambar", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                btnCreate.isEnabled = false
+                btnCreate.text = "Upload cover..."
+                ImgbbUploader.uploadImage(
+                    imageFile = f,
+                    onSuccess = { url ->
+                        runOnUiThread {
+                            coverUrl = url
+                            btnCreate.isEnabled = true
+                            btnCreate.performClick()
+                        }
+                    },
+                    onError = { err ->
+                        runOnUiThread {
+                            btnCreate.isEnabled = true
+                            btnCreate.text = "🎉  Buat Room Sekarang"
+                            Toast.makeText(this, "Gagal upload cover: $err", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+                return@setOnClickListener
+            }
+
             btnCreate.isEnabled = false
             btnCreate.text = "Membuat room..."
 
@@ -124,6 +174,7 @@ class CreateRoomActivity : AppCompatActivity() {
             "ownerName" to ownerName,
             "privacy" to selectedPrivacy,
             "coverColor" to "purple",
+            "coverUrl" to coverUrl,
             "active" to true,
             "lastActiveAt" to System.currentTimeMillis(),
             "createdAt" to System.currentTimeMillis()
