@@ -68,10 +68,10 @@ class ProfileFragment : Fragment() {
 
         btnLogout.setOnClickListener { doLogout() }
 
-        view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { notif("Lencana segera hadir! 🏆") }
-        view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { notif("Toko segera hadir! 🏪") }
+        view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { startActivity(Intent(requireContext(), LencanaActivity::class.java)) }
+        view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { startActivity(Intent(requireContext(), TokoActivity::class.java)) }
         view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
-        view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { notif("Level segera hadir! 👑") }
+        view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { startActivity(Intent(requireContext(), LevelActivity::class.java)) }
 
         view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
         view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
@@ -80,7 +80,7 @@ class ProfileFragment : Fragment() {
             startActivity(Intent(requireContext(), DailyCoinActivity::class.java))
         }
 
-        view.findViewById<View>(R.id.menu_tugas).setOnClickListener { notif("Tugas segera hadir! 📋") }
+        view.findViewById<View>(R.id.menu_tugas).setOnClickListener { startActivity(Intent(requireContext(), TugasActivity::class.java)) }
         view.findViewById<View>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
         view.findViewById<View>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
@@ -130,7 +130,8 @@ class ProfileFragment : Fragment() {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
-                tvNickname.text = nickname
+                val gelar = doc.getString("equippedTitle") ?: ""
+                tvNickname.text = if (gelar.isNotBlank()) "$gelar $nickname" else nickname
 
                 val age = (doc.getLong("age") ?: 0L).toInt()
                 val gender = doc.getString("gender") ?: ""

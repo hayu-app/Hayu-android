@@ -68,5 +68,21 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".TugasActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LencanaActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".TokoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LevelActivity"
+            android:exported="false" />
+
     </application>
 </manifest>

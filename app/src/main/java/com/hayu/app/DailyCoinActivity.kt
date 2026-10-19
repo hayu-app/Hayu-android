@@ -91,7 +91,8 @@ class DailyCoinActivity : AppCompatActivity() {
                 val updates = mapOf(
                     "coins" to (currentCoins + DAILY_COIN),
                     "totalCoinsEarned" to (totalEarned + DAILY_COIN),
-                    "lastDailyClaim" to now
+                    "lastDailyClaim" to now,
+                    "exp" to ((doc.getLong("exp") ?: 0L).toInt() + 5)
                 )
 
                 db.collection("users").document(uid).update(updates)
