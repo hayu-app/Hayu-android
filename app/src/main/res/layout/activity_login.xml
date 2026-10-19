@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:background="@color/hayu_dark">
 
+    <!-- HERO SECTION -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -18,30 +19,41 @@
             android:layout_height="wrap_content"
             android:text="HAYU"
             android:textColor="#FFFFFF"
-            android:textSize="52sp"
+            android:textSize="58sp"
             android:textStyle="bold"
-            android:letterSpacing="0.15" />
+            android:letterSpacing="0.2" />
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="3dp"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginTop="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Teman baru, obrolan seru"
-            android:textColor="#E0E7FF"
+            android:textColor="#C4CAFF"
             android:textSize="14sp"
-            android:layout_marginTop="8dp" />
+            android:letterSpacing="0.05"
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 
+    <!-- FORM SECTION -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bg_bottom_sheet"
-        android:padding="24dp">
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="32dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Selamat Datang"
+            android:text="Selamat Datang 👋"
             android:textColor="@color/hayu_text"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -53,30 +65,30 @@
             android:textColor="@color/hayu_text_secondary"
             android:textSize="13sp"
             android:layout_marginTop="4dp"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginBottom="24dp" />
 
         <EditText
             android:id="@+id/et_email"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="54dp"
             android:hint="Email"
             android:textColorHint="@color/hayu_text_secondary"
             android:textColor="@color/hayu_text"
+            android:textSize="15sp"
             android:background="@drawable/bg_input"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
             android:inputType="textEmailAddress"
             android:autofillHints="emailAddress" />
 
-        <!-- PASSWORD + TOGGLE -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="54dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_input"
             android:layout_marginTop="12dp"
-            android:paddingStart="16dp"
+            android:paddingStart="18dp"
             android:paddingEnd="8dp">
 
             <EditText
@@ -87,43 +99,42 @@
                 android:hint="Password"
                 android:textColorHint="@color/hayu_text_secondary"
                 android:textColor="@color/hayu_text"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:background="@android:color/transparent"
                 android:inputType="textPassword"
                 android:autofillHints="password" />
 
             <TextView
                 android:id="@+id/btn_toggle_password"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:text="👁️"
                 android:textSize="18sp"
                 android:gravity="center"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="Toggle Password" />
+                android:focusable="true" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/btn_login"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="54dp"
             android:text="Masuk"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="center"
+            android:letterSpacing="0.05"
             android:background="@drawable/bg_button_primary"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="24dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp">
+            android:layout_marginTop="20dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -136,12 +147,10 @@
                 android:id="@+id/tv_register"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Daftar"
-                android:textColor="@color/hayu_purple"
+                android:text="Daftar Sekarang"
+                android:textColor="@color/hayu_purple_light"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
-
     </LinearLayout>
-
 </LinearLayout>
