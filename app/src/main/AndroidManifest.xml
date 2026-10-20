@@ -84,5 +84,6 @@
             android:name=".LevelActivity"
             android:exported="false" />
 
+            <activity android:name=".OtpActivity" />
     </application>
 </manifest>
