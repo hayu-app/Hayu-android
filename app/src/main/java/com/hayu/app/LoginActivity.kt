@@ -2,141 +2,82 @@ package com.hayu.app
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
+import java.util.concurrent.TimeUnit
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
-    private var isPasswordVisible: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
+        setContentView(R.layout.activity_login)
 
-        // Cek kalau sudah login, langsung lanjut
+        auth = FirebaseAuth.getInstance()
+
         if (auth.currentUser != null) {
-            checkUserData(auth.currentUser!!.uid)
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
             return
         }
 
-        setContentView(R.layout.activity_login)
-
-        val etEmail = findViewById<EditText>(R.id.et_email)
-        val etPassword = findViewById<EditText>(R.id.et_password)
-        val btnTogglePassword = findViewById<TextView>(R.id.btn_toggle_password)
-        val btnLogin = findViewById<TextView>(R.id.btn_login)
-        val tvRegister = findViewById<TextView>(R.id.tv_register)
-
-        // Toggle show/hide password
-        btnTogglePassword.setOnClickListener {
-            isPasswordVisible = !isPasswordVisible
-            if (isPasswordVisible) {
-                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                btnTogglePassword.text = "🙈"
-            } else {
-                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                btnTogglePassword.text = "👁️"
-            }
-            etPassword.setSelection(etPassword.text.length)
+        // Google login
+        findViewById<android.view.View>(R.id.btn_google).setOnClickListener {
+            Toast.makeText(this, "Login Google segera hadir!", Toast.LENGTH_SHORT).show()
         }
 
-        btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
-            val pass = etPassword.text.toString()
-
-            if (email.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(this, "Email & password wajib diisi", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (pass.length < 6) {
-                Toast.makeText(this, "Password minimal 6 karakter", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            btnLogin.isEnabled = false
-
-            auth.signInWithEmailAndPassword(email, pass)
-                .addOnSuccessListener { result ->
-                    Toast.makeText(this, "Login berhasil! 👋", Toast.LENGTH_SHORT).show()
-                    checkUserData(result.user!!.uid)
-                }
-                .addOnFailureListener { e ->
-                    btnLogin.isEnabled = true
-                    Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+        // Facebook login
+        findViewById<android.view.View>(R.id.btn_facebook).setOnClickListener {
+            Toast.makeText(this, "Login Facebook segera hadir!", Toast.LENGTH_SHORT).show()
         }
 
-        tvRegister.setOnClickListener {
+        // OTP via No HP
+        findViewById<TextView>(R.id.btn_send_otp).setOnClickListener {
+            val phone = findViewById<android.widget.EditText>(R.id.et_phone)
+                .text.toString().trim()
+            if (phone.isEmpty()) {
+                Toast.makeText(this, "Masukkan nomor HP dulu", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val fullPhone = "+62$phone"
+            sendOtp(fullPhone)
+        }
+
+        // Register
+        findViewById<TextView>(R.id.tv_register).setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 
-    private fun checkUserData(uid: String) {
-        val userRef = db.collection("users").document(uid)
-
-        userRef.get()
-            .addOnSuccessListener { doc ->
-                if (!doc.exists()) {
-                    startActivity(Intent(this, OnboardingActivity::class.java))
-                    finishAffinity()
-                    return@addOnSuccessListener
-                }
-
-                val userId = doc.getLong("userId") ?: 0L
-                val onboarded = doc.getBoolean("onboarded") ?: false
-
-                if (userId == 0L) {
-                    generateUniqueIdForUser(uid, userRef, onboarded)
-                } else {
-                    navigateBasedOnOnboarding(onboarded)
-                }
-            }
-            .addOnFailureListener {
-                startActivity(Intent(this, MainActivity::class.java))
-                finishAffinity()
-            }
-    }
-
-    private fun generateUniqueIdForUser(
-        uid: String,
-        userRef: com.google.firebase.firestore.DocumentReference,
-        onboarded: Boolean
-    ) {
-        val candidateId = (1000000L..9999999L).random()
-
-        db.collection("users")
-            .whereEqualTo("userId", candidateId)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    userRef.update("userId", candidateId)
+    private fun sendOtp(phone: String) {
+        Toast.makeText(this, "Mengirim OTP ke $phone...", Toast.LENGTH_SHORT).show()
+        val options = PhoneAuthOptions.newBuilder(auth)
+            .setPhoneNumber(phone)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(this)
+            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    auth.signInWithCredential(credential)
                         .addOnSuccessListener {
-                            navigateBasedOnOnboarding(onboarded)
+                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                            finish()
                         }
-                        .addOnFailureListener {
-                            navigateBasedOnOnboarding(onboarded)
-                        }
-                } else {
-                    generateUniqueIdForUser(uid, userRef, onboarded)
                 }
-            }
-            .addOnFailureListener {
-                navigateBasedOnOnboarding(onboarded)
-            }
-    }
-
-    private fun navigateBasedOnOnboarding(onboarded: Boolean) {
-        val target = if (onboarded) MainActivity::class.java else OnboardingActivity::class.java
-        startActivity(Intent(this, target))
-        finishAffinity()
+                override fun onVerificationFailed(e: com.google.firebase.FirebaseException) {
+                    Toast.makeText(this@LoginActivity, "Gagal: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+                override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+                    Toast.makeText(this@LoginActivity, "Kode OTP terkirim!", Toast.LENGTH_SHORT).show()
+                    // TODO: buka OTP input screen
+                }
+            })
+            .build()
+        PhoneAuthProvider.verifyPhoneNumber(options)
     }
 }
