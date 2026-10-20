@@ -1,168 +1,169 @@
 package com.hayu.app
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class DevPanelActivity : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
+    private var myRole = Role.USER
 
-    private lateinit var btnBack: ImageButton
-    private lateinit var tvPanelTitle: TextView
-    private lateinit var tvPanelDesc: TextView
-    private lateinit var tvRoleBadge: TextView
+    data class PanelItem(val emoji: String, val label: String, val key: String)
 
-    private lateinit var cardMenuUser: CardView
-    private lateinit var cardMenuRoom: CardView
-    private lateinit var cardMenuFamily: CardView
-    private lateinit var cardMenuSystem: CardView
-    private lateinit var cardMenuRole: CardView
-    private lateinit var btnLogout: Button
-
-    private var currentRole: String = ""
+    private val allPanels = listOf(
+        PanelItem("📊", "Master Dashboard",    "dashboard"),
+        PanelItem("👑", "Superadmin",          "superadmin"),
+        PanelItem("🛡️", "Admin",              "admin"),
+        PanelItem("💼", "BD Management",       "bd"),
+        PanelItem("🏢", "Agency Management",   "agency"),
+        PanelItem("🎙️", "Host Management",    "host"),
+        PanelItem("🪙", "Coinseller",          "coinseller"),
+        PanelItem("💰", "Finance",             "finance"),
+        PanelItem("🔍", "Moderator",           "moderator"),
+        PanelItem("🎧", "Customer Service",    "cs"),
+        PanelItem("👥", "User Management",     "user"),
+        PanelItem("🏠", "Room Management",     "room"),
+        PanelItem("🎁", "Coin & Gift",         "coin"),
+        PanelItem("⭐", "VIP & Level",          "vip"),
+        PanelItem("🎉", "Event & Mission",     "event"),
+        PanelItem("🔒", "Security",            "security"),
+        PanelItem("🔔", "Notifikasi",          "notif"),
+        PanelItem("📈", "Reports",             "report"),
+        PanelItem("⚙️", "System & Dev Tools", "system"),
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_dev_panel)
-
-        auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid ?: run { finish(); return }
 
-        bindViews()
-        setupListeners()
-        loadUserRole()
+        db.collection("users").document(uid).get().addOnSuccessListener { doc ->
+            myRole = doc.getString("role") ?: Role.USER
+            buildUI()
+        }.addOnFailureListener { buildUI() }
     }
 
-    private fun bindViews() {
-        btnBack = findViewById(R.id.btnBack)
-        tvPanelTitle = findViewById(R.id.tvPanelTitle)
-        tvPanelDesc = findViewById(R.id.tvPanelDesc)
-        tvRoleBadge = findViewById(R.id.tvRoleBadge)
+    private fun buildUI() {
+        val d = { v: Int -> (v * resources.displayMetrics.density).toInt() }
 
-        cardMenuUser = findViewById(R.id.cardMenuUser)
-        cardMenuRoom = findViewById(R.id.cardMenuRoom)
-        cardMenuFamily = findViewById(R.id.cardMenuFamily)
-        cardMenuSystem = findViewById(R.id.cardMenuSystem)
-        cardMenuRole = findViewById(R.id.cardMenuRole)
-        btnLogout = findViewById(R.id.btnLogout)
-    }
+        val root = LinearLayout(this)
+        root.orientation = LinearLayout.VERTICAL
+        root.setBackgroundColor(Color.parseColor("#080818"))
 
-    private fun setupListeners() {
+        // header
+        val header = LinearLayout(this)
+        header.orientation = LinearLayout.HORIZONTAL
+        header.gravity = Gravity.CENTER_VERTICAL
+        header.setBackgroundColor(Color.parseColor("#0D0D3D"))
+        header.setPadding(d(16), d(14), d(16), d(14))
+
+        val btnBack = TextView(this)
+        btnBack.text = "‹"
+        btnBack.textSize = 28f
+        btnBack.setTextColor(Color.WHITE)
         btnBack.setOnClickListener { finish() }
-        btnLogout.setOnClickListener { showLogoutDialog() }
+        header.addView(btnBack)
 
-        cardMenuUser.setOnClickListener { toastSoon() }
-        cardMenuRoom.setOnClickListener { toastSoon() }
-        cardMenuFamily.setOnClickListener { toastSoon() }
-        cardMenuSystem.setOnClickListener { startActivity(Intent(this, TopUpAdminActivity::class.java)) }
+        val tvTitle = TextView(this)
+        tvTitle.text = "  Panel Manajemen"
+        tvTitle.textSize = 18f
+        tvTitle.setTextColor(Color.WHITE)
+        tvTitle.typeface = android.graphics.Typeface.DEFAULT_BOLD
+        val titleLp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        header.addView(tvTitle, titleLp)
 
-        // Menu "Tambah/Ubah Role" → buka RoleManagerActivity
-        cardMenuRole.setOnClickListener {
-            startActivity(Intent(this, RoleManagerActivity::class.java))
-        }
-    }
+        val tvRole = TextView(this)
+        tvRole.text = myRole.uppercase()
+        tvRole.textSize = 11f
+        tvRole.setTextColor(Color.parseColor("#A78BFA"))
+        tvRole.setBackgroundColor(Color.parseColor("#1C1C35"))
+        tvRole.setPadding(d(8), d(4), d(8), d(4))
+        header.addView(tvRole)
+        root.addView(header)
 
-    private fun toastSoon() {
-        Toast.makeText(this, "Segera hadir! 🚧", Toast.LENGTH_SHORT).show()
-    }
+        // panel grid
+        val sv = ScrollView(this)
+        val container = LinearLayout(this)
+        container.orientation = LinearLayout.VERTICAL
+        container.setPadding(d(12), d(12), d(12), d(80))
 
-    private fun showLogoutDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Keluar")
-            .setMessage("Yakin mau keluar dari panel?")
-            .setPositiveButton("Ya") { _, _ ->
-                auth.signOut()
-                finishAffinity()
-            }
-            .setNegativeButton("Batal", null)
-            .show()
-    }
-
-    private fun loadUserRole() {
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
-            Toast.makeText(this, "Kamu belum login", Toast.LENGTH_SHORT).show()
-            finish()
-            return
+        val visiblePanels = allPanels.filter {
+            Role.canAccess(myRole, it.key) || Role.canAccess(myRole, "all")
         }
 
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                val role = doc.getString("role")?.lowercase()?.trim() ?: "user"
-                currentRole = role
+        var i = 0
+        while (i < visiblePanels.size) {
+            val row = LinearLayout(this)
+            row.orientation = LinearLayout.HORIZONTAL
+            val rowLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            rowLp.bottomMargin = d(8)
 
-                if (role == "user" || role == "cs" || role.isEmpty()) {
-                    Toast.makeText(this, "Akses ditolak 🚫", Toast.LENGTH_LONG).show()
-                    finish()
-                    return@addOnSuccessListener
+            for (j in i until i + 3) {
+                val lp = LinearLayout.LayoutParams(0, d(90), 1f)
+                lp.setMargins(d(4), 0, d(4), 0)
+
+                if (j >= visiblePanels.size) {
+                    row.addView(TextView(this), lp)
+                    continue
                 }
 
-                applyRoleUI(role)
+                val p = visiblePanels[j]
+                val tile = LinearLayout(this)
+                tile.orientation = LinearLayout.VERTICAL
+                tile.gravity = Gravity.CENTER
+                tile.setBackgroundColor(Color.parseColor("#12122A"))
+                tile.setPadding(d(8), d(8), d(8), d(8))
+
+                val icon = TextView(this)
+                icon.text = p.emoji
+                icon.textSize = 26f
+                icon.gravity = Gravity.CENTER
+
+                val name = TextView(this)
+                name.text = p.label
+                name.textSize = 10f
+                name.setTextColor(Color.parseColor("#C4CAFF"))
+                name.gravity = Gravity.CENTER
+                name.maxLines = 2
+                name.setPadding(0, d(4), 0, 0)
+
+                tile.addView(icon)
+                tile.addView(name)
+                tile.setOnClickListener { openPanel(p.key, p.label) }
+
+                // rounded corner manual
+                val gd = android.graphics.drawable.GradientDrawable()
+                gd.setColor(Color.parseColor("#12122A"))
+                gd.cornerRadius = d(12).toFloat()
+                gd.setStroke(d(1), Color.parseColor("#2E2E50"))
+                tile.background = gd
+
+                row.addView(tile, lp)
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal load role: ${e.message}", Toast.LENGTH_LONG).show()
-                finish()
-            }
+            container.addView(row, rowLp)
+            i += 3
+        }
+
+        sv.addView(container)
+        val svLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+        root.addView(sv, svLp)
+        setContentView(root)
     }
 
-// LANJUT BAGIAN 2 DI BAWAH INI
-    private fun applyRoleUI(role: String) {
-        when (role) {
-            "developer" -> {
-                tvPanelTitle.text = "Developer Panel"
-                tvPanelDesc.text = "Akses penuh ke semua fitur"
-                tvRoleBadge.text = "DEV"
-                tvRoleBadge.setBackgroundColor(0xFF7C3AED.toInt())
-
-                cardMenuUser.visibility = View.VISIBLE
-                cardMenuRoom.visibility = View.VISIBLE
-                cardMenuFamily.visibility = View.VISIBLE
-                cardMenuSystem.visibility = View.VISIBLE
-                cardMenuRole.visibility = View.VISIBLE
-            }
-            "superadmin" -> {
-                tvPanelTitle.text = "SuperAdmin Panel"
-                tvPanelDesc.text = "Kelola user & family"
-                tvRoleBadge.text = "SA"
-                tvRoleBadge.setBackgroundColor(0xFF2563EB.toInt())
-
-                cardMenuUser.visibility = View.VISIBLE
-                cardMenuFamily.visibility = View.VISIBLE
-                cardMenuRole.visibility = View.VISIBLE
-            }
-            "admin" -> {
-                tvPanelTitle.text = "Admin Panel"
-                tvPanelDesc.text = "Kelola user"
-                tvRoleBadge.text = "ADM"
-                tvRoleBadge.setBackgroundColor(0xFF059669.toInt())
-
-                cardMenuUser.visibility = View.VISIBLE
-                cardMenuRole.visibility = View.VISIBLE
-            }
-            "bd" -> {
-                tvPanelTitle.text = "BD Panel"
-                tvPanelDesc.text = "Kelola family & bisnis"
-                tvRoleBadge.text = "BD"
-                tvRoleBadge.setBackgroundColor(0xFFD97706.toInt())
-
-                cardMenuFamily.visibility = View.VISIBLE
-                cardMenuRole.visibility = View.VISIBLE
-            }
-            else -> {
-                Toast.makeText(this, "Role tidak dikenali 🚫", Toast.LENGTH_LONG).show()
-                finish()
-            }
-        }
+    private fun openPanel(key: String, label: String) {
+        val intent = Intent(this, PanelDetailActivity::class.java)
+        intent.putExtra("panel_key", key)
+        intent.putExtra("panel_label", label)
+        intent.putExtra("my_role", myRole)
+        startActivity(intent)
     }
 }

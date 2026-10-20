@@ -84,7 +84,11 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
-        view.findViewById<View>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir! ⚙️") }
+        view.findViewById<View>(R.id.menu_settings).setOnClickListener {
+            val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            if (uid == null) { notif("Login dulu"); return@setOnClickListener }
+            startActivity(android.content.Intent(requireContext(), DevPanelActivity::class.java))
+        }
         view.findViewById<View>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
         view.findViewById<View>(R.id.menu_about).setOnClickListener {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()

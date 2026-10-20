@@ -1,0 +1,345 @@
+package com.hayu.app
+
+import android.graphics.Color
+import android.os.Bundle
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
+class PanelDetailActivity : AppCompatActivity() {
+
+    private val db by lazy { FirebaseFirestore.getInstance() }
+    private val auth by lazy { FirebaseAuth.getInstance() }
+
+    // konten per panel
+    private val panelContent = mapOf(
+        "dashboard" to listOf(
+            "📊 Total User Terdaftar",
+            "👥 User Aktif Hari Ini",
+            "🏠 Room Aktif",
+            "🪙 Total Koin Beredar",
+            "💰 Pendapatan Hari Ini",
+            "📈 Grafik Pertumbuhan",
+            "🎁 Gift Terkirim Hari Ini",
+            "⚠️ Laporan Masuk"
+        ),
+        "user" to listOf(
+            "🔍 Cari User by UID",
+            "👤 Profil & Avatar",
+            "🔐 Status Akun",
+            "⭐ Level & EXP",
+            "👑 Status VIP",
+            "🟢 Status Online",
+            "👫 Friend & Follow",
+            "🚫 Block & Mute List",
+            "✅ Verifikasi Akun",
+            "🔨 Ban & Suspension",
+            "📱 Login History",
+            "🗑️ Hapus Akun"
+        ),
+        "room" to listOf(
+            "📡 Monitor Room Aktif",
+            "📂 Kategori Room",
+            "🔓 Room Publik & Privat",
+            "➕ Buat & Edit Room",
+            "👑 Owner & Moderator",
+            "🎤 Kelola Mic & Seat",
+            "💬 Chat Room",
+            "🔒 Password & Kunci Room",
+            "🎁 Gift Room",
+            "📊 Popularitas Room",
+            "⚠️ Laporan Room"
+        ),
+        "coin" to listOf(
+            "📦 Paket & Harga Koin",
+            "💳 Saldo Koin User",
+            "🛒 Top-up & Pembelian",
+            "📋 Ledger Transaksi",
+            "🎁 Toko Gift",
+            "✨ Animasi Gift",
+            "📤 Kirim & Terima Gift",
+            "🏆 Ranking Gift",
+            "💎 Bonus & Reward Koin",
+            "↩️ Refund Transaksi"
+        ),
+        "host" to listOf(
+            "🎙️ Dashboard Host",
+            "🏠 Kelola Room",
+            "🎁 Gift Diterima",
+            "💎 Pendapatan",
+            "⭐ Level & EXP Host",
+            "✅ Tugas Harian",
+            "📅 Absensi & Jam Aktif",
+            "🏆 Ranking Host",
+            "💰 Komisi & Reward",
+            "🏦 Penarikan Dana"
+        ),
+        "agency" to listOf(
+            "🏢 Dashboard Agency",
+            "➕ Rekrut Host",
+            "✅ Verifikasi Host",
+            "📅 Absensi Host",
+            "📊 Performa Host",
+            "🎯 Target Agency",
+            "💰 Komisi & Reward",
+            "🏦 Penarikan Dana",
+            "👥 Manajemen Member"
+        ),
+        "bd" to listOf(
+            "💼 Dashboard BD",
+            "🏢 Daftarkan Agency",
+            "✅ Verifikasi Agency",
+            "📊 Performa Agency & Host",
+            "🎯 Target BD",
+            "💰 Komisi & Bonus",
+            "📋 Laporan Rekrutmen",
+            "🏆 Ranking Agency"
+        ),
+        "coinseller" to listOf(
+            "🪙 Dashboard Coinseller",
+            "🔍 Cari UID Customer",
+            "📦 Paket Koin",
+            "📋 Order Masuk",
+            "✅ Verifikasi Pembayaran",
+            "📤 Kirim Koin",
+            "💼 Wallet Coinseller",
+            "📊 Laporan Penjualan",
+            "↩️ Refund Request"
+        ),
+        "finance" to listOf(
+            "💰 Total Pendapatan",
+            "📋 Ledger Transaksi",
+            "💳 Rekonsiliasi Pembayaran",
+            "🏦 Kelola Deposit",
+            "💼 Komisi BD/Agency/Host",
+            "↩️ Manajemen Refund",
+            "✅ Persetujuan Penarikan",
+            "📊 Laporan Keuangan",
+            "📤 Export Data"
+        ),
+        "moderator" to listOf(
+            "📡 Monitor Room Aktif",
+            "⚠️ Laporan User & Room",
+            "💬 Laporan Chat",
+            "🔇 Mute & Kick",
+            "🔨 Temporary Ban",
+            "🚫 Laporan Spam & Abuse",
+            "⚡ Warning Management",
+            "📋 Appeal Management",
+            "📅 Histori Moderasi"
+        ),
+        "cs" to listOf(
+            "🎧 Dashboard CS",
+            "📩 Komplain User",
+            "🔐 Pemulihan Akun",
+            "🪙 Komplain Top-up",
+            "💳 Komplain Transaksi",
+            "↩️ Request Refund",
+            "🎫 Support Ticket",
+            "📋 Histori Response",
+            "📊 Laporan Support"
+        ),
+        "vip" to listOf(
+            "👑 Paket & Benefit VIP",
+            "📅 Langganan & Kadaluarsa",
+            "⭐ Aturan Level & EXP",
+            "🎙️ Level & Reward Host",
+            "🏆 Ranking Kekayaan",
+            "🌟 Ranking Popularitas",
+            "📊 Leaderboard Global",
+            "🏅 Achievement & Badge"
+        ),
+        "event" to listOf(
+            "🎉 Dashboard Event",
+            "➕ Buat & Edit Event",
+            "📅 Jadwal & Banner",
+            "👥 Peserta Event",
+            "🏆 Ranking & Reward Event",
+            "✅ Misi Harian/Mingguan",
+            "📅 Reward Check-in",
+            "🎟️ Lucky Draw",
+            "📊 Laporan Event"
+        ),
+        "security" to listOf(
+            "⚠️ Laporan User & Room",
+            "🔍 Deteksi Fraud",
+            "🚫 Deteksi Spam",
+            "✅ Verifikasi Akun",
+            "🔨 Warning & Ban",
+            "📋 Unban & Appeal",
+            "🔐 Login Protection",
+            "📊 Admin Activity Logs",
+            "🔒 Audit Trail"
+        ),
+        "notif" to listOf(
+            "📲 Push Notification",
+            "🔔 In-App Notification",
+            "📢 Pengumuman Sistem",
+            "🛠️ Pengumuman Maintenance",
+            "🎉 Notif Event",
+            "💳 Notif Transaksi",
+            "🎁 Notif Gift",
+            "📋 Template Notifikasi",
+            "📅 Histori Notifikasi"
+        ),
+        "system" to listOf(
+            "⚙️ Konfigurasi Aplikasi",
+            "🔌 API Management",
+            "📚 API Documentation",
+            "🗄️ Status Database",
+            "💾 Storage Management",
+            "📦 Cache Management",
+            "📡 Server Monitoring",
+            "🐛 Error Logs",
+            "💾 Backup & Restore",
+            "🛠️ Maintenance Mode",
+            "📱 Versi Aplikasi",
+            "🏳️ Feature Flags"
+        ),
+        "report" to listOf(
+            "👥 Total User Terdaftar",
+            "📈 DAU & MAU",
+            "🏠 Room Aktif",
+            "📊 Pertumbuhan User",
+            "🎙️ Performa Host & Agency",
+            "💼 Performa BD",
+            "🪙 Analitik Penjualan Koin",
+            "🎁 Revenue Gift",
+            "💰 Analitik Transaksi",
+            "📤 Export CSV / Excel / PDF"
+        )
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val key   = intent.getStringExtra("panel_key") ?: "dashboard"
+        val label = intent.getStringExtra("panel_label") ?: "Panel"
+        val role  = intent.getStringExtra("my_role") ?: Role.USER
+
+        val d = { v: Int -> (v * resources.displayMetrics.density).toInt() }
+
+        val root = LinearLayout(this)
+        root.orientation = LinearLayout.VERTICAL
+        root.setBackgroundColor(Color.parseColor("#080818"))
+
+        // header
+        val header = LinearLayout(this)
+        header.orientation = LinearLayout.HORIZONTAL
+        header.gravity = Gravity.CENTER_VERTICAL
+        header.setBackgroundColor(Color.parseColor("#0D0D3D"))
+        header.setPadding(d(16), d(14), d(16), d(14))
+
+        val btnBack = TextView(this)
+        btnBack.text = "‹  $label"
+        btnBack.textSize = 18f
+        btnBack.typeface = android.graphics.Typeface.DEFAULT_BOLD
+        btnBack.setTextColor(Color.WHITE)
+        btnBack.setOnClickListener { finish() }
+        val backLp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        header.addView(btnBack, backLp)
+        root.addView(header)
+
+        // stats row (dashboard only)
+        if (key == "dashboard") {
+            buildDashboardStats(root, d)
+        }
+
+        // menu items
+        val sv = ScrollView(this)
+        val container = LinearLayout(this)
+        container.orientation = LinearLayout.VERTICAL
+        container.setPadding(d(16), d(12), d(16), d(80))
+
+        val items = panelContent[key] ?: listOf("🚧 Panel dalam pengembangan")
+        for (item in items) {
+            val row = LinearLayout(this)
+            row.orientation = LinearLayout.HORIZONTAL
+            row.gravity = Gravity.CENTER_VERTICAL
+            row.setPadding(d(16), d(14), d(16), d(14))
+
+            val gd = android.graphics.drawable.GradientDrawable()
+            gd.setColor(Color.parseColor("#12122A"))
+            gd.cornerRadius = d(12).toFloat()
+            gd.setStroke(d(1), Color.parseColor("#2E2E50"))
+            row.background = gd
+
+            val tv = TextView(this)
+            tv.text = item
+            tv.textSize = 14f
+            tv.setTextColor(Color.parseColor("#F1F5F9"))
+            val tvLp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            row.addView(tv, tvLp)
+
+            val arrow = TextView(this)
+            arrow.text = "›"
+            arrow.textSize = 20f
+            arrow.setTextColor(Color.parseColor("#8892AA"))
+            row.addView(arrow)
+
+            row.setOnClickListener {
+                Toast.makeText(this, "$item — segera tersedia", Toast.LENGTH_SHORT).show()
+            }
+
+            val rowLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            rowLp.bottomMargin = d(8)
+            container.addView(row, rowLp)
+        }
+
+        sv.addView(container)
+        val svLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+        root.addView(sv, svLp)
+        setContentView(root)
+    }
+
+    private fun buildDashboardStats(root: LinearLayout, d: (Int) -> Int) {
+        val uid = auth.currentUser?.uid ?: return
+        val statsRow = LinearLayout(this)
+        statsRow.orientation = LinearLayout.HORIZONTAL
+        statsRow.setPadding(d(12), d(12), d(12), 0)
+
+        val stats = listOf("👥\nUser", "🏠\nRoom", "🪙\nKoin", "💰\nRevenue")
+        for (s in stats) {
+            val tile = LinearLayout(this)
+            tile.orientation = LinearLayout.VERTICAL
+            tile.gravity = Gravity.CENTER
+            tile.setPadding(d(8), d(12), d(8), d(12))
+            val gd = android.graphics.drawable.GradientDrawable()
+            gd.setColor(Color.parseColor("#12122A"))
+            gd.cornerRadius = d(12).toFloat()
+            gd.setStroke(d(1), Color.parseColor("#2E2E50"))
+            tile.background = gd
+
+            val tv = TextView(this)
+            tv.text = s
+            tv.textSize = 12f
+            tv.setTextColor(Color.parseColor("#C4CAFF"))
+            tv.gravity = Gravity.CENTER
+            tile.addView(tv)
+
+            val lp = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            lp.setMargins(d(4), 0, d(4), 0)
+            statsRow.addView(tile, lp)
+        }
+
+        val rowLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        root.addView(statsRow, rowLp)
+
+        // load real stats dari Firestore
+        db.collection("users").get().addOnSuccessListener { users ->
+            val count = users.size()
+            (statsRow.getChildAt(0) as? LinearLayout)?.let { tile ->
+                (tile.getChildAt(0) as? TextView)?.text = "👥\n$count\nUser"
+            }
+        }
+        db.collection("rooms").whereEqualTo("isActive", true).get().addOnSuccessListener { rooms ->
+            val count = rooms.size()
+            (statsRow.getChildAt(1) as? LinearLayout)?.let { tile ->
+                (tile.getChildAt(0) as? TextView)?.text = "🏠\n$count\nRoom"
+            }
+        }
+    }
+}
