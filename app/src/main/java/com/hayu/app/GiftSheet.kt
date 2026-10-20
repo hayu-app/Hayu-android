@@ -239,6 +239,8 @@ object GiftSheet {
             }
             null
         }.addOnSuccessListener {
+            GiftAnimation.show(activity, g.emoji, g.name)
+
             val text = if (isSelf) {
                 "$myName mengirim ${g.emoji} ${g.name} x$qty untuk dirinya sendiri"
             } else {
