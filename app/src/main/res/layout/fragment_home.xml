@@ -3,45 +3,87 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/hayu_dark">
+    android:background="#080818">
 
-    <!-- HEADER STICKY -->
+    <!-- HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp"
         android:gravity="center_vertical"
         android:background="@drawable/bg_home_header">
 
+        <!-- TABS -->
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Milikku   Populer   Event"
+            android:text="Milikku  •  Populer  •  Event"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
+        <!-- SEARCH BUTTON -->
         <TextView
             android:id="@+id/btn_search_room"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:gravity="center"
-            android:text="⌕"
-            android:textColor="#FFFFFF"
-            android:textSize="29sp"
-            android:contentDescription="Cari room"
+            android:text="🔍"
+            android:textSize="18sp"
+            android:background="@drawable/bg_quick_item"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:layout_marginEnd="8dp" />
 
-        <ImageView
-            android:id="@+id/btn_add_room_header"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_add_room"
-            android:contentDescription="Buat Room" />
+        <!-- CREATE ROOM BUTTON -->
+        <LinearLayout
+            android:id="@+id/btn_add_room_header_wrap"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/btn_add_room_header"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_add_room"
+                android:contentDescription="Buat Room" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" Buat"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
+
+    <!-- SEARCH INPUT (hidden by default) -->
+    <EditText
+        android:id="@+id/et_search_room"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:hint="Cari nama room atau topik..."
+        android:textColorHint="#8892AA"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:background="@drawable/bg_input"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
 
     <!-- SCROLL CONTENT -->
     <ScrollView
@@ -54,15 +96,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="16dp">
+            android:paddingBottom="80dp">
 
             <!-- BANNER -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
+                android:layout_height="110dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:background="@drawable/bg_banner_event">
@@ -70,116 +112,141 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="HAYU STAR"
+                    android:text="HAYU STAR ⭐"
                     android:textColor="#FFFFFF"
-                    android:textSize="28sp"
+                    android:textSize="26sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.15" />
+                    android:letterSpacing="0.1" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="BFF Weekly Star"
-                    android:textColor="#FFF7ED"
-                    android:textSize="14sp"
+                    android:textColor="#C4CAFF"
+                    android:textSize="13sp"
                     android:layout_marginTop="4dp" />
             </LinearLayout>
 
-            <!-- KATEGORI -->
+            <!-- QUICK MENU: Peringkat, CP & BFF, Keluarga -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="16dp">
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp">
 
                 <LinearLayout
+                    android:id="@+id/menu_peringkat"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="72dp"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:background="@drawable/bg_card_category"
                     android:layout_marginEnd="6dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🏆"
-                        android:textSize="22sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                        android:text="🏆" android:textSize="26sp" />
+                    <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Peringkat"
-                        android:textColor="#FFFFFF"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="4dp" />
+                        android:text="Peringkat" android:textColor="#C4CAFF"
+                        android:textSize="11sp" android:layout_marginTop="4dp" />
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/menu_cp_bff"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="72dp"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:background="@drawable/bg_card_category"
-                    android:layout_marginStart="6dp"
                     android:layout_marginEnd="6dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="💕"
-                        android:textSize="22sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                        android:text="💕" android:textSize="26sp" />
+                    <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CP &amp; BFF"
-                        android:textColor="#FFFFFF"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="4dp" />
+                        android:text="CP &amp; BFF" android:textColor="#C4CAFF"
+                        android:textSize="11sp" android:layout_marginTop="4dp" />
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/menu_keluarga"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="72dp"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_card_category"
-                    android:layout_marginStart="6dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    android:background="@drawable/bg_card_category">
+                    <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="👨‍👩‍👧"
-                        android:textSize="22sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                        android:text="👨‍👩‍👧" android:textSize="26sp" />
+                    <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Keluarga"
-                        android:textColor="#FFFFFF"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginTop="4dp" />
+                        android:text="Keluarga" android:textColor="#C4CAFF"
+                        android:textSize="11sp" android:layout_marginTop="4dp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- GRID ROOM -->
+            <!-- FILTER TABS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:id="@+id/filter_populer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Populer"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/bg_button_primary"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/filter_terbaru"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Terbaru"
+                    android:textColor="#8892AA"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/bg_quick_item"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/filter_aktif"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Aktif"
+                    android:textColor="#8892AA"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@drawable/bg_quick_item" />
+            </LinearLayout>
+
+            <!-- ROOM LIST -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_rooms"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="8dp"
-                android:clipToPadding="false"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false" />
 
             <!-- EMPTY STATE -->
@@ -189,35 +256,31 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:paddingTop="40dp"
-                android:paddingBottom="60dp"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
+                android:paddingTop="48dp"
                 android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎈"
-                    android:textSize="64sp" />
+                    android:textSize="52sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Belum Ada Room"
-                    android:textColor="@color/hayu_text"
+                    android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="16dp" />
+                    android:layout_marginTop="12dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ketuk tombol + di atas untuk membuat room baru"
-                    android:textColor="@color/hayu_text_secondary"
+                    android:text="Tap tombol Buat di atas untuk mulai"
+                    android:textColor="#8892AA"
                     android:textSize="13sp"
-                    android:gravity="center"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="6dp" />
             </LinearLayout>
 
         </LinearLayout>
