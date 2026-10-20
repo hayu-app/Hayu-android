@@ -1,18 +1,31 @@
 package com.hayu.app
 
+import android.graphics.Color
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class DailyCoinActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
-    private val DAILY_COIN = 10
-    private val ONE_DAY_MS = 24 * 60 * 60 * 1000L
+
+    private lateinit var tvCoinAmount: TextView
+    private lateinit var tvCoinStatus: TextView
+    private lateinit var btnClaim: TextView
+    private lateinit var btnClose: TextView
+
+    private val dailyCoin = 10L
+    private val dailyExp = 5L
+    private val wib = TimeZone.getTimeZone("Asia/Jakarta")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,97 +34,157 @@ class DailyCoinActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
-        val tvCoinAmount = findViewById<TextView>(R.id.tv_coin_amount)
-        val tvCoinStatus = findViewById<TextView>(R.id.tv_coin_status)
-        val btnClaim = findViewById<TextView>(R.id.btn_claim_coin)
-        val btnClose = findViewById<TextView>(R.id.btn_close_daily)
+        tvCoinAmount = findViewById(R.id.tv_coin_amount)
+        tvCoinStatus = findViewById(R.id.tv_coin_status)
+        btnClaim = findViewById(R.id.btn_claim_coin)
+        btnClose = findViewById(R.id.btn_close_daily)
 
-        tvCoinAmount.text = "+$DAILY_COIN Koin"
+        tvCoinAmount.text = "+$dailyCoin Koin"
 
         btnClose.setOnClickListener { finish() }
+        btnClaim.setOnClickListener { claimDailyCoin() }
 
-        checkCanClaim(tvCoinStatus, btnClaim)
+        checkCanClaim()
+    }
 
-        btnClaim.setOnClickListener {
-            claimDailyCoin(tvCoinStatus, btnClaim)
+    // Tanggal kalender WIB. Klaim tersedia kembali setelah pukul 00.00 WIB.
+    private fun todayWib(): String {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        format.timeZone = wib
+        return format.format(Date())
+    }
+
+    private fun checkCanClaim() {
+        val uid = auth.currentUser?.uid
+
+        if (uid == null) {
+            tvCoinStatus.text = "Silakan login terlebih dahulu"
+            btnClaim.isEnabled = false
+            btnClaim.alpha = 0.5f
+            return
+        }
+
+        btnClaim.isEnabled = false
+        tvCoinStatus.text = "Memeriksa klaim harian..."
+
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                if (isFinishing || isDestroyed) return@addOnSuccessListener
+
+                val lastDate = doc.getString("lastDailyClaimDate")
+                val alreadyClaimed = lastDate == todayWib()
+
+                if (alreadyClaimed) {
+                    tvCoinStatus.text = "Kamu sudah klaim hari ini. Kembali besok!"
+                    tvCoinStatus.setTextColor(Color.rgb(239, 180, 68))
+                    btnClaim.text = "✓ Sudah Diklaim"
+                    btnClaim.isEnabled = false
+                    btnClaim.alpha = 0.6f
+                } else {
+                    tvCoinStatus.text = "Klaim hadiah harianmu sekarang!"
+                    tvCoinStatus.setTextColor(Color.rgb(16, 185, 129))
+                    btnClaim.text = "🎁 Klaim Sekarang"
+                    btnClaim.isEnabled = true
+                    btnClaim.alpha = 1f
+                }
+            }
+            .addOnFailureListener {
+                if (isFinishing || isDestroyed) return@addOnFailureListener
+                tvCoinStatus.text = "Gagal memuat data. Coba lagi."
+                btnClaim.text = "↻ Coba Lagi"
+                btnClaim.isEnabled = true
+                btnClaim.alpha = 1f
+            }
+    }
+
+    private fun claimDailyCoin() {
+        val uid = auth.currentUser?.uid
+
+        if (uid == null) {
+            Toast.makeText(
+                this,
+                "Silakan login terlebih dahulu",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        btnClaim.isEnabled = false
+        btnClaim.alpha = 0.5f
+        btnClaim.text = "Memproses..."
+        tvCoinStatus.text = "Memproses hadiah harian..."
+
+        val userRef = db.collection("users").document(uid)
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(userRef)
+
+            if (!snapshot.exists()) {
+                throw IllegalStateException("Akun pengguna tidak ditemukan")
+            }
+
+            // Semua proses klaim harus memakai transaksi ini.
+            val today = todayWib()
+            val lastDate = snapshot.getString("lastDailyClaimDate")
+
+            if (lastDate == today) {
+                return@runTransaction false
+            }
+
+            val coins = snapshot.getLong("coins") ?: 0L
+            val totalEarned = snapshot.getLong("totalCoinsEarned") ?: 0L
+            val exp = snapshot.getLong("exp") ?: 0L
+
+            transaction.update(
+                userRef,
+                mapOf(
+                    "coins" to coins + dailyCoin,
+                    "totalCoinsEarned" to totalEarned + dailyCoin,
+                    "exp" to exp + dailyExp,
+                    "lastDailyClaimDate" to today
+                )
+            )
+
+            true
+        }.addOnSuccessListener { claimed ->
+            if (isFinishing || isDestroyed) return@addOnSuccessListener
+
+            if (claimed == true) {
+                Toast.makeText(
+                    this,
+                    "Berhasil! +$dailyCoin Koin dan +$dailyExp EXP 🎉",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                tvCoinStatus.text = "Hadiah berhasil diklaim! ✓"
+                tvCoinStatus.setTextColor(Color.rgb(16, 185, 129))
+                btnClaim.text = "✓ Sudah Diklaim"
+                btnClaim.isEnabled = false
+                btnClaim.alpha = 0.6f
+            } else {
+                tvCoinStatus.text = "Kamu sudah klaim hari ini. Kembali besok!"
+                btnClaim.text = "✓ Sudah Diklaim"
+                btnClaim.isEnabled = false
+                btnClaim.alpha = 0.6f
+            }
+        }.addOnFailureListener { error ->
+            if (isFinishing || isDestroyed) return@addOnFailureListener
+
+            tvCoinStatus.text = "Klaim gagal. Periksa koneksi lalu coba lagi."
+            btnClaim.text = "↻ Coba Lagi"
+            btnClaim.isEnabled = true
+            btnClaim.alpha = 1f
+
+            Toast.makeText(
+                this,
+                "Klaim gagal: ${error.localizedMessage ?: "Kesalahan tidak diketahui"}",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
-    private fun checkCanClaim(tvStatus: TextView, btnClaim: TextView) {
-        val uid = auth.currentUser?.uid ?: return
-
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                val lastClaim = doc.getLong("lastDailyClaim") ?: 0L
-                val now = System.currentTimeMillis()
-                val timeSince = now - lastClaim
-
-                if (timeSince < ONE_DAY_MS) {
-                    val remainingMs = ONE_DAY_MS - timeSince
-                    val hours = remainingMs / (60 * 60 * 1000)
-                    val minutes = (remainingMs % (60 * 60 * 1000)) / (60 * 1000)
-
-                    tvStatus.text = "Sudah klaim hari ini. Tunggu ${hours}j ${minutes}m lagi"
-                    tvStatus.setTextColor(0xFFEF4444.toInt())
-
-                    btnClaim.isEnabled = false
-                    btnClaim.alpha = 0.5f
-                    btnClaim.text = "⏳  Sudah Diklaim"
-                } else {
-                    tvStatus.text = "Klaim 1x setiap hari"
-                    btnClaim.isEnabled = true
-                    btnClaim.alpha = 1.0f
-                    btnClaim.text = "🎁  Klaim Sekarang"
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Gagal memuat data", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun claimDailyCoin(tvStatus: TextView, btnClaim: TextView) {
-        val uid = auth.currentUser?.uid ?: return
-
-        btnClaim.isEnabled = false
-        btnClaim.text = "Memproses..."
-
-        db.collection("users").document(uid).get()
-            .addOnSuccessListener { doc ->
-                val currentCoins = (doc.getLong("coins") ?: 0L).toInt()
-                val totalEarned = (doc.getLong("totalCoinsEarned") ?: 0L).toInt()
-                val lastClaim = doc.getLong("lastDailyClaim") ?: 0L
-                val now = System.currentTimeMillis()
-
-                if (now - lastClaim < ONE_DAY_MS) {
-                    Toast.makeText(this, "Kamu sudah klaim hari ini!", Toast.LENGTH_SHORT).show()
-                    checkCanClaim(tvStatus, btnClaim)
-                    return@addOnSuccessListener
-                }
-
-                val updates = mapOf(
-                    "coins" to (currentCoins + DAILY_COIN),
-                    "totalCoinsEarned" to (totalEarned + DAILY_COIN),
-                    "lastDailyClaim" to now,
-                    "exp" to ((doc.getLong("exp") ?: 0L).toInt() + 5)
-                )
-
-                db.collection("users").document(uid).update(updates)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Berhasil! +$DAILY_COIN Koin 🎉", Toast.LENGTH_SHORT).show()
-                        tvStatus.text = "Koin berhasil diklaim! ✅"
-                        tvStatus.setTextColor(0xFF10B981.toInt())
-                        btnClaim.text = "✅  Diklaim"
-                    }
-                    .addOnFailureListener { e ->
-                        btnClaim.isEnabled = true
-                        btnClaim.text = "🎁  Klaim Sekarang"
-                        Toast.makeText(this, "Gagal: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-            }
-            .addOnFailureListener {
-                btnClaim.isEnabled = true
-                btnClaim.text = "🎁  Klaim Sekarang"
-                Toast.makeText(this, "Gagal memuat", Toast.LENGTH_SHORT).show()
-            }
+    override fun onResume() {
+        super.onResume()
+        if (::auth.isInitialized) checkCanClaim()
     }
 }
