@@ -25,22 +25,25 @@ jobs:
       - name: Copy and verify debug keystore
         run: |
           set -e
-          mkdir -p ~/.android
-          cp debug.keystore ~/.android/debug.keystore
 
-          echo "===== SHA-1 KEYSTORE REPOSITORY ====="
+          test -f debug.keystore
+
+          mkdir -p "$HOME/.android"
+          cp debug.keystore "$HOME/.android/debug.keystore"
+
+          echo "===== REPOSITORY KEYSTORE ====="
           keytool -list -v \
             -keystore debug.keystore \
             -alias androiddebugkey \
-            -storepass android \
-            -keypass android | grep -E 'SHA1:|SHA256:'
+            -storepass android |
+            grep -E 'SHA1:|SHA256:'
 
-          echo "===== SHA-1 KEYSTORE GRADLE ====="
+          echo "===== ANDROID DEBUG KEYSTORE ====="
           keytool -list -v \
-            -keystore ~/.android/debug.keystore \
+            -keystore "$HOME/.android/debug.keystore" \
             -alias androiddebugkey \
-            -storepass android \
-            -keypass android | grep -E 'SHA1:|SHA256:'
+            -storepass android |
+            grep -E 'SHA1:|SHA256:'
 
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.7
@@ -51,25 +54,45 @@ jobs:
       - name: Verify Google Web Client ID
         run: |
           set -e
-          grep -R -q \
-            '133087066686-n8m4k4evrg5brc2bg2s8llussm0qsl9p.apps.googleusercontent.com' \
-            app/build/generated app/build/intermediates
-          echo "Web Client ID cocok."
+
+          EXPECTED_CLIENT_ID="133087066686-n8m4k4evrg5brc2bg2s8llussm0qsl9p.apps.googleusercontent.com"
+
+          if grep -R -q "$EXPECTED_CLIENT_ID" \
+            app/build/generated app/build/intermediates 2>/dev/null; then
+            echo "Web Client ID cocok."
+          else
+            echo "ERROR: Web Client ID tidak ditemukan."
+            exit 1
+          fi
 
       - name: Verify APK signing certificate
         run: |
           set -e
+
           APK="app/build/outputs/apk/debug/app-debug.apk"
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" \
+            -type f -name apksigner | sort -V | tail -n 1)
 
-          test -f "$APK"
-          test -n "$APKSIGNER"
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK tidak ditemukan."
+            exit 1
+          fi
 
+          if [ -z "$APKSIGNER" ]; then
+            echo "ERROR: apksigner tidak ditemukan."
+            exit 1
+          fi
+
+          echo "===== APK SIGNING CERTIFICATE ====="
           "$APKSIGNER" verify --print-certs "$APK"
 
-          ACTUAL_SHA1=$("$APKSIGNER" verify --print-certs "$APK" |
-            awk -F': ' '/certificate SHA-1 digest:/ {print $2; exit}' |
-            tr -d ':' | tr '[:upper:]' '[:lower:]')
+          ACTUAL_SHA1=$(
+            "$APKSIGNER" verify --print-certs "$APK" |
+            sed -n 's/.*certificate SHA-1 digest: //p' |
+            head -n 1 |
+            tr -d ':' |
+            tr '[:upper:]' '[:lower:]'
+          )
 
           EXPECTED_SHA1="d7d110077f9c300c23444a2afae6c37767cf2a96"
 
