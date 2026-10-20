@@ -33,6 +33,13 @@ jobs:
       - name: Build APK Debug
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Verify Google Web Client ID
+        run: |
+          RESOURCE="app/build/generated/res/google-services/debug/values/values.xml"
+          echo "===== GENERATED GOOGLE SERVICES RESOURCE ====="
+          cat "$RESOURCE"
+          grep -q '133087066686-n8m4k4evrg5brc2bg2s8llussm0qsl9p.apps.googleusercontent.com' "$RESOURCE"
+
       - name: Verify APK signing certificate
         run: |
           APK="app/build/outputs/apk/debug/app-debug.apk"
