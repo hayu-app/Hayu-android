@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "133087066686-edqk6ip3rm46evr5sa56c5073k3l50ls.apps.googleusercontent.com",
+          "client_id": "133087066686-iue354bpmqk434f6r0ifd1un8avr0gnb.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.hayu.app",
-            "certificate_hash": "d0b4ab07de14a737f58c331053f1d8fb080282d3"
+            "certificate_hash": "d7d110077f9c300c23444a2afae6c37767cf2a96"
           }
         },
         {
