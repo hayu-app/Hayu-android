@@ -80,6 +80,17 @@
             android:ellipsize="end" />
 
         <TextView
+            android:id="@+id/tv_room_owner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="👑 Pemilik room"
+            android:textColor="@color/hayu_text_secondary"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginTop="2dp" />
+
+        <TextView
             android:id="@+id/tv_room_topic"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

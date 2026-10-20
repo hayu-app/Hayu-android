@@ -34,9 +34,11 @@ class HomeFragment : Fragment() {
     private val allRooms = mutableListOf<Room>()
     private val favoriteIds = mutableSetOf<String>()
     private val filterButtons = mutableMapOf<String, TextView>()
+    private val sortButtons = mutableMapOf<String, TextView>()
 
     private var searchQuery = ""
     private var filterMode = "Semua"
+    private var sortMode = "Populer"
     private var emptyLayout: LinearLayout? = null
 
     override fun onCreateView(
@@ -182,12 +184,60 @@ class HomeFragment : Fragment() {
         }
 
         parent.addView(filterRow, index + 1, filterParams)
+
+        val sortRow = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        val sortParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(38)
+        ).apply {
+            setMargins(dp(12), 0, dp(12), dp(8))
+        }
+
+        listOf("Populer", "Terbaru", "Aktif").forEach { mode ->
+            val button = TextView(requireContext()).apply {
+                text = mode
+                textSize = 11f
+                gravity = Gravity.CENTER
+                setTextColor(Color.WHITE)
+                background = roundedBackground(Color.rgb(39, 39, 54))
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    sortMode = mode
+                    updateSortStyles()
+                    applyFilters()
+                }
+            }
+            val params = LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
+            ).apply {
+                setMargins(dp(3), 0, dp(3), 0)
+            }
+            sortButtons[mode] = button
+            sortRow.addView(button, params)
+        }
+
+        parent.addView(sortRow, index + 2, sortParams)
         updateFilterStyles()
+        updateSortStyles()
     }
 
     private fun updateFilterStyles() {
         filterButtons.forEach { (mode, button) ->
             val color = if (mode == filterMode) {
+                Color.rgb(105, 75, 230)
+            } else {
+                Color.rgb(39, 39, 54)
+            }
+            button.background = roundedBackground(color)
+        }
+    }
+
+    private fun updateSortStyles() {
+        sortButtons.forEach { (mode, button) ->
+            val color = if (mode == sortMode) {
                 Color.rgb(105, 75, 230)
             } else {
                 Color.rgb(39, 39, 54)
@@ -222,7 +272,15 @@ class HomeFragment : Fragment() {
         adapter.setFavorites(favoriteIds) { room ->
             toggleFavorite(room)
         }
-        adapter.submitList(filtered)
+        val sorted = when (sortMode) {
+            "Terbaru" -> filtered.sortedByDescending { it.createdAt }
+            "Aktif" -> filtered.sortedByDescending { it.lastActiveAt }
+            else -> filtered.sortedWith(
+                compareByDescending<Room> { it.currentUsers }
+                    .thenByDescending { it.lastActiveAt }
+            )
+        }
+        adapter.submitList(sorted)
 
         emptyLayout?.visibility =
             if (filtered.isEmpty()) View.VISIBLE else View.GONE
