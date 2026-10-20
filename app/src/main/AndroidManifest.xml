@@ -86,5 +86,6 @@
 
             <activity android:name=".OtpActivity" />
             <activity android:name=".VipActivity" android:exported="false" />
+            <activity android:name=".TopUpAdminActivity" android:exported="false" />
     </application>
 </manifest>

@@ -283,7 +283,7 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:gravity="center"
-                        android:text="⚙️"
+                        android:text="💳"
                         android:textSize="22sp"
                         android:background="@drawable/bg_icon_circle" />
 
@@ -297,7 +297,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Pengaturan Sistem"
+                            android:text="Konfirmasi Top Up"
                             android:textColor="#FFFFFF"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -305,7 +305,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Konfigurasi aplikasi &amp; maintenance"
+                            android:text="Setujui permintaan top up koin"
                             android:textColor="#999999"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp" />

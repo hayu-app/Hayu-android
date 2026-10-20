@@ -65,7 +65,7 @@ class DevPanelActivity : AppCompatActivity() {
         cardMenuUser.setOnClickListener { toastSoon() }
         cardMenuRoom.setOnClickListener { toastSoon() }
         cardMenuFamily.setOnClickListener { toastSoon() }
-        cardMenuSystem.setOnClickListener { toastSoon() }
+        cardMenuSystem.setOnClickListener { startActivity(Intent(this, TopUpAdminActivity::class.java)) }
 
         // Menu "Tambah/Ubah Role" → buka RoleManagerActivity
         cardMenuRole.setOnClickListener {
