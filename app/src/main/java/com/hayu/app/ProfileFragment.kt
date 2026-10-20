@@ -56,11 +56,9 @@ class ProfileFragment : Fragment() {
         loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
         loadRoleBadge(view)
 
-        tvNickname.setOnClickListener {
-            val intent = Intent(requireContext(), UserProfileActivity::class.java)
-            intent.putExtra("uid", currentUser.uid)
-            startActivity(intent)
-        }
+        // Profil akun sendiri sudah ditampilkan di halaman ini.
+        // UserProfileActivity tetap digunakan untuk profil pengguna lain.
+        tvNickname.setOnClickListener { }
 
         btnEditProfile.setOnClickListener {
             startActivity(Intent(requireContext(), EditProfileActivity::class.java))

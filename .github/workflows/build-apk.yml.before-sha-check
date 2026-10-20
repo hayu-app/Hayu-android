@@ -1,0 +1,77 @@
+name: Build HAYU APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Copy debug keystore
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.7
+
+      - name: Build APK Debug
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Verify Google Web Client ID
+        run: |
+          echo "===== GOOGLE SERVICES RESOURCE FILES ====="
+          find app/build -type f -name values.xml -print
+
+          echo "===== DEFAULT WEB CLIENT ID ====="
+          grep -R -n -A 2 -B 2 \
+            'default_web_client_id' \
+            app/build/generated app/build/intermediates 2>/dev/null || true
+
+          echo "===== CHECK EXPECTED WEB CLIENT ID ====="
+          if grep -R -q \
+            '133087066686-n8m4k4evrg5brc2bg2s8llussm0qsl9p.apps.googleusercontent.com' \
+            app/build/generated app/build/intermediates 2>/dev/null; then
+            echo "Web Client ID cocok."
+          else
+            echo "PERINGATAN: Web Client ID belum ditemukan di resource hasil build."
+          fi
+
+      - name: Verify APK signing certificate
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+
+          if [ ! -f "$APK" ]; then
+            echo "APK tidak ditemukan: $APK"
+            exit 1
+          fi
+
+          if [ -z "$APKSIGNER" ]; then
+            echo "apksigner tidak ditemukan"
+            exit 1
+          fi
+
+          "$APKSIGNER" verify --print-certs "$APK"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: hayu-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

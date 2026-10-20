@@ -154,7 +154,7 @@ class RoomActivity : AppCompatActivity() {
 
         btnMenu.setOnClickListener { showRoomMenu() }
 
-        btnGift.setOnClickListener { openGiftSheet() }
+        btnGift.setOnClickListener { GamePanelSheet.show(this) }
 
         listenMessages()
     }
