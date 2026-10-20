@@ -85,5 +85,6 @@
             android:exported="false" />
 
             <activity android:name=".OtpActivity" />
+            <activity android:name=".VipActivity" android:exported="false" />
     </application>
 </manifest>

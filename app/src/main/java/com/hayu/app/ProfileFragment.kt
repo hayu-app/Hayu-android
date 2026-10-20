@@ -73,8 +73,8 @@ class ProfileFragment : Fragment() {
         view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
         view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { startActivity(Intent(requireContext(), LevelActivity::class.java)) }
 
-        view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { notif("SVIP segera hadir! 👑") }
-        view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { notif("VIP segera hadir! ⭐") }
+        view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { startActivity(Intent(requireContext(), VipActivity::class.java)) }
+        view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { startActivity(Intent(requireContext(), VipActivity::class.java)) }
 
         view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener {
             startActivity(Intent(requireContext(), DailyCoinActivity::class.java))
