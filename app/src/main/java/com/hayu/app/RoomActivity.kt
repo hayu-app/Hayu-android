@@ -341,23 +341,22 @@ class RoomActivity : AppCompatActivity() {
 
         when {
             slot.uid.isEmpty() -> {
-                // kosong
-                label.text = "🪑"
-                view.alpha = 0.5f
+                label.text = "🎤"
+                label.textSize = 24f
+                view.alpha = 0.6f
+                view.setBackgroundResource(R.drawable.bg_seat_empty)
             }
             slot.isMuted -> {
-                // on mic tapi muted
                 label.text = "🔇\n${slot.nickname.take(6)}"
                 label.textSize = 11f
                 view.alpha = 1f
-                view.setBackgroundResource(R.drawable.bg_quick_item)
+                view.setBackgroundResource(R.drawable.bg_seat_muted)
             }
             else -> {
-                // on mic aktif
                 label.text = "🎙️\n${slot.nickname.take(6)}"
                 label.textSize = 11f
                 view.alpha = 1f
-                view.setBackgroundResource(R.drawable.bg_button_primary)
+                view.setBackgroundResource(R.drawable.bg_seat_active)
             }
         }
     }
@@ -420,7 +419,32 @@ class RoomActivity : AppCompatActivity() {
                 list.add(Pair(s.uid, s.nickname))
             }
         }
-        GiftSheet.show(this, myNickname, list) { text -> sendGiftMessage(text) }
+        list.add(Pair(me, "Saya"))
+        GiftSheet.show(this, myNickname, list) { text, emoji ->
+            sendGiftMessage(text)
+            playGiftAnimation(emoji)
+        }
+    }
+
+    private fun playGiftAnimation(emoji: String) {
+        val root = findViewById<android.view.ViewGroup>(android.R.id.content)
+        val tv = TextView(this)
+        tv.text = emoji
+        tv.textSize = 72f
+        tv.alpha = 0f
+        tv.scaleX = 0.3f
+        tv.scaleY = 0.3f
+        val lp = android.widget.FrameLayout.LayoutParams(
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        lp.gravity = android.view.Gravity.CENTER
+        root.addView(tv, lp)
+        tv.animate().alpha(1f).scaleX(1.4f).scaleY(1.4f).setDuration(450).withEndAction {
+            tv.animate().alpha(0f).translationY(-200f).setDuration(600).withEndAction {
+                root.removeView(tv)
+            }.start()
+        }.start()
     }
 
     private fun sendGiftMessage(text: String) {
