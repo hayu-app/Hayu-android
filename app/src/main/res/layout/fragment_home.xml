@@ -23,6 +23,18 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
+        <TextView
+            android:id="@+id/btn_search_room"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="⌕"
+            android:textColor="#FFFFFF"
+            android:textSize="29sp"
+            android:contentDescription="Cari room"
+            android:clickable="true"
+            android:focusable="true" />
+
         <ImageView
             android:id="@+id/btn_add_room_header"
             android:layout_width="28dp"
@@ -159,52 +171,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- FILTER -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="8dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:text="Populer"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:background="@drawable/bg_button_primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:text="Terbaru"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="12sp"
-                    android:gravity="center"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:layout_marginStart="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:text="Cara Bermain"
-                    android:textColor="@color/hayu_text_secondary"
-                    android:textSize="12sp"
-                    android:gravity="center"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
-
             <!-- GRID ROOM -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_rooms"
@@ -247,7 +213,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tap ikon rumah di atas untuk membuat room baru"
+                    android:text="Ketuk tombol + di atas untuk membuat room baru"
                     android:textColor="@color/hayu_text_secondary"
                     android:textSize="13sp"
                     android:gravity="center"

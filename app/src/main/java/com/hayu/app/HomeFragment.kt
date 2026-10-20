@@ -33,11 +33,10 @@ class HomeFragment : Fragment() {
 
     private val allRooms = mutableListOf<Room>()
     private val favoriteIds = mutableSetOf<String>()
-    private val filterButtons = mutableMapOf<String, TextView>()
     private val sortButtons = mutableMapOf<String, TextView>()
 
     private var searchQuery = ""
-    private var filterMode = "Semua"
+    private var searchInput: EditText? = null
     private var sortMode = "Populer"
     private var emptyLayout: LinearLayout? = null
 
@@ -57,6 +56,7 @@ class HomeFragment : Fragment() {
 
         val btnAddRoomHeader =
             view.findViewById<ImageView>(R.id.btn_add_room_header)
+        val btnSearchRoom = view.findViewById<TextView>(R.id.btn_search_room)
         val rvRooms = view.findViewById<RecyclerView>(R.id.rv_rooms)
         val layoutEmpty = view.findViewById<LinearLayout>(R.id.layout_empty)
 
@@ -85,6 +85,27 @@ class HomeFragment : Fragment() {
         rvRooms.adapter = adapter
 
         addSearchAndFilters(rvRooms)
+
+        btnSearchRoom.setOnClickListener {
+            val input = searchInput ?: return@setOnClickListener
+            val imm = requireContext().getSystemService(
+                Context.INPUT_METHOD_SERVICE
+            ) as android.view.inputmethod.InputMethodManager
+
+            if (input.visibility == View.VISIBLE) {
+                input.setText("")
+                input.visibility = View.GONE
+                input.clearFocus()
+                imm.hideSoftInputFromWindow(input.windowToken, 0)
+            } else {
+                input.visibility = View.VISIBLE
+                input.requestFocus()
+                imm.showSoftInput(
+                    input,
+                    android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT
+                )
+            }
+        }
 
         btnAddRoomHeader.setOnClickListener { checkUserRoom() }
 
@@ -115,16 +136,21 @@ class HomeFragment : Fragment() {
             setHintTextColor(Color.LTGRAY)
             setPadding(dp(14), 0, dp(14), 0)
             background = roundedBackground(Color.rgb(39, 39, 54))
+            visibility = View.GONE
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
         }
+        searchInput = search
 
-        val searchParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(48)
-        ).apply {
-            setMargins(dp(12), dp(12), dp(12), dp(8))
-        }
-
-        parent.addView(search, index, searchParams)
+        parent.addView(
+            search,
+            index,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(46)
+            ).apply {
+                setMargins(dp(12), dp(10), dp(12), dp(6))
+            }
+        )
 
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(
@@ -141,64 +167,26 @@ class HomeFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) = Unit
         })
 
-        val filterRow = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-
-        val filterParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(42)
-        ).apply {
-            setMargins(dp(12), 0, dp(12), dp(10))
-        }
-
-        val modes = listOf("Semua", "Publik", "Favorit")
-
-        modes.forEach { mode ->
-            val button = TextView(requireContext()).apply {
-                text = mode
-                textSize = 12f
-                gravity = Gravity.CENTER
-                setTextColor(Color.WHITE)
-                background = roundedBackground(Color.rgb(39, 39, 54))
-                isClickable = true
-                isFocusable = true
-                setOnClickListener {
-                    filterMode = mode
-                    updateFilterStyles()
-                    applyFilters()
-                }
-            }
-
-            val buttonParams = LinearLayout.LayoutParams(
-                0,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                1f
-            ).apply {
-                setMargins(dp(3), 0, dp(3), 0)
-            }
-
-            filterButtons[mode] = button
-            filterRow.addView(button, buttonParams)
-        }
-
-        parent.addView(filterRow, index + 1, filterParams)
-
         val sortRow = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        val sortParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(38)
-        ).apply {
-            setMargins(dp(12), 0, dp(12), dp(8))
-        }
 
-        listOf("Populer", "Terbaru", "Aktif").forEach { mode ->
+        parent.addView(
+            sortRow,
+            index + 1,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(42)
+            ).apply {
+                setMargins(dp(12), dp(12), dp(12), dp(8))
+            }
+        )
+
+        listOf("Populer", "Terbaru", "Favorit").forEach { mode ->
             val button = TextView(requireContext()).apply {
                 text = mode
-                textSize = 11f
+                textSize = 12f
                 gravity = Gravity.CENTER
                 setTextColor(Color.WHITE)
                 background = roundedBackground(Color.rgb(39, 39, 54))
@@ -210,39 +198,29 @@ class HomeFragment : Fragment() {
                     applyFilters()
                 }
             }
-            val params = LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
-            ).apply {
-                setMargins(dp(3), 0, dp(3), 0)
-            }
+
             sortButtons[mode] = button
-            sortRow.addView(button, params)
+            sortRow.addView(
+                button,
+                LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    1f
+                ).apply {
+                    setMargins(dp(3), 0, dp(3), 0)
+                }
+            )
         }
 
-        parent.addView(sortRow, index + 2, sortParams)
-        updateFilterStyles()
         updateSortStyles()
-    }
-
-    private fun updateFilterStyles() {
-        filterButtons.forEach { (mode, button) ->
-            val color = if (mode == filterMode) {
-                Color.rgb(105, 75, 230)
-            } else {
-                Color.rgb(39, 39, 54)
-            }
-            button.background = roundedBackground(color)
-        }
     }
 
     private fun updateSortStyles() {
         sortButtons.forEach { (mode, button) ->
-            val color = if (mode == sortMode) {
-                Color.rgb(105, 75, 230)
-            } else {
-                Color.rgb(39, 39, 54)
-            }
-            button.background = roundedBackground(color)
+            button.background = roundedBackground(
+                if (mode == sortMode) Color.rgb(105, 75, 230)
+                else Color.rgb(39, 39, 54)
+            )
         }
     }
 
@@ -257,31 +235,28 @@ class HomeFragment : Fragment() {
         val filtered = allRooms.filter { room ->
             val matchesSearch =
                 searchQuery.isEmpty() ||
-                room.name.lowercase().contains(searchQuery) ||
-                room.topic.lowercase().contains(searchQuery)
+                room.name.contains(searchQuery, ignoreCase = true) ||
+                room.topic.contains(searchQuery, ignoreCase = true)
 
-            val matchesMode = when (filterMode) {
-                "Favorit" -> room.roomId in favoriteIds
-                "Publik" -> isPublicRoom(room)
-                else -> true
-            }
+            val matchesFavorite =
+                sortMode != "Favorit" || room.roomId in favoriteIds
 
-            matchesSearch && matchesMode && isPublicRoom(room)
+            matchesSearch && matchesFavorite && isPublicRoom(room)
         }
 
         adapter.setFavorites(favoriteIds) { room ->
             toggleFavorite(room)
         }
+
         val sorted = when (sortMode) {
             "Terbaru" -> filtered.sortedByDescending { it.createdAt }
-            "Aktif" -> filtered.sortedByDescending { it.lastActiveAt }
             else -> filtered.sortedWith(
                 compareByDescending<Room> { it.currentUsers }
                     .thenByDescending { it.lastActiveAt }
             )
         }
-        adapter.submitList(sorted)
 
+        adapter.submitList(sorted)
         emptyLayout?.visibility =
             if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
