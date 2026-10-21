@@ -74,7 +74,7 @@ class VipActivity : SimplePageActivity() {
         )
         container.addView(card)
 
-        container.addView(Ui.row(this, "💳", "Top Up Koin", "Top up untuk naik level SVIP", Ui.button(this, "Top Up") { chooseTopUp() }))
+        container.addView(Ui.row(this, "💳", "Top Up Koin", "Top up untuk naik level SVIP", Ui.button(this, "Top Up") { startActivity(android.content.Intent(this, WalletActivity::class.java)) }))
 
         for (i in 1..7) {
             val tag = Ui.text(this, if (svLv >= i) "✅" else "🔒", 14f)

@@ -112,6 +112,7 @@
             <activity android:name=".OtpActivity" />
             <activity android:name=".VipActivity" android:exported="false" />
             <activity android:name=".TopUpAdminActivity" android:exported="false" />
+            <activity android:name=".WalletActivity" android:exported="false" />
             <activity android:name=".PanelDetailActivity" android:exported="false" />
         <activity android:name=".LionVsTigerActivity" android:exported="false" android:screenOrientation="portrait" />
     </application>

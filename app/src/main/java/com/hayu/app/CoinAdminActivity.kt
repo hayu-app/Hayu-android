@@ -100,6 +100,7 @@ class CoinAdminActivity : AppCompatActivity() {
         when (mode) {
             "packages" -> {
                 if (isCoinAdmin()) addAction("➕ Paket baru") { packageDialog(null) }
+                if (isCoinAdmin()) addAction("🌱 Paket standar") { seedDefaults() }
                 loadPackages()
             }
             "ledger" -> loadLedger()
@@ -309,6 +310,35 @@ class CoinAdminActivity : AppCompatActivity() {
             }
             .setNegativeButton("Batal", null)
             .show()
+    }
+
+    // Isi paket standar (rasio 3 koin = Rp1) hanya jika koleksi masih kosong
+    private fun seedDefaults() {
+        db.collection("coin_packages").limit(1).get()
+            .addOnSuccessListener { snap ->
+                if (!snap.isEmpty) {
+                    toast("Paket sudah ada. Hapus dulu kalau mau isi ulang.")
+                    return@addOnSuccessListener
+                }
+                val batch = db.batch()
+                val data = listOf(
+                    15000L to 5000L, 30000L to 10000L, 75000L to 25000L, 150000L to 50000L,
+                    300000L to 100000L, 750000L to 250000L, 1500000L to 500000L
+                )
+                for ((coins, price) in data) {
+                    batch.set(
+                        db.collection("coin_packages").document(),
+                        mapOf<String, Any>(
+                            "coins" to coins, "price" to price, "active" to true,
+                            "createdAt" to System.currentTimeMillis()
+                        )
+                    )
+                }
+                batch.commit()
+                    .addOnSuccessListener { toast("✅ Paket standar ditambahkan"); loadPackages() }
+                    .addOnFailureListener { toast("Gagal: ${it.message}") }
+            }
+            .addOnFailureListener { toast("Gagal: ${it.message}") }
     }
 
     // ---------------- LEDGER / PENJUALAN ----------------

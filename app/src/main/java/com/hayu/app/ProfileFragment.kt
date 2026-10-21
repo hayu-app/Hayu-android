@@ -75,7 +75,7 @@ class ProfileFragment : Fragment() {
         view.findViewById<LinearLayout>(R.id.card_vip).setOnClickListener { startActivity(Intent(requireContext(), VipActivity::class.java)) }
 
         view.findViewById<LinearLayout>(R.id.card_wallet).setOnClickListener {
-            startActivity(Intent(requireContext(), DailyCoinActivity::class.java))
+            startActivity(Intent(requireContext(), WalletActivity::class.java))
         }
 
         view.findViewById<View>(R.id.menu_tugas).setOnClickListener { startActivity(Intent(requireContext(), TugasActivity::class.java)) }

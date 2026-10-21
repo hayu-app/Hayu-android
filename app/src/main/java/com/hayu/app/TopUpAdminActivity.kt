@@ -28,6 +28,7 @@ class TopUpAdminActivity : SimplePageActivity() {
                 for (d in snap.documents.sortedBy { it.getLong("createdAt") ?: 0L }) {
                     val uid = d.getString("uid") ?: continue
                     val amount = (d.getLong("amount") ?: 0L).toInt()
+                    val price = d.getLong("price") ?: 0L
                     val reqId = d.id
                     db.collection("users").document(uid).get().addOnSuccessListener { u ->
                         val name = u.getString("nickname") ?: uid.take(6)
@@ -42,7 +43,7 @@ class TopUpAdminActivity : SimplePageActivity() {
                         lp.marginStart = gap
                         box.addView(Ui.button(this, "Terima") { decide(reqId, uid, true) }, lp)
 
-                        container.addView(Ui.row(this, "💳", name, "ID: $idNum  •  🪙 $amount koin", box))
+                        container.addView(Ui.row(this, "💳", name, "ID: $idNum  •  🪙 $amount koin" + (if (price > 0L) "  •  Rp $price" else ""), box))
                     }
                 }
             }
