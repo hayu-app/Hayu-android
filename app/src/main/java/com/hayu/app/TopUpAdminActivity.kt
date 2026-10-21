@@ -10,7 +10,7 @@ class TopUpAdminActivity : SimplePageActivity() {
 
     override fun render(user: DocumentSnapshot, following: Int, followers: Int) {
         val role = (user.getString("role") ?: "user").lowercase().trim()
-        if (role != "developer") {
+        if (role != "developer" && role != "superadmin") {
             toast("Kamu tidak punya akses")
             finish()
             return
@@ -72,6 +72,15 @@ class TopUpAdminActivity : SimplePageActivity() {
                 )
                 if (newLv > oldLv) upd["equippedTitle"] = "👑 SVIP$newLv"
                 tx.update(userRef, upd)
+                tx.set(
+                    db.collection("coin_ledger").document(), mapOf<String, Any>(
+                        "type" to "topup_approved", "uid" to uid,
+                        "name" to (u.getString("nickname") ?: ""),
+                        "delta" to amount,
+                        "balanceAfter" to ((u.getLong("coins") ?: 0L) + amount),
+                        "byUid" to adminUid, "at" to System.currentTimeMillis()
+                    )
+                )
             }
 
             tx.update(

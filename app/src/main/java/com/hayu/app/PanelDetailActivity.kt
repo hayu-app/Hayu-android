@@ -262,6 +262,12 @@ class PanelDetailActivity : AppCompatActivity() {
             "Ban & Suspension" to "ban", "Temporary Ban" to "ban", "Warning & Ban" to "ban",
             "Verifikasi Akun" to "verify", "Saldo Koin User" to "coin"
         )
+        val coinModes = mapOf(
+            "Paket & Harga Koin" to "packages", "Paket Koin" to "packages",
+            "Ledger Transaksi" to "ledger", "Dashboard Coinseller" to "wallet",
+            "Wallet Coinseller" to "wallet", "Kirim Koin" to "send",
+            "Laporan Penjualan" to "sales", "Top-up & Pembelian" to "topup"
+        )
         if ((key == "dashboard" || key == "user") && Role.canManageRoles(role)) {
             items.add(0, roleItem)
         }
@@ -292,8 +298,16 @@ class PanelDetailActivity : AppCompatActivity() {
 
             row.setOnClickListener {
                 val adminMode = adminModes[item.substringAfter(' ')]
+                val coinMode = coinModes[item.substringAfter(' ')]
                 if (item == roleItem) {
                     startActivity(Intent(this, RoleManagerActivity::class.java))
+                } else if (coinMode == "topup") {
+                    startActivity(Intent(this, TopUpAdminActivity::class.java))
+                } else if (coinMode != null) {
+                    val ci = Intent(this, CoinAdminActivity::class.java)
+                    ci.putExtra("mode", coinMode)
+                    ci.putExtra("title", item)
+                    startActivity(ci)
                 } else if (adminMode != null) {
                     val i = Intent(this, UserAdminActivity::class.java)
                     i.putExtra("mode", adminMode)

@@ -64,6 +64,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".CoinAdminActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".UserAdminActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

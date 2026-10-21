@@ -299,6 +299,14 @@ class UserAdminActivity : AppCompatActivity() {
             if (newVal < 0L) throw IllegalStateException("Saldo tidak boleh minus")
             tx.update(targetRef, "coins", newVal)
             tx.set(
+                db.collection("coin_ledger").document(), mapOf<String, Any>(
+                    "type" to "admin_adjust", "uid" to targetUid,
+                    "name" to (target.getString("nickname") ?: ""),
+                    "delta" to delta, "balanceAfter" to newVal,
+                    "byUid" to actorUid, "at" to System.currentTimeMillis()
+                )
+            )
+            tx.set(
                 logRef, mapOf<String, Any>(
                     "action" to "coin",
                     "targetUid" to targetUid,

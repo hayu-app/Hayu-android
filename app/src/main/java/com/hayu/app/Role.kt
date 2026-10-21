@@ -20,10 +20,10 @@ object Role {
         BD          to listOf("dashboard","agency","host","commission","report","recruit"),
         AGENCY      to listOf("dashboard","host","attendance","performance","commission","withdrawal","member"),
         HOST        to listOf("dashboard","room","gift","earnings","level","task","attendance","ranking","withdrawal","wallet"),
-        COINSELLER  to listOf("dashboard","customer","topup","order","wallet","commission","report"),
-        FINANCE     to listOf("dashboard","revenue","transaction","commission","withdrawal","refund","report"),
-        MODERATOR   to listOf("dashboard","room","report","ban","chat","appeal","history"),
-        CS          to listOf("dashboard","complaint","recovery","refund","ticket","support"),
+        COINSELLER  to listOf("dashboard","coinseller","customer","topup","order","wallet","commission","report"),
+        FINANCE     to listOf("dashboard","finance","revenue","transaction","commission","withdrawal","refund","report"),
+        MODERATOR   to listOf("dashboard","moderator","room","report","ban","chat","appeal","history"),
+        CS          to listOf("dashboard","cs","complaint","recovery","refund","ticket","support"),
         USER        to listOf()
     )
 
