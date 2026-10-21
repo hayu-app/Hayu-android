@@ -1,5 +1,6 @@
 package com.hayu.app
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
@@ -254,7 +255,11 @@ class PanelDetailActivity : AppCompatActivity() {
         container.orientation = LinearLayout.VERTICAL
         container.setPadding(d(16), d(12), d(16), d(80))
 
-        val items = panelContent[key] ?: listOf("🚧 Panel dalam pengembangan")
+        val items = (panelContent[key] ?: listOf("🚧 Panel dalam pengembangan")).toMutableList()
+        val roleItem = "🎭 Kelola Role"
+        if ((key == "dashboard" || key == "user") && Role.canManageRoles(role)) {
+            items.add(0, roleItem)
+        }
         for (item in items) {
             val row = LinearLayout(this)
             row.orientation = LinearLayout.HORIZONTAL
@@ -281,7 +286,11 @@ class PanelDetailActivity : AppCompatActivity() {
             row.addView(arrow)
 
             row.setOnClickListener {
-                Toast.makeText(this, "$item — segera tersedia", Toast.LENGTH_SHORT).show()
+                if (item == roleItem) {
+                    startActivity(Intent(this, RoleManagerActivity::class.java))
+                } else {
+                    Toast.makeText(this, "$item — segera tersedia", Toast.LENGTH_SHORT).show()
+                }
             }
 
             val rowLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)

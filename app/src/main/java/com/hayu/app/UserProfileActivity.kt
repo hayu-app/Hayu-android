@@ -106,13 +106,12 @@ class UserProfileActivity : AppCompatActivity() {
                 tvSpecialName.text = nickname
 
                 // Tampilkan badge role
-                when (role) {
-                    "developer" -> { tvRoleBadgeUser.text = "🛡️ DEVELOPER"; tvRoleBadgeUser.visibility = View.VISIBLE }
-                    "superadmin" -> { tvRoleBadgeUser.text = "🛡️ SUPERADMIN"; tvRoleBadgeUser.visibility = View.VISIBLE }
-                    "admin" -> { tvRoleBadgeUser.text = "⭐ ADMIN"; tvRoleBadgeUser.visibility = View.VISIBLE }
-                    "bd" -> { tvRoleBadgeUser.text = "🏡 BD"; tvRoleBadgeUser.visibility = View.VISIBLE }
-                    "cs" -> { tvRoleBadgeUser.text = "🎧 CS"; tvRoleBadgeUser.visibility = View.VISIBLE }
-                    else -> { tvRoleBadgeUser.visibility = View.GONE }
+                val roleText = Role.badge(role)
+                if (roleText != null) {
+                    tvRoleBadgeUser.text = roleText
+                    tvRoleBadgeUser.visibility = View.VISIBLE
+                } else {
+                    tvRoleBadgeUser.visibility = View.GONE
                 }
 
 // LANJUT BAGIAN 2 DI BAWAH INI

@@ -27,13 +27,82 @@ object Role {
         USER        to listOf()
     )
 
+    // Hirarki: angka lebih besar = lebih tinggi
+    private val rank = mapOf(
+        DEVELOPER to 100, SUPERADMIN to 90, ADMIN to 80, BD to 60, AGENCY to 50,
+        FINANCE to 45, MODERATOR to 40, COINSELLER to 35, CS to 30, HOST to 20, USER to 0
+    )
+
+    // Role apa saja yang boleh DIBERIKAN oleh masing-masing role
+    private val assignable = mapOf(
+        DEVELOPER  to listOf(SUPERADMIN, ADMIN, BD, AGENCY, HOST, COINSELLER, FINANCE, MODERATOR, CS, USER),
+        SUPERADMIN to listOf(ADMIN, BD, AGENCY, HOST, COINSELLER, FINANCE, MODERATOR, CS, USER),
+        ADMIN      to listOf(BD, AGENCY, HOST, COINSELLER, FINANCE, MODERATOR, CS, USER),
+        BD         to listOf(AGENCY, HOST, USER)
+    )
+
     fun normalize(raw: String?): String {
-        return (raw ?: USER).trim().lowercase()
+        val r = (raw ?: USER).trim().lowercase()
+        return if (r.isEmpty()) USER else r
     }
 
     fun canAccess(role: String?, panel: String): Boolean {
         val normalizedRole = normalize(role)
         val perms = access[normalizedRole] ?: return false
         return perms.contains("all") || perms.contains(panel)
+    }
+
+    fun rankOf(role: String?): Int = rank[normalize(role)] ?: 0
+
+    fun assignableBy(actorRole: String?): List<String> = assignable[normalize(actorRole)] ?: emptyList()
+
+    fun canManageRoles(role: String?): Boolean = assignableBy(role).isNotEmpty()
+
+    /** Actor boleh mengubah role target hanya jika pangkat actor LEBIH TINGGI dari target. */
+    fun canManageTarget(actorRole: String?, targetRole: String?): Boolean =
+        canManageRoles(actorRole) && rankOf(actorRole) > rankOf(targetRole)
+
+    fun label(role: String?): String = when (normalize(role)) {
+        DEVELOPER -> "👑 Developer"
+        SUPERADMIN -> "🛡️ SuperAdmin"
+        ADMIN -> "⭐ Admin"
+        BD -> "🏡 BD"
+        AGENCY -> "🏢 Agency"
+        HOST -> "🎙️ Host"
+        COINSELLER -> "🪙 Coinseller"
+        FINANCE -> "💰 Finance"
+        MODERATOR -> "🔍 Moderator"
+        CS -> "🎧 CS"
+        else -> "👤 User (tanpa role)"
+    }
+
+    /** Teks badge panjang (profil). null = user biasa, badge disembunyikan. */
+    fun badge(role: String?): String? = when (normalize(role)) {
+        DEVELOPER -> "🛡️ DEVELOPER"
+        SUPERADMIN -> "🛡️ SUPERADMIN"
+        ADMIN -> "⭐ ADMIN"
+        BD -> "🏡 BD"
+        AGENCY -> "🏢 AGENCY"
+        HOST -> "🎙️ HOST"
+        COINSELLER -> "🪙 COINSELLER"
+        FINANCE -> "💰 FINANCE"
+        MODERATOR -> "🔍 MODERATOR"
+        CS -> "🎧 CS"
+        else -> null
+    }
+
+    /** Teks badge pendek (list user). */
+    fun badgeShort(role: String?): String? = when (normalize(role)) {
+        DEVELOPER -> "🛡️ DEV"
+        SUPERADMIN -> "🛡️ SA"
+        ADMIN -> "⭐ ADM"
+        BD -> "🏡 BD"
+        AGENCY -> "🏢 AGN"
+        HOST -> "🎙️ HOST"
+        COINSELLER -> "🪙 COIN"
+        FINANCE -> "💰 FIN"
+        MODERATOR -> "🔍 MOD"
+        CS -> "🎧 CS"
+        else -> null
     }
 }

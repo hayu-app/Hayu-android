@@ -247,43 +247,19 @@ class ProfileFragment : Fragment() {
     }
 
     private fun applyRoleToUI(rootView: View, role: String) {
+        val r = Role.normalize(role)
         val badge = rootView.findViewById<TextView>(R.id.tvRoleBadgeProfile)
         val menuPanel = rootView.findViewById<View>(R.id.menu_dev_panel)
 
-        // Sembunyikan default
-        badge?.visibility = View.GONE
-        menuPanel?.visibility = View.GONE
-
-        when (role) {
-            "developer" -> {
-                badge?.text = "🛡️ DEVELOPER"
-                badge?.visibility = View.VISIBLE
-                menuPanel?.visibility = View.VISIBLE
-            }
-            "superadmin" -> {
-                badge?.text = "🛡️ SUPERADMIN"
-                badge?.visibility = View.VISIBLE
-                menuPanel?.visibility = View.VISIBLE
-            }
-            "admin" -> {
-                badge?.text = "⭐ ADMIN"
-                badge?.visibility = View.VISIBLE
-                menuPanel?.visibility = View.VISIBLE
-            }
-            "bd" -> {
-                badge?.text = "🏡 BD"
-                badge?.visibility = View.VISIBLE
-                menuPanel?.visibility = View.VISIBLE
-            }
-            "cs" -> {
-                badge?.text = "🎧 CS"
-                badge?.visibility = View.VISIBLE
-                // CS tidak dapat menu panel
-            }
-            else -> {
-                // user biasa
-            }
+        val text = Role.badge(r)
+        if (text != null) {
+            badge?.text = text
+            badge?.visibility = View.VISIBLE
+        } else {
+            badge?.visibility = View.GONE
         }
+        // Semua role yang punya akses dashboard bisa lihat menu panel
+        menuPanel?.visibility = if (Role.canAccess(r, "dashboard")) View.VISIBLE else View.GONE
     }
 
     private fun notif(msg: String) {

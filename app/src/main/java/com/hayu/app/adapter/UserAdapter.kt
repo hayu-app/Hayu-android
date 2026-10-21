@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.hayu.app.R
+import com.hayu.app.Role
 import com.hayu.app.model.User
 
 class UserAdapter(
@@ -51,31 +52,12 @@ class UserAdapter(
             tvBio.text = if (user.bio.isEmpty()) "Belum ada bio" else user.bio
 
             // === BADGE ROLE ===
-            val role = user.role.lowercase().trim()
-            when (role) {
-                "developer" -> {
-                    tvRoleBadge.text = "🛡️ DEV"
-                    tvRoleBadge.visibility = View.VISIBLE
-                }
-                "superadmin" -> {
-                    tvRoleBadge.text = "🛡️ SA"
-                    tvRoleBadge.visibility = View.VISIBLE
-                }
-                "admin" -> {
-                    tvRoleBadge.text = "⭐ ADM"
-                    tvRoleBadge.visibility = View.VISIBLE
-                }
-                "bd" -> {
-                    tvRoleBadge.text = "🏡 BD"
-                    tvRoleBadge.visibility = View.VISIBLE
-                }
-                "cs" -> {
-                    tvRoleBadge.text = "🎧 CS"
-                    tvRoleBadge.visibility = View.VISIBLE
-                }
-                else -> {
-                    tvRoleBadge.visibility = View.GONE
-                }
+            val badgeText = Role.badgeShort(user.role)
+            if (badgeText != null) {
+                tvRoleBadge.text = badgeText
+                tvRoleBadge.visibility = View.VISIBLE
+            } else {
+                tvRoleBadge.visibility = View.GONE
             }
 
             if (user.photoUrl.isNotEmpty()) {
