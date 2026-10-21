@@ -170,7 +170,10 @@ object GamePanelSheet {
                 tile.addView(name)
 
                 tile.setOnClickListener {
-                    if (g.name == "Lion vs Tiger") {
+                    if (g.name == "Greedy Eat") {
+                        dialog.dismiss()
+                        activity.startActivity(Intent(activity, GreedyEatActivity::class.java))
+                    } else if (g.name == "Lion vs Tiger") {
                         dialog.dismiss()
                         activity.startActivity(
                             Intent(activity, LionVsTigerActivity::class.java)

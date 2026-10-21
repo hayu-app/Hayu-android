@@ -115,5 +115,6 @@
             <activity android:name=".WalletActivity" android:exported="false" />
             <activity android:name=".PanelDetailActivity" android:exported="false" />
         <activity android:name=".LionVsTigerActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".GreedyEatActivity" android:exported="false" android:screenOrientation="portrait" />
     </application>
 </manifest>
