@@ -43,6 +43,7 @@ class CoinAdminActivity : AppCompatActivity() {
     private var mode = "ledger"
     private var myRole = Role.USER
     private var myRoles: Set<String> = emptySet()
+    private var myRoles: Set<String> = emptySet()
     private var myUid = ""
     private var ready = false
     private var walletInfo = ""

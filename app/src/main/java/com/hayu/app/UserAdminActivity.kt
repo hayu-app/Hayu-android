@@ -37,6 +37,7 @@ class UserAdminActivity : AppCompatActivity() {
     private var mode = "search"
     private var myRole = Role.USER
     private var myRoles: Set<String> = emptySet()
+    private var myRoles: Set<String> = emptySet()
     private var ready = false
     private var lastQuery = ""
 

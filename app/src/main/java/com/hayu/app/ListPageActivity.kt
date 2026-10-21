@@ -34,6 +34,7 @@ abstract class ListPageActivity : AppCompatActivity() {
     protected var myUid = ""
     protected var myRole = Role.USER
     protected var myRoles: Set<String> = emptySet()
+    protected var myRoles: Set<String> = emptySet()
     protected var myDoc: DocumentSnapshot? = null
     protected var mode = ""
 
@@ -202,6 +203,20 @@ abstract class ListPageActivity : AppCompatActivity() {
             }
             .setNegativeButton("Batal", null)
             .show()
+    }
+
+    /** User yang memegang role tertentu (field `roles` array ATAU `role` lama), digabung tanpa duplikat. */
+    protected fun usersByRole(role: String, limit: Long): Task<List<DocumentSnapshot>> {
+        val users = db.collection("users")
+        val tasks = listOf(
+            users.whereArrayContains("roles", role).limit(limit).get(),
+            users.whereEqualTo("role", role).limit(limit).get()
+        )
+        return Tasks.whenAllSuccess<QuerySnapshot>(tasks).continueWith { t ->
+            val seen = linkedMapOf<String, DocumentSnapshot>()
+            t.result.forEach { s -> s.documents.forEach { seen.putIfAbsent(it.id, it) } }
+            seen.values.toList()
+        }
     }
 
     /** User yang memegang role tertentu (field `roles` array ATAU `role` lama), digabung tanpa duplikat. */
