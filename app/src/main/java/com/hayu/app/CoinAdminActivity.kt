@@ -42,6 +42,7 @@ class CoinAdminActivity : AppCompatActivity() {
 
     private var mode = "ledger"
     private var myRole = Role.USER
+    private var myRoles: Set<String> = emptySet()
     private var myUid = ""
     private var ready = false
     private var walletInfo = ""
@@ -58,8 +59,8 @@ class CoinAdminActivity : AppCompatActivity() {
     private fun timeStr(ms: Long): String = SimpleDateFormat("dd MMM HH:mm", Locale("id", "ID")).format(Date(ms))
     private fun num(doc: DocumentSnapshot, f: String): Long = (doc.get(f) as? Number)?.toLong() ?: 0L
 
-    private fun isCoinAdmin() = Role.canAccess(myRole, "coin")
-    private fun isSeller() = myRole == Role.COINSELLER
+    private fun isCoinAdmin() = Role.canAccessAny(myRoles, "coin")
+    private fun isSeller() = Role.COINSELLER in myRoles
 
     private fun setInfo(s: String) {
         tvInfo.text = if (walletInfo.isEmpty()) s else "$walletInfo\n$s"
@@ -73,7 +74,8 @@ class CoinAdminActivity : AppCompatActivity() {
         myUid = auth.currentUser?.uid ?: run { finish(); return }
         db.collection("users").document(myUid).get()
             .addOnSuccessListener { doc ->
-                myRole = Role.normalize(doc.getString("role"))
+                myRoles = Role.rolesOf(doc)
+                myRole = Role.top(myRoles)
                 if (!allowed()) {
                     toast("Akses ditolak 🚫"); finish()
                 } else {
@@ -85,11 +87,11 @@ class CoinAdminActivity : AppCompatActivity() {
     }
 
     private fun allowed(): Boolean = when (mode) {
-        "packages" -> isCoinAdmin() || isSeller() || Role.canAccess(myRole, "transaction")
-        "ledger" -> isCoinAdmin() || Role.canAccess(myRole, "transaction")
+        "packages" -> isCoinAdmin() || isSeller() || Role.canAccessAny(myRoles, "transaction")
+        "ledger" -> isCoinAdmin() || Role.canAccessAny(myRoles, "transaction")
         "wallet" -> isCoinAdmin() || isSeller()
         "send" -> isSeller()
-        "sales" -> isCoinAdmin() || isSeller() || Role.canAccess(myRole, "transaction")
+        "sales" -> isCoinAdmin() || isSeller() || Role.canAccessAny(myRoles, "transaction")
         else -> false
     }
 
@@ -415,7 +417,7 @@ class CoinAdminActivity : AppCompatActivity() {
     private fun renderUsers(docs: List<DocumentSnapshot>) {
         list.removeAllViews()
         val shown = docs.filter { u ->
-            if (mode == "wallet") Role.normalize(u.getString("role")) == Role.COINSELLER else u.id != myUid
+            if (mode == "wallet") Role.COINSELLER in Role.rolesOf(u) else u.id != myUid
         }
         if (shown.isEmpty()) {
             setInfo(if (mode == "wallet") "Coinseller tidak ditemukan 😕" else "User tidak ditemukan 😕")
@@ -445,7 +447,7 @@ class CoinAdminActivity : AppCompatActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val target = tx.get(targetRef)
-            if (Role.normalize(actor.getString("role")) != Role.COINSELLER) {
+            if (Role.COINSELLER !in Role.rolesOf(actor)) {
                 throw IllegalStateException("Hanya coinseller yang boleh mengirim koin")
             }
             if (!target.exists()) throw IllegalStateException("User tidak ditemukan")
@@ -479,10 +481,10 @@ class CoinAdminActivity : AppCompatActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val target = tx.get(targetRef)
-            if (!Role.canAccess(actor.getString("role"), "coin")) {
+            if (!Role.canAccessAny(Role.rolesOf(actor), "coin")) {
                 throw IllegalStateException("Kamu tidak boleh mengisi wallet")
             }
-            if (Role.normalize(target.getString("role")) != Role.COINSELLER) {
+            if (Role.COINSELLER !in Role.rolesOf(target)) {
                 throw IllegalStateException("Target bukan coinseller")
             }
             val newWallet = num(target, "sellerWallet") + amount

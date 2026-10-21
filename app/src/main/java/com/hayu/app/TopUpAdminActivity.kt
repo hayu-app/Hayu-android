@@ -9,8 +9,8 @@ class TopUpAdminActivity : SimplePageActivity() {
     override val pageTitle: String get() = "Konfirmasi Top Up"
 
     override fun render(user: DocumentSnapshot, following: Int, followers: Int) {
-        val role = (user.getString("role") ?: "user").lowercase().trim()
-        if (role != "developer" && role != "superadmin") {
+        val roles = Role.rolesOf(user)
+        if (Role.DEVELOPER !in roles && Role.SUPERADMIN !in roles) {
             toast("Kamu tidak punya akses")
             finish()
             return

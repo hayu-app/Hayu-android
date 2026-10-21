@@ -48,7 +48,9 @@ class DevPanelActivity : AppCompatActivity() {
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                myRole = Role.normalize(doc.getString("role"))
+                val owned = Role.rolesOf(doc)
+                val want = intent.getStringExtra("role")
+                myRole = if (want != null && want in owned) want else Role.top(owned)
                 if (!Role.canAccess(myRole, "dashboard")) {
                     Toast.makeText(this, "Akses ditolak", Toast.LENGTH_SHORT).show()
                     finish()

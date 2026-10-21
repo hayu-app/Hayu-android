@@ -84,22 +84,7 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
-        view.findViewById<View>(R.id.menu_settings).setOnClickListener {
-            val uid = auth.currentUser?.uid ?: return@setOnClickListener
-
-            db.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    val role = Role.normalize(doc.getString("role"))
-                    if (Role.canAccess(role, "dashboard")) {
-                        startActivity(Intent(requireContext(), DevPanelActivity::class.java))
-                    } else {
-                        Toast.makeText(requireContext(), "Akses ditolak", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .addOnFailureListener {
-                    Toast.makeText(requireContext(), "Gagal cek akses", Toast.LENGTH_SHORT).show()
-                }
-        }
+        view.findViewById<View>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir ⚙️") }
         view.findViewById<View>(R.id.menu_help).setOnClickListener { startActivity(Intent(requireContext(), SupportActivity::class.java)) }
         view.findViewById<View>(R.id.menu_about).setOnClickListener {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
@@ -238,28 +223,29 @@ class ProfileFragment : Fragment() {
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                val role = doc.getString("role")?.lowercase()?.trim() ?: "user"
-                applyRoleToUI(rootView, role)
+                applyRolesToUI(rootView, Role.rolesOf(doc))
             }
             .addOnFailureListener {
-                applyRoleToUI(rootView, "user")
+                applyRolesToUI(rootView, emptySet())
             }
     }
 
-    private fun applyRoleToUI(rootView: View, role: String) {
-        val r = Role.normalize(role)
+    private fun applyRolesToUI(rootView: View, roles: Set<String>) {
+        if (!isAdded) return
         val badge = rootView.findViewById<TextView>(R.id.tvRoleBadgeProfile)
         val menuPanel = rootView.findViewById<View>(R.id.menu_dev_panel)
+        val container = rootView.findViewById<LinearLayout>(R.id.panel_container)
 
-        val text = Role.badge(r)
+        val text = Role.badgeAll(roles)
         if (text != null) {
             badge?.text = text
             badge?.visibility = View.VISIBLE
         } else {
             badge?.visibility = View.GONE
         }
-        // Semua role yang punya akses dashboard bisa lihat menu panel
-        menuPanel?.visibility = if (Role.canAccess(r, "dashboard")) View.VISIBLE else View.GONE
+        // Menu lama disembunyikan; panel sekarang dinamis per role yang dimiliki
+        menuPanel?.visibility = View.GONE
+        if (container != null) RolePanels.build(requireContext(), container, roles)
     }
 
     private fun notif(msg: String) {

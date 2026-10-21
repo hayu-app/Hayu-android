@@ -58,7 +58,7 @@ class LencanaActivity : SimplePageActivity() {
             Badge("🎁", "Dermawan", "Kirim hadiah pertama", giftsSent.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), 1),
             Badge("💝", "Idola", "Terima hadiah pertama", giftsReceived.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), 1),
             Badge("🛡️", "Staf HAYU", "Bergabung dengan tim HAYU",
-                if ((user.getString("role") ?: "user").lowercase().trim() != "user") 1 else 0, 1)
+                if (Role.rolesOf(user).isNotEmpty()) 1 else 0, 1)
         )
 
         val unlocked = badges.count { it.unlocked }

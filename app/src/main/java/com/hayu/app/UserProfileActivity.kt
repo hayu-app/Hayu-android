@@ -106,7 +106,7 @@ class UserProfileActivity : AppCompatActivity() {
                 tvSpecialName.text = nickname
 
                 // Tampilkan badge role
-                val roleText = Role.badge(role)
+                val roleText = Role.badgeAll(Role.rolesOf(doc))
                 if (roleText != null) {
                     tvRoleBadgeUser.text = roleText
                     tvRoleBadgeUser.visibility = View.VISIBLE

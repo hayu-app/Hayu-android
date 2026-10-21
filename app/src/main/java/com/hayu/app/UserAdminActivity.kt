@@ -36,6 +36,7 @@ class UserAdminActivity : AppCompatActivity() {
 
     private var mode = "search"
     private var myRole = Role.USER
+    private var myRoles: Set<String> = emptySet()
     private var ready = false
     private var lastQuery = ""
 
@@ -54,7 +55,8 @@ class UserAdminActivity : AppCompatActivity() {
         val uid = auth.currentUser?.uid ?: run { finish(); return }
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                myRole = Role.normalize(doc.getString("role"))
+                myRoles = Role.rolesOf(doc)
+                myRole = Role.top(myRoles)
                 if (!allowed()) {
                     toast("Akses ditolak 🚫"); finish()
                 } else {
@@ -66,11 +68,11 @@ class UserAdminActivity : AppCompatActivity() {
     }
 
     private fun allowed(): Boolean = when (mode) {
-        "ban" -> Role.canAccess(myRole, "ban") || Role.canAccess(myRole, "user")
-        "verify" -> Role.canAccess(myRole, "verify") || Role.canAccess(myRole, "user")
-        "coin" -> Role.canAccess(myRole, "coin")
-        "recover" -> Role.canAccess(myRole, "recovery")
-        else -> Role.canAccess(myRole, "dashboard")
+        "ban" -> Role.canAccessAny(myRoles, "ban") || Role.canAccessAny(myRoles, "user")
+        "verify" -> Role.canAccessAny(myRoles, "verify") || Role.canAccessAny(myRoles, "user")
+        "coin" -> Role.canAccessAny(myRoles, "coin")
+        "recover" -> Role.canAccessAny(myRoles, "recovery")
+        else -> Role.canAccessAny(myRoles, "dashboard")
     }
 
     private fun buildUI(title: String) {
@@ -166,7 +168,7 @@ class UserAdminActivity : AppCompatActivity() {
         tvInfo.text = "Ditemukan ${docs.size} user — tap untuk aksi"
         for (doc in docs) {
             val nick = doc.getString("nickname").orEmpty().ifEmpty { "Pengguna HAYU" }
-            val role = Role.normalize(doc.getString("role"))
+            val role = Role.top(Role.rolesOf(doc))
             val flags = buildString {
                 append("🪙 ${num(doc, "coins")}")
                 if (isBanned(doc)) append("  🚫 DIBLOKIR")
@@ -214,7 +216,7 @@ class UserAdminActivity : AppCompatActivity() {
         val msg = "UID: ${doc.id}\n" +
             "UserID: ${num(doc, "userId")}\n" +
             "Email: ${doc.getString("email").orEmpty()}\n" +
-            "Role: ${Role.label(doc.getString("role"))}\n" +
+            "Role: ${Role.rolesOf(doc).joinToString(", ") { Role.label(it) }.ifEmpty { Role.label(Role.USER) }}\n" +
             "Level: ${num(doc, "level")}\n" +
             "Koin: ${num(doc, "coins")}\n" +
             "Diblokir: ${if (isBanned(doc)) "Ya" else "Tidak"}\n" +
@@ -229,7 +231,7 @@ class UserAdminActivity : AppCompatActivity() {
     // ---------- BAN ----------
     private fun banDialog(doc: DocumentSnapshot) {
         if (doc.id == auth.currentUser?.uid) { toast("Tidak bisa memblokir diri sendiri"); return }
-        if (Role.rankOf(myRole) <= Role.rankOf(doc.getString("role"))) {
+        if (Role.rankOf(Role.top(myRoles)) <= Role.rankOf(Role.top(Role.rolesOf(doc)))) {
             toast("Pangkat target setara/lebih tinggi dari kamu"); return
         }
         val labels = arrayOf("🚫 Ban permanen", "⏳ Ban 1 hari", "⏳ Ban 7 hari", "⏳ Ban 30 hari", "✅ Unban")
@@ -317,9 +319,10 @@ class UserAdminActivity : AppCompatActivity() {
         val logRef = db.collection("admin_logs").document()
 
         db.runTransaction(Transaction.Function<Void?> { tx ->
-            val actorRole = Role.normalize(tx.get(actorRef).getString("role"))
+            val actorRoles = Role.rolesOf(tx.get(actorRef))
+            val actorRole = Role.top(actorRoles)
             val target = tx.get(targetRef)
-            if (!Role.canAccess(actorRole, "coin")) throw IllegalStateException("Kamu tidak boleh mengubah koin")
+            if (!Role.canAccessAny(actorRoles, "coin")) throw IllegalStateException("Kamu tidak boleh mengubah koin")
             val old = (target.get("coins") as? Number)?.toLong() ?: 0L
             val newVal = old + delta
             if (newVal < 0L) throw IllegalStateException("Saldo tidak boleh minus")
@@ -358,9 +361,10 @@ class UserAdminActivity : AppCompatActivity() {
         val logRef = db.collection("admin_logs").document()
 
         db.runTransaction(Transaction.Function<Void?> { tx ->
-            val actorRole = Role.normalize(tx.get(actorRef).getString("role"))
+            val actorRoles = Role.rolesOf(tx.get(actorRef))
+            val actorRole = Role.top(actorRoles)
             val target = tx.get(targetRef)
-            if (checkRank && Role.rankOf(actorRole) <= Role.rankOf(target.getString("role"))) {
+            if (checkRank && Role.rankOf(actorRole) <= Role.rankOf(Role.top(Role.rolesOf(target)))) {
                 throw IllegalStateException("Pangkat target setara/lebih tinggi dari kamu")
             }
             tx.update(targetRef, data)

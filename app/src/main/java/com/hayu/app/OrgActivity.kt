@@ -19,16 +19,16 @@ class OrgActivity : ListPageActivity() {
     private val orgAdminRoles = setOf(Role.DEVELOPER, Role.SUPERADMIN, Role.ADMIN)
     private val ymd = SimpleDateFormat("yyyyMMdd", Locale.US)
 
-    private fun isBd() = myRole == Role.BD
-    private fun isAgency() = myRole == Role.AGENCY
-    private fun isOrgAdmin() = myRole in orgAdminRoles
+    private fun isBd() = Role.BD in myRoles
+    private fun isAgency() = Role.AGENCY in myRoles
+    private fun isOrgAdmin() = myRoles.any { it in orgAdminRoles }
 
     override fun allowed(): Boolean = when {
         mode == "register_agency" || mode == "verify_agency" || mode.startsWith("agencies_") -> isBd() || isOrgAdmin()
         mode == "recruit_host" || mode == "attendance_agency" || mode.startsWith("hosts_") -> isAgency()
         mode == "verify_host" -> isAgency() || isOrgAdmin()
-        mode == "host_home" -> myRole == Role.HOST
-        mode == "ranking_host" -> isAgency() || isBd() || isOrgAdmin() || myRole == Role.HOST
+        mode == "host_home" -> Role.HOST in myRoles
+        mode == "ranking_host" -> isAgency() || isBd() || isOrgAdmin() || Role.HOST in myRoles
         else -> false
     }
 
@@ -49,9 +49,10 @@ class OrgActivity : ListPageActivity() {
     // ---------- hasil cari user ----------
     override fun onUserResults(docs: List<DocumentSnapshot>) {
         clearList()
-        val shown = docs.filter { it.id != myUid && Role.normalize(it.getString("role")) == Role.USER }
+        val wanted = if (mode == "register_agency") Role.AGENCY else Role.HOST
+        val shown = docs.filter { it.id != myUid && wanted !in Role.rolesOf(it) }
         if (shown.isEmpty()) {
-            setInfo("Tidak ada user biasa yang cocok (hanya user tanpa role yang bisa dipilih)")
+            setInfo("Tidak ada user yang cocok (atau sudah memegang role ini)")
             return
         }
         setInfo("Ditemukan ${shown.size} user — tap untuk pilih")
@@ -74,12 +75,13 @@ class OrgActivity : ListPageActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val t = tx.get(targetRef)
-            val ar = Role.normalize(actor.getString("role"))
-            if (ar != Role.BD && ar !in orgAdminRoles) throw IllegalStateException("Tidak punya akses")
-            if (Role.normalize(t.getString("role")) != Role.USER) throw IllegalStateException("User ini sudah punya role")
+            val ar = Role.rolesOf(actor)
+            if (Role.BD !in ar && ar.none { it in orgAdminRoles }) throw IllegalStateException("Tidak punya akses")
+            if (Role.AGENCY in Role.rolesOf(t)) throw IllegalStateException("User ini sudah menjadi agency")
+            val newRoles = Role.rolesOf(t) + Role.AGENCY
             tx.update(
                 targetRef, mapOf<String, Any>(
-                    "role" to Role.AGENCY, "agencyStatus" to "pending", "agencyName" to name,
+                    "role" to Role.top(newRoles), "roles" to newRoles.toList(), "agencyStatus" to "pending", "agencyName" to name,
                     "bdUid" to myUid, "recruitedAt" to System.currentTimeMillis()
                 )
             )
@@ -124,14 +126,14 @@ class OrgActivity : ListPageActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val t = tx.get(targetRef)
-            val ar = Role.normalize(actor.getString("role"))
-            val ownBd = ar == Role.BD && t.getString("bdUid") == myUid
-            if (!ownBd && ar !in orgAdminRoles) throw IllegalStateException("Bukan agency di bawah kamu")
+            val ar = Role.rolesOf(actor)
+            val ownBd = Role.BD in ar && t.getString("bdUid") == myUid
+            if (!ownBd && ar.none { it in orgAdminRoles }) throw IllegalStateException("Bukan agency di bawah kamu")
             if (t.getString("agencyStatus") != "pending") throw IllegalStateException("Sudah diproses")
             if (approve) {
                 tx.update(targetRef, mapOf<String, Any>("agencyStatus" to "verified", "verifiedAt" to System.currentTimeMillis()))
             } else {
-                tx.update(targetRef, mapOf<String, Any>("role" to Role.USER, "agencyStatus" to "rejected"))
+                tx.update(targetRef, mapOf<String, Any>("role" to Role.top(Role.rolesOf(t) - Role.AGENCY), "roles" to (Role.rolesOf(t) - Role.AGENCY).toList(), "agencyStatus" to "rejected"))
             }
             tx.set(
                 logRef, mapOf<String, Any>(
@@ -147,16 +149,16 @@ class OrgActivity : ListPageActivity() {
 
     // ---------- BD: dashboard / performa / laporan / ranking agency ----------
     private fun loadAgencies(variant: String) {
-        db.collection("users").whereEqualTo("role", Role.AGENCY).limit(200).get()
+        usersByRole(Role.AGENCY, 200)
             .addOnSuccessListener { aSnap ->
-                db.collection("users").whereEqualTo("role", Role.HOST).limit(1000).get()
+                usersByRole(Role.HOST, 1000)
                     .addOnSuccessListener { hSnap ->
-                        val verified = hSnap.documents.filter { it.getString("hostStatus") == "verified" }
+                        val verified = hSnap.filter { it.getString("hostStatus") == "verified" }
                             .groupingBy { it.getString("agencyUid").orEmpty() }.eachCount()
-                        val pending = hSnap.documents.filter { it.getString("hostStatus") == "pending" }
+                        val pending = hSnap.filter { it.getString("hostStatus") == "pending" }
                             .groupingBy { it.getString("agencyUid").orEmpty() }.eachCount()
 
-                        val mine = aSnap.documents.filter { isOrgAdmin() || it.getString("bdUid") == myUid }
+                        val mine = aSnap.filter { isOrgAdmin() || it.getString("bdUid") == myUid }
                         val agencies = if (variant == "report") {
                             mine.sortedByDescending { num(it, "recruitedAt") }
                         } else {
@@ -198,12 +200,13 @@ class OrgActivity : ListPageActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val t = tx.get(targetRef)
-            if (Role.normalize(actor.getString("role")) != Role.AGENCY) throw IllegalStateException("Hanya agency yang boleh merekrut")
+            if (Role.AGENCY !in Role.rolesOf(actor)) throw IllegalStateException("Hanya agency yang boleh merekrut")
             if (actor.getString("agencyStatus") != "verified") throw IllegalStateException("Agency kamu belum diverifikasi")
-            if (Role.normalize(t.getString("role")) != Role.USER) throw IllegalStateException("User ini sudah punya role")
+            if (Role.HOST in Role.rolesOf(t)) throw IllegalStateException("User ini sudah menjadi host")
+            val newRoles = Role.rolesOf(t) + Role.HOST
             tx.update(
                 targetRef, mapOf<String, Any>(
-                    "role" to Role.HOST, "hostStatus" to "pending", "agencyUid" to myUid,
+                    "role" to Role.top(newRoles), "roles" to newRoles.toList(), "hostStatus" to "pending", "agencyUid" to myUid,
                     "agencyName" to (actor.getString("agencyName") ?: ""),
                     "recruitedAt" to System.currentTimeMillis()
                 )
@@ -249,16 +252,16 @@ class OrgActivity : ListPageActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val t = tx.get(targetRef)
-            val ar = Role.normalize(actor.getString("role"))
-            val own = ar == Role.AGENCY && t.getString("agencyUid") == myUid
-            if (!own && ar !in orgAdminRoles) throw IllegalStateException("Bukan host di bawah kamu")
+            val ar = Role.rolesOf(actor)
+            val own = Role.AGENCY in ar && t.getString("agencyUid") == myUid
+            if (!own && ar.none { it in orgAdminRoles }) throw IllegalStateException("Bukan host di bawah kamu")
             if (t.getString("hostStatus") != "pending") throw IllegalStateException("Sudah diproses")
             if (approve) {
                 tx.update(targetRef, mapOf<String, Any>("hostStatus" to "verified", "verifiedAt" to System.currentTimeMillis()))
             } else {
                 tx.update(
                     targetRef, mapOf<String, Any>(
-                        "role" to Role.USER, "hostStatus" to "rejected", "agencyUid" to FieldValue.delete()
+                        "role" to Role.top(Role.rolesOf(t) - Role.HOST), "roles" to (Role.rolesOf(t) - Role.HOST).toList(), "hostStatus" to "rejected", "agencyUid" to FieldValue.delete()
                     )
                 )
             }
@@ -278,7 +281,7 @@ class OrgActivity : ListPageActivity() {
     private fun myHosts(onDone: (List<DocumentSnapshot>) -> Unit) {
         db.collection("users").whereEqualTo("agencyUid", myUid).limit(200).get()
             .addOnSuccessListener { snap ->
-                onDone(snap.documents.filter { Role.normalize(it.getString("role")) == Role.HOST })
+                onDone(snap.documents.filter { Role.HOST in Role.rolesOf(it) })
             }
             .addOnFailureListener { toast("Gagal: ${it.message}") }
     }
@@ -314,12 +317,12 @@ class OrgActivity : ListPageActivity() {
         val logRef = db.collection("org_logs").document()
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val t = tx.get(targetRef)
-            if (t.getString("agencyUid") != myUid || Role.normalize(t.getString("role")) != Role.HOST) {
+            if (t.getString("agencyUid") != myUid || Role.HOST !in Role.rolesOf(t)) {
                 throw IllegalStateException("Bukan host di bawah kamu")
             }
             tx.update(
                 targetRef, mapOf<String, Any>(
-                    "role" to Role.USER, "hostStatus" to FieldValue.delete(), "agencyUid" to FieldValue.delete()
+                    "role" to Role.top(Role.rolesOf(t) - Role.HOST), "roles" to (Role.rolesOf(t) - Role.HOST).toList(), "hostStatus" to FieldValue.delete(), "agencyUid" to FieldValue.delete()
                 )
             )
             tx.set(
@@ -398,10 +401,10 @@ class OrgActivity : ListPageActivity() {
 
     // ---------- Ranking host ----------
     private fun loadRanking() {
-        db.collection("users").whereEqualTo("role", Role.HOST).limit(200).get()
+        usersByRole(Role.HOST, 200)
             .addOnSuccessListener { snap ->
                 clearList()
-                val top = snap.documents
+                val top = snap
                     .filter { it.getString("hostStatus") != "pending" }
                     .sortedWith(compareByDescending<DocumentSnapshot> { lv(it) }.thenByDescending { num(it, "coins") })
                     .take(50)

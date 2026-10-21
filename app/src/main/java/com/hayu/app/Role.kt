@@ -1,5 +1,7 @@
 package com.hayu.app
 
+import com.google.firebase.firestore.DocumentSnapshot
+
 object Role {
     const val DEVELOPER    = "developer"
     const val SUPERADMIN   = "superadmin"
@@ -111,4 +113,41 @@ object Role {
         CS -> "🎧 CS"
         else -> null
     }
+
+    // ================= MULTI-ROLE =================
+    /** Gabungan field `roles` (array) + `role` (string lama). "user" = tidak punya role. */
+    fun rolesFrom(primary: Any?, list: Any?): Set<String> {
+        val out = linkedSetOf<String>()
+        (list as? List<*>)?.forEach { r ->
+            val n = normalize(r?.toString())
+            if (n != USER && access.containsKey(n)) out.add(n)
+        }
+        val p = normalize(primary?.toString())
+        if (p != USER && access.containsKey(p)) out.add(p)
+        return out
+    }
+
+    fun rolesOf(doc: DocumentSnapshot?): Set<String> =
+        if (doc == null) emptySet() else rolesFrom(doc.get("role"), doc.get("roles"))
+
+    /** Role dengan pangkat tertinggi (disimpan juga di field `role` untuk kode lama). */
+    fun top(roles: Collection<String>): String = roles.maxByOrNull { rankOf(it) } ?: USER
+
+    fun canAccessAny(roles: Collection<String>, panel: String): Boolean = roles.any { canAccess(it, panel) }
+
+    fun assignableByAny(roles: Collection<String>): List<String> =
+        roles.flatMap { assignableBy(it) }.distinct()
+
+    fun canManageRolesAny(roles: Collection<String>): Boolean = roles.any { canManageRoles(it) }
+
+    /** Semua role target harus bisa diurus oleh salah satu role actor. */
+    fun canManageTargetAny(actorRoles: Collection<String>, targetRoles: Collection<String>): Boolean {
+        if (!canManageRolesAny(actorRoles)) return false
+        val t = if (targetRoles.isEmpty()) listOf(USER) else targetRoles.toList()
+        return t.all { tr -> actorRoles.any { canManageTarget(it, tr) } }
+    }
+
+    /** Badge semua role yang dimiliki, null jika user biasa. */
+    fun badgeAll(roles: Collection<String>): String? =
+        roles.sortedByDescending { rankOf(it) }.mapNotNull { badge(it) }.joinToString("  ").ifEmpty { null }
 }

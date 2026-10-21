@@ -284,7 +284,7 @@ class PanelDetailActivity : AppCompatActivity() {
             "Komplain Top-up" to "tickets|topup", "Komplain Transaksi" to "tickets|transaksi",
             "Request Refund" to "tickets|refund", "Histori Response" to "history"
         )
-        if ((key == "dashboard" || key == "user") && Role.canManageRoles(role)) {
+        if ((key == "dashboard" || key == "user" || key == "bd") && Role.canManageRoles(role)) {
             items.add(0, roleItem)
         }
         for (item in items) {

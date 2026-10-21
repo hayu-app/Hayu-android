@@ -9,7 +9,7 @@ class TicketAdminActivity : ListPageActivity() {
 
     private var cat = ""
 
-    override fun allowed(): Boolean = Role.canAccess(myRole, "support") || Role.canAccess(myRole, "cs")
+    override fun allowed(): Boolean = Role.canAccessAny(myRoles, "support") || Role.canAccessAny(myRoles, "cs")
 
     override fun onReady() {
         cat = intent.getStringExtra("cat") ?: ""
@@ -70,7 +70,7 @@ class TicketAdminActivity : ListPageActivity() {
         db.collection("tickets").whereEqualTo("status", "closed").limit(300).get()
             .addOnSuccessListener { snap ->
                 clearList()
-                val onlyMine = myRole == Role.CS
+                val onlyMine = Role.CS in myRoles && Role.top(myRoles) == Role.CS
                 val docs = snap.documents
                     .filter { !onlyMine || it.getString("repliedBy") == myUid }
                     .sortedByDescending { num(it, "repliedAt") }
