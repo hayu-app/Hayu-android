@@ -257,6 +257,11 @@ class PanelDetailActivity : AppCompatActivity() {
 
         val items = (panelContent[key] ?: listOf("🚧 Panel dalam pengembangan")).toMutableList()
         val roleItem = "🎭 Kelola Role"
+        val adminModes = mapOf(
+            "Cari User by UID" to "search", "Cari UID Customer" to "search", "Status Akun" to "search",
+            "Ban & Suspension" to "ban", "Temporary Ban" to "ban", "Warning & Ban" to "ban",
+            "Verifikasi Akun" to "verify", "Saldo Koin User" to "coin"
+        )
         if ((key == "dashboard" || key == "user") && Role.canManageRoles(role)) {
             items.add(0, roleItem)
         }
@@ -286,8 +291,14 @@ class PanelDetailActivity : AppCompatActivity() {
             row.addView(arrow)
 
             row.setOnClickListener {
+                val adminMode = adminModes[item.substringAfter(' ')]
                 if (item == roleItem) {
                     startActivity(Intent(this, RoleManagerActivity::class.java))
+                } else if (adminMode != null) {
+                    val i = Intent(this, UserAdminActivity::class.java)
+                    i.putExtra("mode", adminMode)
+                    i.putExtra("title", item)
+                    startActivity(i)
                 } else {
                     Toast.makeText(this, "$item — segera tersedia", Toast.LENGTH_SHORT).show()
                 }

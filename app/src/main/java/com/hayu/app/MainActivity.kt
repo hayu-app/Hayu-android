@@ -30,6 +30,18 @@ class MainActivity : AppCompatActivity() {
         floatingIcon = findViewById(R.id.floating_room_icon)
         bottomNav = findViewById(R.id.bottom_nav)
 
+        auth.currentUser?.uid?.let { myUid ->
+            db.collection("users").document(myUid).get().addOnSuccessListener { d ->
+                val until = d.getLong("bannedUntil") ?: 0L
+                if (d.getBoolean("banned") == true && (until == 0L || until > System.currentTimeMillis())) {
+                    auth.signOut()
+                    android.widget.Toast.makeText(this, "Akun kamu diblokir 🚫", android.widget.Toast.LENGTH_LONG).show()
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finishAffinity()
+                }
+            }
+        }
+
         if (savedInstanceState == null) {
             loadFragment(HomeFragment())
         }
