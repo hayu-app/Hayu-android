@@ -80,7 +80,7 @@ object GamePanelSheet {
 
             // build grid buat tab ini
             val sv = ScrollView(activity)
-            val grid = buildGrid(activity, games, d)
+            val grid = buildGrid(activity, dialog, games, d)
             sv.addView(grid)
             sv.visibility = if (idx == 0) android.view.View.VISIBLE else android.view.View.GONE
             grids.add(sv)
@@ -113,6 +113,7 @@ object GamePanelSheet {
 
     private fun buildGrid(
         activity: AppCompatActivity,
+        dialog: BottomSheetDialog,
         games: List<GameItem>,
         d: (Int) -> Int
     ): LinearLayout {

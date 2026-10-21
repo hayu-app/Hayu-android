@@ -9,6 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlin.random.Random
 
 class LionVsTigerActivity : AppCompatActivity() {
@@ -17,7 +20,10 @@ class LionVsTigerActivity : AppCompatActivity() {
     private val dark = Color.rgb(30, 20, 44)
     private val amounts = listOf(1000, 10000, 100000, 200000, 500000)
 
-    private var balance = 100000
+    private val db by lazy { FirebaseFirestore.getInstance() }
+    private val uid: String? get() = FirebaseAuth.getInstance().currentUser?.uid
+    private var coinListener: ListenerRegistration? = null
+    private var balance = 0
     private var selectedAmount = 1000
     private var selectedSide = ""
     private var round = 1
@@ -166,7 +172,7 @@ class LionVsTigerActivity : AppCompatActivity() {
         val balanceColumn = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
-        balanceText = text("Coins Balance\n${fmt(balance)}", 14f, gold, true)
+        balanceText = text("Coins Balance\n...", 14f, gold, true)
         profitText = text("Profits of Today\n${fmt(profit)}", 14f, gold, true)
         balanceColumn.addView(balanceText)
         stats.addView(balanceColumn, LinearLayout.LayoutParams(0, -2, 1f))
@@ -200,6 +206,28 @@ class LionVsTigerActivity : AppCompatActivity() {
         add(root, repeat, 52)
 
         refreshChoices()
+        listenCoins()
+    }
+
+    // Saldo diambil realtime dari users/{uid}.coins (sama dengan saldo di Room & Gift)
+    private fun listenCoins() {
+        val me = uid
+        if (me == null) {
+            Toast.makeText(this, "Silakan login dulu", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        coinListener = db.collection("users").document(me)
+            .addSnapshotListener { snap, err ->
+                if (err != null || snap == null) return@addSnapshotListener
+                balance = (snap.getLong("coins") ?: 0L).toInt()
+                updateStats()
+            }
+    }
+
+    override fun onDestroy() {
+        coinListener?.remove()
+        super.onDestroy()
     }
 
     private fun choice(label: String): TextView {
@@ -267,45 +295,48 @@ class LionVsTigerActivity : AppCompatActivity() {
             Toast.makeText(this, "Pilih Lion, Draw atau Tiger", Toast.LENGTH_SHORT).show()
             return
         }
-        if (balance < selectedAmount) {
-            Toast.makeText(this, "Saldo demo tidak cukup", Toast.LENGTH_SHORT).show()
+        val me = uid ?: return
+        val bet = selectedAmount
+        val side = selectedSide
+        if (balance < bet) {
+            Toast.makeText(this, "Koin tidak cukup", Toast.LENGTH_SHORT).show()
             return
         }
 
         busy = true
-        lastBet = selectedAmount
-        lastSide = selectedSide
-        balance -= selectedAmount
-        updateStats()
         betButton.text = "⏳  MENENTUKAN HASIL..."
 
-        // Simulasi lokal untuk uji UI, bukan hasil server atau taruhan nyata.
-        betButton.postDelayed({
-            val outcomes = listOf("LION", "DRAW", "TIGER")
-            val outcome = outcomes[Random.nextInt(outcomes.size)]
-            val won = outcome == selectedSide
+        val outcome = listOf("LION", "DRAW", "TIGER")[Random.nextInt(3)]
+        val payout = if (outcome == side) (if (outcome == "DRAW") bet * 3 else bet * 2) else 0
+        val ref = db.collection("users").document(me)
 
-            if (won) {
-                val payout = when (outcome) {
-                    "DRAW" -> selectedAmount * 3
-                    else -> selectedAmount * 2
-                }
-                balance += payout
-                profit += payout - selectedAmount
-                resultText.text = "HASIL: $outcome  •  MENANG +${fmt(payout - selectedAmount)}"
+        // Potong taruhan + bayar kemenangan dalam satu transaksi atomik di Firestore
+        db.runTransaction { tx ->
+            val snap = tx.get(ref)
+            val coins = snap.getLong("coins") ?: 0L
+            if (coins < bet) throw IllegalStateException("Koin tidak cukup")
+            tx.update(ref, "coins", coins - bet + payout)
+            null
+        }.addOnSuccessListener {
+            lastBet = bet
+            lastSide = side
+            if (payout > 0) {
+                profit += payout - bet
+                resultText.text = "HASIL: $outcome  •  MENANG +${fmt(payout - bet)}"
             } else {
-                profit -= selectedAmount
-                resultText.text = "HASIL: $outcome  •  KALAH -${fmt(selectedAmount)}"
+                profit -= bet
+                resultText.text = "HASIL: $outcome  •  KALAH -${fmt(bet)}"
             }
-
-            historyText.text = "$outcome   •   ${historyText.text}"
-                .take(220)
+            historyText.text = "$outcome   •   ${historyText.text}".take(220)
             round++
             roundText.text = "Round $round of Today"
-            updateStats()
             betButton.text = "▶  MULAI RONDE"
             busy = false
-        }, 900)
+        }.addOnFailureListener {
+            Toast.makeText(this, "Gagal: ${it.message}", Toast.LENGTH_LONG).show()
+            betButton.text = "▶  MULAI RONDE"
+            busy = false
+        }
     }
 
     private fun updateStats() {
