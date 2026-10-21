@@ -100,7 +100,7 @@ class ProfileFragment : Fragment() {
                     Toast.makeText(requireContext(), "Gagal cek akses", Toast.LENGTH_SHORT).show()
                 }
         }
-        view.findViewById<View>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
+        view.findViewById<View>(R.id.menu_help).setOnClickListener { startActivity(Intent(requireContext(), SupportActivity::class.java)) }
         view.findViewById<View>(R.id.menu_about).setOnClickListener {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
         }

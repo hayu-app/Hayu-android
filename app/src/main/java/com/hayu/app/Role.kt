@@ -17,9 +17,9 @@ object Role {
         DEVELOPER   to listOf("all"),
         SUPERADMIN  to listOf("dashboard","user","admin","bd","agency","host","coinseller","finance","moderator","cs","room","coin","vip","event","security","notif","system","report"),
         ADMIN       to listOf("dashboard","user","room","host","agency","bd","coinseller","report","ban","event","transaction","cs","verify","logs"),
-        BD          to listOf("dashboard","agency","host","commission","report","recruit"),
-        AGENCY      to listOf("dashboard","host","attendance","performance","commission","withdrawal","member"),
-        HOST        to listOf("dashboard","room","gift","earnings","level","task","attendance","ranking","withdrawal","wallet"),
+        BD          to listOf("dashboard","bd","agency","host","commission","report","recruit"),
+        AGENCY      to listOf("dashboard","agency","host","attendance","performance","commission","withdrawal","member"),
+        HOST        to listOf("dashboard","host","room","gift","earnings","level","task","attendance","ranking","withdrawal","wallet"),
         COINSELLER  to listOf("dashboard","coinseller","customer","topup","order","wallet","commission","report"),
         FINANCE     to listOf("dashboard","finance","revenue","transaction","commission","withdrawal","refund","report"),
         MODERATOR   to listOf("dashboard","moderator","room","report","ban","chat","appeal","history"),
@@ -59,8 +59,14 @@ object Role {
     fun canManageRoles(role: String?): Boolean = assignableBy(role).isNotEmpty()
 
     /** Actor boleh mengubah role target hanya jika pangkat actor LEBIH TINGGI dari target. */
-    fun canManageTarget(actorRole: String?, targetRole: String?): Boolean =
-        canManageRoles(actorRole) && rankOf(actorRole) > rankOf(targetRole)
+    fun canManageTarget(actorRole: String?, targetRole: String?): Boolean {
+        val actor = normalize(actorRole)
+        val target = normalize(targetRole)
+        if (!canManageRoles(actor) || rankOf(actor) <= rankOf(target)) return false
+        // BD hanya boleh mengurus jalur rekrutmennya (user / agency / host)
+        if (actor == BD && target !in listOf(USER, AGENCY, HOST)) return false
+        return true
+    }
 
     fun label(role: String?): String = when (normalize(role)) {
         DEVELOPER -> "👑 Developer"

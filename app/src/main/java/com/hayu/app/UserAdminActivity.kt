@@ -69,6 +69,7 @@ class UserAdminActivity : AppCompatActivity() {
         "ban" -> Role.canAccess(myRole, "ban") || Role.canAccess(myRole, "user")
         "verify" -> Role.canAccess(myRole, "verify") || Role.canAccess(myRole, "user")
         "coin" -> Role.canAccess(myRole, "coin")
+        "recover" -> Role.canAccess(myRole, "recovery")
         else -> Role.canAccess(myRole, "dashboard")
     }
 
@@ -204,6 +205,7 @@ class UserAdminActivity : AppCompatActivity() {
             "ban" -> banDialog(doc)
             "verify" -> verifyDialog(doc)
             "coin" -> coinDialog(doc)
+            "recover" -> recoverDialog(doc)
             else -> infoDialog(doc)
         }
     }
@@ -257,6 +259,30 @@ class UserAdminActivity : AppCompatActivity() {
             .setMessage(if (now) "Akun ini sudah terverifikasi." else "Akun ini belum terverifikasi.")
             .setPositiveButton(if (now) "Cabut verifikasi" else "Verifikasi") { _, _ ->
                 safeUpdate(doc.id, mapOf<String, Any>("verified" to !now), if (now) "unverify" else "verify", false)
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    // ---------- PEMULIHAN AKUN ----------
+    private fun recoverDialog(doc: DocumentSnapshot) {
+        val email = doc.getString("email").orEmpty()
+        if (email.isEmpty()) { toast("Email user tidak tersimpan"); return }
+        AlertDialog.Builder(this)
+            .setTitle("Pemulihan akun")
+            .setMessage("Kirim email reset password ke $email?")
+            .setPositiveButton("Kirim") { _, _ ->
+                auth.sendPasswordResetEmail(email)
+                    .addOnSuccessListener {
+                        db.collection("admin_logs").add(
+                            mapOf<String, Any>(
+                                "action" to "recover", "targetUid" to doc.id,
+                                "byUid" to (auth.currentUser?.uid ?: ""), "at" to Timestamp.now()
+                            )
+                        )
+                        toast("✅ Email reset password terkirim")
+                    }
+                    .addOnFailureListener { toast("Gagal: ${it.message}") }
             }
             .setNegativeButton("Batal", null)
             .show()

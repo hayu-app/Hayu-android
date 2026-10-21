@@ -260,13 +260,29 @@ class PanelDetailActivity : AppCompatActivity() {
         val adminModes = mapOf(
             "Cari User by UID" to "search", "Cari UID Customer" to "search", "Status Akun" to "search",
             "Ban & Suspension" to "ban", "Temporary Ban" to "ban", "Warning & Ban" to "ban",
-            "Verifikasi Akun" to "verify", "Saldo Koin User" to "coin"
+            "Verifikasi Akun" to "verify", "Saldo Koin User" to "coin", "Pemulihan Akun" to "recover"
         )
         val coinModes = mapOf(
             "Paket & Harga Koin" to "packages", "Paket Koin" to "packages",
             "Ledger Transaksi" to "ledger", "Dashboard Coinseller" to "wallet",
             "Wallet Coinseller" to "wallet", "Kirim Koin" to "send",
             "Laporan Penjualan" to "sales", "Top-up & Pembelian" to "topup"
+        )
+        val orgModes = mapOf(
+            "Dashboard BD" to "agencies_dash", "Daftarkan Agency" to "register_agency",
+            "Verifikasi Agency" to "verify_agency", "Performa Agency & Host" to "agencies_perf",
+            "Laporan Rekrutmen" to "agencies_report", "Ranking Agency" to "agencies_rank",
+            "Dashboard Agency" to "hosts_dash", "Rekrut Host" to "recruit_host",
+            "Verifikasi Host" to "verify_host", "Absensi Host" to "attendance_agency",
+            "Performa Host" to "hosts_perf", "Manajemen Member" to "hosts_manage",
+            "Dashboard Host" to "host_home", "Absensi & Jam Aktif" to "host_home",
+            "Ranking Host" to "ranking_host"
+        )
+        val csModes = mapOf(
+            "Dashboard CS" to "stats", "Laporan Support" to "stats",
+            "Support Ticket" to "tickets|", "Komplain User" to "tickets|complaint",
+            "Komplain Top-up" to "tickets|topup", "Komplain Transaksi" to "tickets|transaksi",
+            "Request Refund" to "tickets|refund", "Histori Response" to "history"
         )
         if ((key == "dashboard" || key == "user") && Role.canManageRoles(role)) {
             items.add(0, roleItem)
@@ -299,8 +315,27 @@ class PanelDetailActivity : AppCompatActivity() {
             row.setOnClickListener {
                 val adminMode = adminModes[item.substringAfter(' ')]
                 val coinMode = coinModes[item.substringAfter(' ')]
+                val orgMode = orgModes[item.substringAfter(' ')]
+                val csMode = csModes[item.substringAfter(' ')]
+                val plainName = item.substringAfter(' ')
                 if (item == roleItem) {
                     startActivity(Intent(this, RoleManagerActivity::class.java))
+                } else if (orgMode != null) {
+                    val oi = Intent(this, OrgActivity::class.java)
+                    oi.putExtra("mode", orgMode)
+                    oi.putExtra("title", item)
+                    startActivity(oi)
+                } else if (csMode != null) {
+                    val parts = csMode.split("|")
+                    val ti = Intent(this, TicketAdminActivity::class.java)
+                    ti.putExtra("mode", parts[0])
+                    ti.putExtra("cat", parts.getOrElse(1) { "" })
+                    ti.putExtra("title", item)
+                    startActivity(ti)
+                } else if (plainName == "Level & EXP Host") {
+                    startActivity(Intent(this, LevelActivity::class.java))
+                } else if (plainName == "Tugas Harian") {
+                    startActivity(Intent(this, TugasActivity::class.java))
                 } else if (coinMode == "topup") {
                     startActivity(Intent(this, TopUpAdminActivity::class.java))
                 } else if (coinMode != null) {

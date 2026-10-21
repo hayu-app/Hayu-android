@@ -64,6 +64,21 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".OrgActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".SupportActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".TicketAdminActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".CoinAdminActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
