@@ -78,7 +78,7 @@ class RoleManagerActivity : AppCompatActivity() {
 
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                val role = doc.getString("role")?.lowercase()?.trim() ?: "user"
+                val role = Role.normalize(doc.getString("role"))
                 currentRole = role
 
                 val allowed = arrayOf("developer", "superadmin", "admin", "bd")
