@@ -88,6 +88,7 @@ class RoomActivity : AppCompatActivity() {
         val btnNotif     = findViewById<TextView>(R.id.btn_notif)
         val btnMenu      = findViewById<TextView>(R.id.btn_menu)
         val btnGift      = findViewById<TextView>(R.id.btn_gift)
+        val btnGame      = findViewById<TextView>(R.id.btn_game)
 
         // bind mic slot views
         val slotIds = listOf(
@@ -154,7 +155,8 @@ class RoomActivity : AppCompatActivity() {
 
         btnMenu.setOnClickListener { showRoomMenu() }
 
-        btnGift.setOnClickListener { GamePanelSheet.show(this) }
+        btnGift.setOnClickListener { openGiftSheet() }
+        btnGame.setOnClickListener { GamePanelSheet.show(this) }
 
         listenMessages()
     }
