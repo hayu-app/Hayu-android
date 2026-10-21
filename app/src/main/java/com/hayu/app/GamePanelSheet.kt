@@ -169,7 +169,18 @@ object GamePanelSheet {
                 tile.addView(name)
 
                 tile.setOnClickListener {
-                    Toast.makeText(activity, "${g.emoji} ${g.name} segera hadir!", Toast.LENGTH_SHORT).show()
+                    if (g.name == "Lion vs Tiger") {
+                        dialog.dismiss()
+                        activity.startActivity(
+                            Intent(activity, LionVsTigerActivity::class.java)
+                        )
+                    } else {
+                        Toast.makeText(
+                            activity,
+                            "${g.emoji} ${g.name} segera hadir!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
 
                 row.addView(tile, lp)
