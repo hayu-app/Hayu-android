@@ -13,7 +13,6 @@ object Role {
     const val CS           = "cs"
     const val USER         = "user"
 
-    // panel yang boleh diakses per role
     val access = mapOf(
         DEVELOPER   to listOf("all"),
         SUPERADMIN  to listOf("dashboard","user","admin","bd","agency","host","coinseller","finance","moderator","cs","room","coin","vip","event","security","notif","system","report"),
@@ -28,8 +27,13 @@ object Role {
         USER        to listOf()
     )
 
-    fun canAccess(role: String, panel: String): Boolean {
-        val perms = access[role] ?: return false
+    fun normalize(raw: String?): String {
+        return (raw ?: USER).trim().lowercase()
+    }
+
+    fun canAccess(role: String?, panel: String): Boolean {
+        val normalizedRole = normalize(role)
+        val perms = access[normalizedRole] ?: return false
         return perms.contains("all") || perms.contains(panel)
     }
 }

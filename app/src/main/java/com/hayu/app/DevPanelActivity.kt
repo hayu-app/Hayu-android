@@ -46,10 +46,20 @@ class DevPanelActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         val uid = auth.currentUser?.uid ?: run { finish(); return }
 
-        db.collection("users").document(uid).get().addOnSuccessListener { doc ->
-            myRole = doc.getString("role") ?: Role.USER
-            buildUI()
-        }.addOnFailureListener { buildUI() }
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                myRole = Role.normalize(doc.getString("role"))
+                if (!Role.canAccess(myRole, "dashboard")) {
+                    Toast.makeText(this, "Akses ditolak", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return@addOnSuccessListener
+                }
+                buildUI()
+            }
+            .addOnFailureListener {
+                myRole = Role.USER
+                buildUI()
+            }
     }
 
     private fun buildUI() {

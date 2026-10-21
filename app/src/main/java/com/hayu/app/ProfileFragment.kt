@@ -85,9 +85,20 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
         view.findViewById<View>(R.id.menu_settings).setOnClickListener {
-            val uid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-            if (uid == null) { notif("Login dulu"); return@setOnClickListener }
-            startActivity(android.content.Intent(requireContext(), DevPanelActivity::class.java))
+            val uid = auth.currentUser?.uid ?: return@setOnClickListener
+
+            db.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    val role = Role.normalize(doc.getString("role"))
+                    if (Role.canAccess(role, "dashboard")) {
+                        startActivity(Intent(requireContext(), DevPanelActivity::class.java))
+                    } else {
+                        Toast.makeText(requireContext(), "Akses ditolak", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(requireContext(), "Gagal cek akses", Toast.LENGTH_SHORT).show()
+                }
         }
         view.findViewById<View>(R.id.menu_help).setOnClickListener { notif("Bantuan segera hadir! ❓") }
         view.findViewById<View>(R.id.menu_about).setOnClickListener {
@@ -96,7 +107,17 @@ class ProfileFragment : Fragment() {
 
         // Menu Panel Role (dengan pengaman ?. agar tidak crash)
         view.findViewById<View>(R.id.menu_dev_panel)?.setOnClickListener {
-            startActivity(Intent(requireContext(), DevPanelActivity::class.java))
+            val uid = auth.currentUser?.uid ?: return@setOnClickListener
+
+            db.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    val role = Role.normalize(doc.getString("role"))
+                    if (Role.canAccess(role, "dashboard")) {
+                        startActivity(Intent(requireContext(), DevPanelActivity::class.java))
+                    } else {
+                        Toast.makeText(requireContext(), "Akses ditolak", Toast.LENGTH_SHORT).show()
+                    }
+                }
         }
     }
 
