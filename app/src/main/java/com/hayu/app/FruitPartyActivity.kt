@@ -908,6 +908,7 @@ class FruitPartyActivity : AppCompatActivity() {
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 
+    private fun fmt(v: Int)  = fmt(v.toLong())
     private fun fmt(v: Long) = String.format(Locale.US, "%,d", v).replace(',', '.')
     private fun compact(v: Long) = when {
         v >= 1_000_000_000L -> String.format(Locale.US, "%.1fB", v / 1_000_000_000.0)
