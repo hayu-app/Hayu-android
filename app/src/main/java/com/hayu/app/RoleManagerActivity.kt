@@ -154,7 +154,12 @@ class RoleManagerActivity : AppCompatActivity() {
 
     private fun onUserClicked(user: User) {
         if (user.uid == auth.currentUser?.uid) {
-            Toast.makeText(this, "Tidak bisa mengubah role sendiri", Toast.LENGTH_SHORT).show()
+            // Hanya DEVELOPER yang boleh mengatur role dirinya sendiri
+            if (Role.DEVELOPER in currentRoles) {
+                showRolePicker(user, currentRoles)
+            } else {
+                Toast.makeText(this, "Tidak bisa mengubah role sendiri", Toast.LENGTH_SHORT).show()
+            }
             return
         }
         val targetRoles = rolesByUid[user.uid] ?: Role.rolesFrom(user.role, null)
@@ -206,7 +211,13 @@ class RoleManagerActivity : AppCompatActivity() {
             val allowed = Role.assignableByAny(actorRoles)
 
             if (!chosen.all { it in allowed }) throw IllegalStateException("Kamu tidak boleh memberi role itu")
-            if (!Role.canManageTargetAny(actorRoles, oldRoles)) {
+            val selfEdit = actorUid == targetUser.uid
+            if (selfEdit) {
+                // Dicek ulang di dalam transaksi dari data Firestore
+                if (Role.DEVELOPER !in actorRoles) {
+                    throw IllegalStateException("Hanya developer yang boleh mengubah role sendiri")
+                }
+            } else if (!Role.canManageTargetAny(actorRoles, oldRoles)) {
                 throw IllegalStateException("Role target setara/lebih tinggi dari kamu")
             }
 
