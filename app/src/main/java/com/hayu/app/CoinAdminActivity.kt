@@ -34,6 +34,7 @@ import java.util.Locale
  *  packages = paket & harga koin | ledger = riwayat transaksi koin
  *  wallet   = wallet coinseller (seller: saldo sendiri, admin: isi wallet) | send = coinseller kirim koin
  *  sales    = laporan penjualan coinseller
+ *  restock  = isi ulang stok: coinseller mengajukan, developer/superadmin/admin menyetujui
  */
 class CoinAdminActivity : AppCompatActivity() {
 
@@ -62,6 +63,12 @@ class CoinAdminActivity : AppCompatActivity() {
     private fun isCoinAdmin() = Role.canAccessAny(myRoles, "coin")
     private fun isSeller() = Role.COINSELLER in myRoles
 
+    /** Developer, Superadmin, Admin (atau yang punya akses panel koin) boleh mengisi stok coinseller. */
+    private fun canStock(roles: Set<String>) =
+        roles.any { it == Role.DEVELOPER || it == Role.SUPERADMIN || it == Role.ADMIN } ||
+            Role.canAccessAny(roles, "coin")
+    private fun isStockAdmin() = canStock(myRoles)
+
     private fun setInfo(s: String) {
         tvInfo.text = if (walletInfo.isEmpty()) s else "$walletInfo\n$s"
     }
@@ -89,7 +96,8 @@ class CoinAdminActivity : AppCompatActivity() {
     private fun allowed(): Boolean = when (mode) {
         "packages" -> isCoinAdmin() || isSeller() || Role.canAccessAny(myRoles, "transaction")
         "ledger" -> isCoinAdmin() || Role.canAccessAny(myRoles, "transaction")
-        "wallet" -> isCoinAdmin() || isSeller()
+        "wallet" -> isStockAdmin() || isSeller()
+        "restock" -> isStockAdmin() || isSeller()
         "send" -> isSeller()
         "sales" -> isCoinAdmin() || isSeller() || Role.canAccessAny(myRoles, "transaction")
         else -> false
@@ -104,6 +112,7 @@ class CoinAdminActivity : AppCompatActivity() {
             }
             "ledger" -> loadLedger()
             "sales" -> loadSales()
+            "restock" -> startRestock()
             "wallet" -> if (isSeller()) loadMyWallet() else {
                 searchBar.visibility = View.VISIBLE
                 setInfo("Cari coinseller (nickname / UserID / UID), tap untuk isi wallet")
@@ -414,6 +423,132 @@ class CoinAdminActivity : AppCompatActivity() {
         }.addOnFailureListener { toast("Gagal: ${it.message}") }
     }
 
+    // ---------------- ISI ULANG STOK COINSELLER ----------------
+    // Coinseller mengajukan stok -> developer/superadmin/admin menyetujui -> wallet bertambah.
+    private fun startRestock() {
+        if (isSeller()) {
+            addAction("➕ Ajukan isi ulang") {
+                amountDialog("Ajukan isi ulang stok", 10_000_000L) { requestStock(it) }
+            }
+        }
+        if (isStockAdmin()) {
+            addAction("💼 Isi langsung") {
+                startActivity(
+                    android.content.Intent(this, CoinAdminActivity::class.java)
+                        .putExtra("mode", "wallet")
+                        .putExtra("title", "💼 Isi Wallet Coinseller")
+                )
+            }
+            loadStockRequests(null)
+        } else {
+            refreshSellerBalance()
+            loadStockRequests(myUid)
+        }
+    }
+
+    private fun loadStockRequests(onlyUid: String?) {
+        val base = db.collection("seller_stock_requests")
+        val q: Query = if (onlyUid == null) base.whereEqualTo("status", "pending")
+        else base.whereEqualTo("uid", onlyUid)
+        q.limit(100).get()
+            .addOnSuccessListener { snap ->
+                list.removeAllViews()
+                val docs = snap.documents.sortedByDescending { num(it, "createdAt") }
+                if (docs.isEmpty()) {
+                    setInfo(if (onlyUid == null) "Tidak ada permintaan 🎉" else "Belum ada pengajuan stok")
+                    return@addOnSuccessListener
+                }
+                setInfo(if (onlyUid == null) "${docs.size} permintaan menunggu — tap untuk proses" else "Riwayat pengajuan stok")
+                for (r in docs) {
+                    val st = when (r.getString("status")) {
+                        "approved" -> "✅ Disetujui"
+                        "rejected" -> "❌ Ditolak"
+                        else -> "⏳ Menunggu"
+                    }
+                    val who = r.getString("name").orEmpty().ifEmpty { "Coinseller" }
+                    addRow("🔄 ${fmt(num(r, "amount"))} koin • $who", "$st • ${timeStr(num(r, "createdAt"))}") {
+                        if (onlyUid == null) stockDecisionMenu(r)
+                    }
+                }
+            }
+            .addOnFailureListener { toast("Gagal: ${it.message}") }
+    }
+
+    private fun requestStock(amount: Long) {
+        db.collection("users").document(myUid).get()
+            .addOnSuccessListener { me ->
+                val data = mapOf<String, Any>(
+                    "uid" to myUid, "name" to me.getString("nickname").orEmpty(),
+                    "amount" to amount, "status" to "pending",
+                    "createdAt" to System.currentTimeMillis()
+                )
+                db.collection("seller_stock_requests").add(data)
+                    .addOnSuccessListener {
+                        toast("✅ Pengajuan ${fmt(amount)} koin dikirim")
+                        loadStockRequests(if (isStockAdmin()) null else myUid)
+                    }
+                    .addOnFailureListener { toast("Gagal: ${it.message}") }
+            }
+            .addOnFailureListener { toast("Gagal: ${it.message}") }
+    }
+
+    private fun stockDecisionMenu(r: DocumentSnapshot) {
+        AlertDialog.Builder(this)
+            .setTitle("${fmt(num(r, "amount"))} koin untuk ${r.getString("name").orEmpty()}")
+            .setItems(arrayOf("✅ Setujui & isi wallet", "❌ Tolak")) { _, which ->
+                decideStock(r.id, which == 0)
+            }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
+
+    private fun decideStock(reqId: String, approve: Boolean) {
+        val reqRef = db.collection("seller_stock_requests").document(reqId)
+        val actorRef = db.collection("users").document(myUid)
+        val ledgerRef = db.collection("coin_ledger").document()
+
+        db.runTransaction(Transaction.Function<Void?> { tx ->
+            val r = tx.get(reqRef)
+            val actor = tx.get(actorRef)
+            if (!canStock(Role.rolesOf(actor))) throw IllegalStateException("Kamu tidak boleh memproses ini")
+            if (r.getString("status") != "pending") throw IllegalStateException("Sudah diproses")
+            val sellerUid = r.getString("uid") ?: throw IllegalStateException("Data tidak valid")
+            val amount = num(r, "amount")
+            val now = System.currentTimeMillis()
+
+            if (approve) {
+                val sellerRef = db.collection("users").document(sellerUid)
+                val seller = tx.get(sellerRef)
+                if (Role.COINSELLER !in Role.rolesOf(seller)) throw IllegalStateException("Target bukan coinseller")
+                val newWallet = num(seller, "sellerWallet") + amount
+                tx.update(sellerRef, "sellerWallet", newWallet)
+                tx.set(
+                    ledgerRef, mapOf<String, Any>(
+                        "type" to "seller_stock", "uid" to sellerUid,
+                        "name" to (seller.getString("nickname") ?: ""),
+                        "delta" to amount, "balanceAfter" to newWallet,
+                        "byUid" to myUid, "at" to now
+                    )
+                )
+            }
+            tx.update(
+                reqRef, mapOf<String, Any>(
+                    "status" to (if (approve) "approved" else "rejected"),
+                    "processedBy" to myUid, "processedAt" to now
+                )
+            )
+            null
+        })
+            .addOnSuccessListener {
+                toast(if (approve) "✅ Stok ditambahkan ke wallet" else "Pengajuan ditolak")
+                loadStockRequests(null)
+            }
+            .addOnFailureListener {
+                toast("Gagal: ${it.message}")
+                loadStockRequests(null)
+            }
+    }
+
     // ---------------- CARI USER (send / wallet-admin) ----------------
     private fun doSearch() {
         if (!ready) { toast("Tunggu, mengecek akses…"); return }
@@ -511,7 +646,7 @@ class CoinAdminActivity : AppCompatActivity() {
         db.runTransaction(Transaction.Function<Void?> { tx ->
             val actor = tx.get(actorRef)
             val target = tx.get(targetRef)
-            if (!Role.canAccessAny(Role.rolesOf(actor), "coin")) {
+            if (!canStock(Role.rolesOf(actor))) {
                 throw IllegalStateException("Kamu tidak boleh mengisi wallet")
             }
             if (Role.COINSELLER !in Role.rolesOf(target)) {

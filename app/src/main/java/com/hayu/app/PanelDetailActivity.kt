@@ -100,15 +100,13 @@ class PanelDetailActivity : AppCompatActivity() {
             "🏆 Ranking Agency"
         ),
         "coinseller" to listOf(
-            "🪙 Dashboard Coinseller",
             "🔍 Cari UID Customer",
             "📦 Paket Koin",
-            "📋 Order Masuk",
+            "🔄 Isi Ulang Stok Koin",
             "✅ Verifikasi Pembayaran",
             "📤 Kirim Koin",
             "💼 Wallet Coinseller",
-            "📊 Laporan Penjualan",
-            "↩️ Refund Request"
+            "📊 Laporan Penjualan"
         ),
         "finance" to listOf(
             "💰 Total Pendapatan",
@@ -264,7 +262,7 @@ class PanelDetailActivity : AppCompatActivity() {
         )
         val coinModes = mapOf(
             "Paket & Harga Koin" to "packages", "Paket Koin" to "packages",
-            "Ledger Transaksi" to "ledger", "Dashboard Coinseller" to "wallet",
+            "Ledger Transaksi" to "ledger", "Isi Ulang Stok Koin" to "restock",
             "Wallet Coinseller" to "wallet", "Kirim Koin" to "send",
             "Laporan Penjualan" to "sales", "Top-up & Pembelian" to "topup"
         )
@@ -286,6 +284,10 @@ class PanelDetailActivity : AppCompatActivity() {
         )
         if ((key == "dashboard" || key == "user" || key == "bd") && Role.canManageRoles(role)) {
             items.add(0, roleItem)
+        }
+        // Developer / Superadmin / Admin: konfirmasi top up juga bisa dibuka dari panel Coinseller
+        if (key == "coinseller" && role in listOf(Role.DEVELOPER, Role.SUPERADMIN, Role.ADMIN)) {
+            items.add("💳 Top-up & Pembelian")
         }
         for (item in items) {
             val row = LinearLayout(this)

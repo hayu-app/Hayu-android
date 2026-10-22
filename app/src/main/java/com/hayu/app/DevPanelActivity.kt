@@ -38,6 +38,7 @@ class DevPanelActivity : AppCompatActivity() {
         PanelItem("🔔", "Notifikasi",          "notif"),
         PanelItem("📈", "Reports",             "report"),
         PanelItem("⚙️", "System & Dev Tools", "system"),
+        PanelItem("🎞️", "SVGA Manager",       "svga"),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -172,6 +173,10 @@ class DevPanelActivity : AppCompatActivity() {
     }
 
     private fun openPanel(key: String, label: String) {
+        if (key == "svga") {
+            startActivity(Intent(this, SvgaManagerActivity::class.java))
+            return
+        }
         val intent = Intent(this, PanelDetailActivity::class.java)
         intent.putExtra("panel_key", key)
         intent.putExtra("panel_label", label)

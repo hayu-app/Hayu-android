@@ -64,6 +64,11 @@
             android:screenOrientation="portrait" />
 
         <activity
+            android:name=".SvgaManagerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".OrgActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

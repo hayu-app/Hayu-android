@@ -10,7 +10,7 @@ class TopUpAdminActivity : SimplePageActivity() {
 
     override fun render(user: DocumentSnapshot, following: Int, followers: Int) {
         val roles = Role.rolesOf(user)
-        if (Role.DEVELOPER !in roles && Role.SUPERADMIN !in roles) {
+        if (Role.DEVELOPER !in roles && Role.SUPERADMIN !in roles && Role.ADMIN !in roles) {
             toast("Kamu tidak punya akses")
             finish()
             return
