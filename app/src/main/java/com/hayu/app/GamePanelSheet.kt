@@ -178,6 +178,11 @@ object GamePanelSheet {
                         activity.startActivity(
                             Intent(activity, LionVsTigerActivity::class.java)
                         )
+                    } else if (g.name == "Fruit Party" || g.name == "Fruit Party 2") {
+                        dialog.dismiss()
+                        activity.startActivity(
+                            Intent(activity, FruitPartyActivity::class.java)
+                        )
                     } else {
                         Toast.makeText(
                             activity,
