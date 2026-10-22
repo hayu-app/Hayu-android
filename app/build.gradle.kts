@@ -68,5 +68,4 @@ dependencies {
 
     // OkHttp (untuk upload gambar ke imgbb)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.github.yyued:SVGAPlayer-Android:2.6.1")
 }
