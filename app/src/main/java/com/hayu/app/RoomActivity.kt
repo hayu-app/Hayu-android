@@ -20,8 +20,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
 import com.hayu.app.adapter.RoomMessageAdapter
 import com.hayu.app.model.RoomMessage
 import com.hayu.app.util.SessionManager
@@ -133,6 +136,7 @@ class RoomActivity : AppCompatActivity() {
                         myNickname = userDoc.getString("nickname") ?: "Pengguna HAYU"
                         setupMicSlots()
                         listenMicSlots()
+                        announceCarEntrance(userDoc)
                     }
             }
             .addOnFailureListener {
@@ -430,9 +434,9 @@ class RoomActivity : AppCompatActivity() {
             }
         }
         list.add(Pair(me, "Saya"))
-        GiftSheet.show(this, myNickname, list) { text, emoji ->
-            sendGiftMessage(text)
-            playGiftAnimation(emoji)
+        GiftSheet.show(this, myNickname, list) { text, emoji, svgaUrl ->
+            sendGiftMessage(text, svgaUrl)
+            if (emoji.isNotBlank()) playGiftAnimation(emoji)
         }
     }
 
@@ -457,14 +461,15 @@ class RoomActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun sendGiftMessage(text: String) {
+    private fun sendGiftMessage(text: String, svgaUrl: String? = null) {
         val uid = auth.currentUser?.uid ?: return
-        val msg = hashMapOf(
+        val msg = hashMapOf<String, Any>(
             "senderUid"  to uid,
             "senderName" to "🎁 GIFT",
             "text"       to text,
             "timestamp"  to System.currentTimeMillis()
         )
+        if (!svgaUrl.isNullOrEmpty()) msg["svgaUrl"] = svgaUrl
         roomId?.let { id ->
             db.collection("rooms").document(id).collection("messages").add(msg)
         }
@@ -546,6 +551,44 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
+    private var messagesLoaded = false
+
+    /** Putar animasi SVGA (gift / mobil masuk) dari pesan baru milik orang lain. */
+    private fun playIncomingSvga(snapshot: QuerySnapshot) {
+        val firstLoad = !messagesLoaded
+        messagesLoaded = true
+        if (firstLoad) return
+        val me = auth.currentUser?.uid
+        val now = System.currentTimeMillis()
+        for (change in snapshot.documentChanges) {
+            if (change.type != DocumentChange.Type.ADDED) continue
+            val doc = change.document
+            val url = doc.getString("svgaUrl") ?: continue
+            if (doc.getString("senderUid") == me) continue
+            if (now - (doc.getLong("timestamp") ?: 0L) > 15_000L) continue
+            SvgaOverlay.show(this, url)
+        }
+    }
+
+    /** Kalau punya mobil terpasang: putar animasinya & umumkan ke semua orang di room. */
+    private fun announceCarEntrance(userDoc: DocumentSnapshot) {
+        val url = userDoc.getString("equippedCarUrl") ?: ""
+        if (url.isEmpty()) return
+        val uid = auth.currentUser?.uid ?: return
+        val carName = userDoc.getString("equippedCarName") ?: "kendaraan"
+        SvgaOverlay.show(this, url)
+        val msg = hashMapOf<String, Any>(
+            "senderUid"  to uid,
+            "senderName" to "🚗 MASUK",
+            "text"       to "$myNickname masuk dengan $carName",
+            "timestamp"  to System.currentTimeMillis(),
+            "svgaUrl"    to url
+        )
+        roomId?.let { id ->
+            db.collection("rooms").document(id).collection("messages").add(msg)
+        }
+    }
+
     private fun listenMessages() {
         roomId?.let { id ->
             db.collection("rooms").document(id)
@@ -554,6 +597,7 @@ class RoomActivity : AppCompatActivity() {
                 .limitToLast(100)
                 .addSnapshotListener { snapshot, _ ->
                     if (snapshot == null) return@addSnapshotListener
+                    playIncomingSvga(snapshot)
                     val messages = snapshot.documents.mapNotNull { doc ->
                         doc.data?.let { RoomMessage.fromDoc(doc.id, it) }
                     }

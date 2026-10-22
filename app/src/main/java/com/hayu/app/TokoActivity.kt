@@ -1,5 +1,7 @@
 package com.hayu.app
 
+import android.view.ViewGroup
+import android.widget.LinearLayout
 import com.google.firebase.firestore.DocumentSnapshot
 
 class TokoActivity : SimplePageActivity() {
@@ -38,6 +40,90 @@ class TokoActivity : SimplePageActivity() {
             }
             val desc = if (item.id in owned) "Sudah dimiliki" else "Gelar • ${item.price} koin"
             container.addView(Ui.row(this, item.emoji, item.name, desc, btn))
+        }
+
+        renderSvgaShop(user, owned)
+    }
+
+    // Bingkai avatar & kendaraan masuk room (SVGA unggahan Developer)
+    private fun renderSvgaShop(user: DocumentSnapshot, owned: Set<String>) {
+        val coins = (user.getLong("coins") ?: 0L).toInt()
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        container.addView(box)
+
+        val sections = listOf(
+            Triple(SvgaCatalog.FRAME, "🖼️ Bingkai Avatar", "equippedFrame"),
+            Triple(SvgaCatalog.CAR, "🚗 Kendaraan Masuk Room", "equippedCar")
+        )
+        SvgaCatalog.load(null) { all ->
+            for ((type, title, field) in sections) {
+                val list = all.filter { it.type == type }
+                if (list.isEmpty()) continue
+                val equippedUrl = user.getString("${field}Url") ?: ""
+                val head = Ui.text(this, title, 15f, Ui.WHITE_SOFT, true)
+                head.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 6))
+                box.addView(head)
+
+                for (a in list) {
+                    val have = a.price == 0 || "svga_${a.id}" in owned
+                    val main = when {
+                        equippedUrl == a.url -> Ui.button(this, "Lepas") { equipSvga(field, "", "") }
+                        have -> Ui.button(this, "Pakai") { equipSvga(field, a.url, a.name) }
+                        else -> Ui.button(this, "🪙 ${a.price}", coins >= a.price) { buySvga(a) }
+                    }
+                    val preview = Ui.button(this, "▶") { SvgaOverlay.show(this, a.url) }
+                    val right = LinearLayout(this)
+                    right.orientation = LinearLayout.HORIZONTAL
+                    right.addView(preview)
+                    val lp = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    lp.marginStart = Ui.dp(this, 6)
+                    right.addView(main, lp)
+
+                    val desc = when {
+                        equippedUrl == a.url -> "Sedang dipakai"
+                        have -> "Sudah dimiliki"
+                        else -> "${a.price} koin"
+                    }
+                    val icon = a.emoji.ifBlank { if (type == SvgaCatalog.FRAME) "🖼️" else "🚗" }
+                    box.addView(Ui.row(this, icon, a.name, desc, right))
+                }
+            }
+        }
+    }
+
+    private fun equipSvga(field: String, url: String, name: String) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid)
+            .update(mapOf("${field}Url" to url, "${field}Name" to name))
+            .addOnSuccessListener { reload() }
+            .addOnFailureListener { toast("Gagal: ${it.message}") }
+    }
+
+    private fun buySvga(a: SvgaCatalog.Asset) {
+        val uid = auth.currentUser?.uid ?: return
+        val ref = db.collection("users").document(uid)
+        val itemId = "svga_${a.id}"
+        db.runTransaction { tx ->
+            val snap = tx.get(ref)
+            val owned = (snap.get("ownedItems") as? List<*>)?.map { o -> o.toString() } ?: emptyList()
+            val coins = snap.getLong("coins") ?: 0L
+            if (itemId in owned) throw IllegalStateException("Sudah dimiliki")
+            if (coins < a.price) throw IllegalStateException("Koin tidak cukup")
+            tx.update(
+                ref, mapOf(
+                    "coins" to (coins - a.price),
+                    "ownedItems" to (owned + itemId)
+                )
+            )
+            null
+        }.addOnSuccessListener {
+            toast("Berhasil membeli ${a.name} 🎉")
+            reload()
+        }.addOnFailureListener {
+            toast("Gagal: ${it.message}")
         }
     }
 

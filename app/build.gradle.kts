@@ -68,4 +68,7 @@ dependencies {
 
     // OkHttp (untuk upload gambar ke imgbb)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // SVGA player (animasi frame, car, gift) - dari JitPack
+    implementation("com.github.yyued:SVGAPlayer-Android:2.6.1")
 }
