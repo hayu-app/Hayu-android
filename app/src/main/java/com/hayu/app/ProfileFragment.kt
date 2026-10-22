@@ -140,7 +140,6 @@ class ProfileFragment : Fragment() {
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
                 val gelar = doc.getString("equippedTitle") ?: ""
                 tvNickname.text = if (gelar.isNotBlank()) "$gelar $nickname" else nickname
-                SvgaFrame.attach(imgAvatar, doc.getString("equippedFrameUrl"))
 
                 val age = (doc.getLong("age") ?: 0L).toInt()
                 val gender = doc.getString("gender") ?: ""

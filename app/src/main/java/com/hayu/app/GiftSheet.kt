@@ -15,9 +15,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 object GiftSheet {
 
-    private class Gift(val emoji: String, val name: String, val price: Int, val svgaUrl: String? = null)
+    private class Gift(val emoji: String, val name: String, val price: Int)
 
-    private val baseGifts = listOf(
+    private val gifts = listOf(
         Gift("🌹", "Mawar", 10),
         Gift("☕", "Kopi", 20),
         Gift("🍫", "Cokelat", 30),
@@ -28,31 +28,13 @@ object GiftSheet {
         Gift("💎", "Berlian", 1000)
     )
 
-    // baseGifts + gift SVGA unggahan Developer (diisi ulang tiap sheet dibuka)
-    private var gifts: List<Gift> = baseGifts
-
     // recipients: pasangan (uid, nama tampil). Boleh berisi uid sendiri.
     // onSent(teks pesan, emoji hadiah)
-    // onSent(teks pesan, emoji hadiah, url SVGA atau null)
     fun show(
         activity: AppCompatActivity,
         myNickname: String,
         recipients: List<Pair<String, String>>,
-        onSent: (String, String, String?) -> Unit
-    ) {
-        SvgaCatalog.load(SvgaCatalog.GIFT) { assets ->
-            gifts = baseGifts + assets.map {
-                Gift(it.emoji.ifBlank { "🎁" }, it.name, it.price, it.url)
-            }
-            showInternal(activity, myNickname, recipients, onSent)
-        }
-    }
-
-    private fun showInternal(
-        activity: AppCompatActivity,
-        myNickname: String,
-        recipients: List<Pair<String, String>>,
-        onSent: (String, String, String?) -> Unit
+        onSent: (String, String) -> Unit
     ) {
         val db = FirebaseFirestore.getInstance()
         val myUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -184,7 +166,7 @@ object GiftSheet {
                 send(activity, db, myUid, myNickname, to, g, qty,
                     onDone = { text ->
                         dialog.dismiss()
-                        onSent(text, if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
+                        onSent(text, g.emoji)
                     },
                     onFail = { sendBtn.isEnabled = true }
                 )
@@ -257,9 +239,7 @@ object GiftSheet {
             }
             null
         }.addOnSuccessListener {
-            val svga = g.svgaUrl
-            if (svga != null) SvgaOverlay.show(activity, svga)
-            else GiftAnimation.show(activity, g.emoji, g.name)
+            GiftAnimation.show(activity, g.emoji, g.name)
 
             val text = if (isSelf) {
                 "$myName mengirim ${g.emoji} ${g.name} x$qty untuk dirinya sendiri"

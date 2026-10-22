@@ -37,11 +37,10 @@ object Role {
 
     // Role apa saja yang boleh DIBERIKAN oleh masing-masing role
     private val assignable = mapOf(
-        // HOST tidak ada di daftar: role host HANYA didapat otomatis saat agency menyetujui.
-        DEVELOPER  to listOf(SUPERADMIN, ADMIN, BD, AGENCY, COINSELLER, FINANCE, MODERATOR, CS, USER),
-        SUPERADMIN to listOf(ADMIN, BD, AGENCY, COINSELLER, FINANCE, MODERATOR, CS, USER),
-        ADMIN      to listOf(BD, AGENCY, COINSELLER, FINANCE, MODERATOR, CS, USER),
-        BD         to listOf(AGENCY)   // BD hanya boleh menambah/mencabut role agency
+        DEVELOPER  to listOf(SUPERADMIN, ADMIN, BD, AGENCY, HOST, COINSELLER, FINANCE, MODERATOR, CS, USER),
+        SUPERADMIN to listOf(ADMIN, BD, AGENCY, HOST, COINSELLER, FINANCE, MODERATOR, CS, USER),
+        ADMIN      to listOf(BD, AGENCY, HOST, COINSELLER, FINANCE, MODERATOR, CS, USER),
+        BD         to listOf(AGENCY, HOST, USER)
     )
 
     fun normalize(raw: String?): String {

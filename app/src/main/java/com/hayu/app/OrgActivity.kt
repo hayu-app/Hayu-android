@@ -26,7 +26,7 @@ class OrgActivity : ListPageActivity() {
     override fun allowed(): Boolean = when {
         mode == "register_agency" || mode == "verify_agency" || mode.startsWith("agencies_") -> isBd() || isOrgAdmin()
         mode == "recruit_host" || mode == "attendance_agency" || mode.startsWith("hosts_") -> isAgency()
-        mode == "verify_host" -> isAgency()   // hanya agency yang menyetujui host
+        mode == "verify_host" -> isAgency() || isOrgAdmin()
         mode == "host_home" -> Role.HOST in myRoles
         mode == "ranking_host" -> isAgency() || isBd() || isOrgAdmin() || Role.HOST in myRoles
         else -> false
@@ -35,7 +35,7 @@ class OrgActivity : ListPageActivity() {
     override fun onReady() {
         when {
             mode == "register_agency" -> { showSearch(); setInfo("Cari user biasa untuk dijadikan agency") }
-            mode == "recruit_host" -> { showSearch(); setInfo("Cari user biasa. Jadi host otomatis setelah disetujui agency") }
+            mode == "recruit_host" -> { showSearch(); setInfo("Cari user biasa untuk direkrut jadi host") }
             mode == "verify_agency" -> loadPendingAgencies()
             mode.startsWith("agencies_") -> loadAgencies(mode.substringAfter("_"))
             mode == "verify_host" -> loadPendingHosts()
@@ -155,9 +155,7 @@ class OrgActivity : ListPageActivity() {
                     .addOnSuccessListener { hSnap ->
                         val verified = hSnap.filter { it.getString("hostStatus") == "verified" }
                             .groupingBy { it.getString("agencyUid").orEmpty() }.eachCount()
-                        db.collection("users").whereEqualTo("hostStatus", "pending").limit(500).get()
-                            .addOnSuccessListener { pSnap ->
-                        val pending = pSnap.documents
+                        val pending = hSnap.filter { it.getString("hostStatus") == "pending" }
                             .groupingBy { it.getString("agencyUid").orEmpty() }.eachCount()
 
                         val mine = aSnap.filter { isOrgAdmin() || it.getString("bdUid") == myUid }
@@ -188,8 +186,6 @@ class OrgActivity : ListPageActivity() {
                                 "👥 ${verified[a.id] ?: 0} host (+${pending[a.id] ?: 0} menunggu) • $status$extra"
                             )
                         }
-                            }
-                            .addOnFailureListener { toast("Gagal: ${it.message}") }
                     }
                     .addOnFailureListener { toast("Gagal: ${it.message}") }
             }
@@ -207,11 +203,10 @@ class OrgActivity : ListPageActivity() {
             if (Role.AGENCY !in Role.rolesOf(actor)) throw IllegalStateException("Hanya agency yang boleh merekrut")
             if (actor.getString("agencyStatus") != "verified") throw IllegalStateException("Agency kamu belum diverifikasi")
             if (Role.HOST in Role.rolesOf(t)) throw IllegalStateException("User ini sudah menjadi host")
-            if (t.getString("hostStatus") == "pending") throw IllegalStateException("User ini masih menunggu persetujuan")
-            // Role HOST BELUM diberikan di sini; baru diberikan otomatis saat agency menyetujui.
+            val newRoles = Role.rolesOf(t) + Role.HOST
             tx.update(
                 targetRef, mapOf<String, Any>(
-                    "hostStatus" to "pending", "agencyUid" to myUid,
+                    "role" to Role.top(newRoles), "roles" to newRoles.toList(), "hostStatus" to "pending", "agencyUid" to myUid,
                     "agencyName" to (actor.getString("agencyName") ?: ""),
                     "recruitedAt" to System.currentTimeMillis()
                 )
@@ -224,7 +219,7 @@ class OrgActivity : ListPageActivity() {
             )
             null
         })
-            .addOnSuccessListener { toast("✅ ${nick(target)} diajukan, jadi host setelah disetujui"); clearList(); doSearch() }
+            .addOnSuccessListener { toast("✅ ${nick(target)} direkrut (menunggu verifikasi)"); clearList(); doSearch() }
             .addOnFailureListener { toast("Gagal: ${it.message}") }
     }
 
@@ -234,14 +229,14 @@ class OrgActivity : ListPageActivity() {
             .addOnSuccessListener { snap ->
                 clearList()
                 val docs = snap.documents
-                    .filter { it.getString("agencyUid") == myUid }
+                    .filter { isOrgAdmin() || it.getString("agencyUid") == myUid }
                     .sortedBy { num(it, "recruitedAt") }
                 setInfo(if (docs.isEmpty()) "Tidak ada host yang menunggu 🎉" else "${docs.size} host menunggu verifikasi")
                 for (h in docs) {
                     addRow("🎙️ ${nick(h)} • ID ${num(h, "userId")}", "Direkrut ${timeStr(num(h, "recruitedAt"))}") {
                         AlertDialog.Builder(this)
                             .setTitle(nick(h))
-                            .setItems(arrayOf("✅ Setujui (jadi host)", "❌ Tolak")) { _, which -> decideHost(h.id, which == 0) }
+                            .setItems(arrayOf("✅ Verifikasi", "❌ Tolak")) { _, which -> decideHost(h.id, which == 0) }
                             .setNegativeButton("Batal", null)
                             .show()
                     }
@@ -259,19 +254,16 @@ class OrgActivity : ListPageActivity() {
             val t = tx.get(targetRef)
             val ar = Role.rolesOf(actor)
             val own = Role.AGENCY in ar && t.getString("agencyUid") == myUid
-            if (!own) throw IllegalStateException("Hanya agency yang merekrut user ini yang bisa menyetujui")
+            if (!own && ar.none { it in orgAdminRoles }) throw IllegalStateException("Bukan host di bawah kamu")
             if (t.getString("hostStatus") != "pending") throw IllegalStateException("Sudah diproses")
             if (approve) {
-                // Disetujui agency -> otomatis jadi HOST
-                val newRoles = Role.rolesOf(t) + Role.HOST
+                tx.update(targetRef, mapOf<String, Any>("hostStatus" to "verified", "verifiedAt" to System.currentTimeMillis()))
+            } else {
                 tx.update(
                     targetRef, mapOf<String, Any>(
-                        "role" to Role.top(newRoles), "roles" to newRoles.toList(),
-                        "hostStatus" to "verified", "verifiedAt" to System.currentTimeMillis()
+                        "role" to Role.top(Role.rolesOf(t) - Role.HOST), "roles" to (Role.rolesOf(t) - Role.HOST).toList(), "hostStatus" to "rejected", "agencyUid" to FieldValue.delete()
                     )
                 )
-            } else {
-                tx.update(targetRef, mapOf<String, Any>("hostStatus" to "rejected", "agencyUid" to FieldValue.delete()))
             }
             tx.set(
                 logRef, mapOf<String, Any>(
@@ -281,7 +273,7 @@ class OrgActivity : ListPageActivity() {
             )
             null
         })
-            .addOnSuccessListener { toast(if (approve) "✅ Disetujui, user kini menjadi host" else "Permintaan ditolak"); loadPendingHosts() }
+            .addOnSuccessListener { toast(if (approve) "✅ Host diverifikasi" else "Host ditolak"); loadPendingHosts() }
             .addOnFailureListener { toast("Gagal: ${it.message}") }
     }
 
