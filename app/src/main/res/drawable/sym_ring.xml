@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+    <!-- lingkaran cincin -->
+    <path android:fillColor="#C8A0FF" android:strokeColor="#9060D0" android:strokeWidth="2"
+        android:pathData="M24,38 C14,38 8,32 8,24 C8,16 14,10 24,10 C34,10 40,16 40,24 C40,32 34,38 24,38 Z"/>
+    <path android:fillColor="#9050C0"
+        android:pathData="M24,32 C17,32 14,28 14,24 C14,20 17,16 24,16 C31,16 34,20 34,24 C34,28 31,32 24,32 Z"/>
+    <!-- batu permata atas -->
+    <path android:fillColor="#FF4488"
+        android:pathData="M24,6 L28,10 L24,14 L20,10 Z"/>
+    <path android:fillColor="#FF88BB"
+        android:pathData="M24,6 L28,10 L24,10 L20,10 Z"/>
+    <path android:fillColor="#FFC800" android:strokeColor="#DAA520" android:strokeWidth="1"
+        android:pathData="M20,10 L28,10 L26,13 L22,13 Z"/>
+</vector>

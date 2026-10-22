@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+    <!-- badan mahkota -->
+    <path android:fillColor="#FFC800"
+        android:pathData="M6,36 L6,22 L14,30 L24,12 L34,30 L42,22 L42,36 Z"/>
+    <path android:fillColor="#FFE566"
+        android:pathData="M6,22 L14,30 L14,24 Z M42,22 L34,30 L34,24 Z M24,12 L28,22 L20,22 Z"/>
+    <!-- hiasan bawah -->
+    <path android:fillColor="#B8860B"
+        android:pathData="M6,36 L42,36 L42,40 L6,40 Z"/>
+    <!-- permata -->
+    <path android:fillColor="#DC2828"
+        android:pathData="M22,36 L24,30 L26,36 Z"/>
+    <path android:fillColor="#FF4444"
+        android:pathData="M22,36 L24,33 L26,36 L24,37 Z"/>
+    <path android:fillColor="#DC2828"
+        android:pathData="M10,36 L12,32 L14,36 Z"/>
+    <path android:fillColor="#DC2828"
+        android:pathData="M34,36 L36,32 L38,36 Z"/>
+</vector>

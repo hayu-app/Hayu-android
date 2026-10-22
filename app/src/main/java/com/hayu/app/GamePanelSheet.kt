@@ -183,6 +183,11 @@ object GamePanelSheet {
                         activity.startActivity(
                             Intent(activity, FruitPartyActivity::class.java)
                         )
+                    } else if (g.name == "Olympus") {
+                        dialog.dismiss()
+                        activity.startActivity(
+                            Intent(activity, GatesOfOlympusActivity::class.java)
+                        )
                     } else {
                         Toast.makeText(
                             activity,
