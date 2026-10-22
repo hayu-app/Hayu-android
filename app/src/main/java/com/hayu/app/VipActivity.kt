@@ -1,8 +1,6 @@
 package com.hayu.app
 
-import androidx.appcompat.app.AlertDialog
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 
 class VipActivity : SimplePageActivity() {
 
@@ -11,32 +9,11 @@ class VipActivity : SimplePageActivity() {
     companion object {
         val VIP_PRICES = intArrayOf(100, 300, 600, 1000, 1500, 2200, 3000)
         val SVIP_POINTS = intArrayOf(1000, 3000, 6000, 10000, 15000, 25000, 40000)
-        val TOPUP_OPTIONS = intArrayOf(1000, 5000, 10000, 25000)
 
         fun svipLevel(points: Long): Int {
             var lv = 0
             for (i in SVIP_POINTS.indices) if (points >= SVIP_POINTS[i]) lv = i + 1
             return lv
-        }
-
-        fun creditTopUp(db: FirebaseFirestore, uid: String, amount: Int, onDone: (Boolean, String?) -> Unit) {
-            val ref = db.collection("users").document(uid)
-            db.runTransaction { tx ->
-                val s = tx.get(ref)
-                val oldPts = s.getLong("svipPoints") ?: 0L
-                val newPts = oldPts + amount
-                val oldLv = svipLevel(oldPts)
-                val newLv = svipLevel(newPts)
-                val upd = hashMapOf<String, Any>(
-                    "coins" to ((s.getLong("coins") ?: 0L) + amount),
-                    "svipPoints" to newPts,
-                    "svipLevel" to newLv.toLong()
-                )
-                if (newLv > oldLv) upd["equippedTitle"] = "👑 SVIP$newLv"
-                tx.update(ref, upd)
-                null
-            }.addOnSuccessListener { onDone(true, null) }
-                .addOnFailureListener { onDone(false, it.message) }
         }
     }
 
@@ -59,7 +36,7 @@ class VipActivity : SimplePageActivity() {
             container.addView(Ui.row(this, "⭐", "VIP $i", "Harga $price koin", btn))
         }
 
-        container.addView(Ui.text(this, "\n👑 SVIP — naik level lewat top up", 12f, Ui.GRAY))
+        container.addView(Ui.text(this, "\n👑 SVIP — naik level lewat top up di Dompet", 12f, Ui.GRAY))
 
         val card = Ui.card(this)
         card.addView(Ui.text(this, "Poin top up: $pts", 14f, Ui.WHITE_SOFT, true))
@@ -74,7 +51,6 @@ class VipActivity : SimplePageActivity() {
         )
         container.addView(card)
 
-        container.addView(Ui.row(this, "💳", "Top Up Koin", "Top up untuk naik level SVIP", Ui.button(this, "Top Up") { startActivity(android.content.Intent(this, WalletActivity::class.java)) }))
 
         for (i in 1..7) {
             val tag = Ui.text(this, if (svLv >= i) "✅" else "🔒", 14f)
@@ -106,27 +82,5 @@ class VipActivity : SimplePageActivity() {
         }.addOnFailureListener {
             toast("Gagal: ${it.message}")
         }
-    }
-
-    private fun chooseTopUp() {
-        val labels = TOPUP_OPTIONS.map { "🪙 $it koin  (+$it poin SVIP)" }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle("Pilih nominal top up")
-            .setItems(labels) { _, which -> requestTopUp(TOPUP_OPTIONS[which]) }
-            .setNegativeButton("Batal", null)
-            .show()
-    }
-
-    private fun requestTopUp(amount: Int) {
-        val uid = auth.currentUser?.uid ?: return
-        val req = hashMapOf(
-            "uid" to uid,
-            "amount" to amount,
-            "status" to "pending",
-            "createdAt" to System.currentTimeMillis()
-        )
-        db.collection("topupRequests").add(req)
-            .addOnSuccessListener { toast("Permintaan top up $amount koin dikirim. Menunggu konfirmasi admin ⏳") }
-            .addOnFailureListener { toast("Gagal: ${it.message}") }
     }
 }
