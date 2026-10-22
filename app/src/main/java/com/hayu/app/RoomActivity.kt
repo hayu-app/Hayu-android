@@ -58,6 +58,7 @@ class RoomActivity : AppCompatActivity() {
     private val micSlots = Array(5) { MicSlot() }
     private val micSlotViews = arrayOfNulls<LinearLayout>(5)
     private var micSlotListener: ListenerRegistration? = null
+    private var redPacketManager: RedPacketManager? = null
 
     private val MIC_SLOT_COUNT = 5
     private val REQ_RECORD_AUDIO = 1001
@@ -159,6 +160,9 @@ class RoomActivity : AppCompatActivity() {
         btnGame.setOnClickListener { GamePanelSheet.show(this) }
 
         listenMessages()
+
+        redPacketManager = RedPacketManager(this, roomId!!)
+        redPacketManager?.start()
     }
 
     // ────────────────────────────────────────────
@@ -407,6 +411,10 @@ class RoomActivity : AppCompatActivity() {
             sheet.dismiss()
             Toast.makeText(this, "Pengaturan room segera hadir! ⚙️", Toast.LENGTH_SHORT).show()
         }
+        view.findViewById<LinearLayout>(R.id.menu_red_packet).setOnClickListener {
+            sheet.dismiss()
+            RedPacketSheet.show(this, roomId!!)
+        }
         sheet.show()
     }
 
@@ -526,6 +534,7 @@ class RoomActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         micSlotListener?.remove()
+        redPacketManager?.stop()
         leaveMicIfOn()
         updateLastActive()
     }

@@ -188,11 +188,33 @@
                 android:gravity="center" />
         </LinearLayout>
 
-        <View
+        <LinearLayout
+            android:id="@+id/menu_red_packet"
             android:layout_width="0dp"
             android:layout_height="88dp"
             android:layout_weight="1"
-            android:layout_marginStart="6dp" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_quick_item"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🧧"
+                android:textSize="26sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Red Packet"
+                android:textColor="@color/hayu_text"
+                android:textSize="11sp"
+                android:layout_marginTop="4dp"
+                android:gravity="center" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>
