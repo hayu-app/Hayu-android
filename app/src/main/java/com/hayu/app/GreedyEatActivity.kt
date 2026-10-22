@@ -105,7 +105,7 @@ class GreedyEatActivity : AppCompatActivity() {
     private lateinit var revenueText: TextView
     private lateinit var autoBtn: TextView
     private lateinit var avatar: ImageView
-    private lateinit var overlay: LinearLayout
+    private lateinit var resultPanel: LinearLayout
     private lateinit var ovCountdown: TextView
     private lateinit var ovTitle: TextView
     private lateinit var ovEmoji: TextView
@@ -570,7 +570,7 @@ class GreedyEatActivity : AppCompatActivity() {
                 val left = betMs - pos
                 centerValue.text = "${(left + 999) / 1000}s"
             }
-            if (ph == "RESULT" && overlay.visibility == View.VISIBLE) {
+            if (ph == "RESULT" && resultPanel.visibility == View.VISIBLE) {
                 ovCountdown.text = "${(cycleMs - pos + 999) / 1000}s"
             }
             handler.postDelayed(this, 100)
@@ -588,7 +588,7 @@ class GreedyEatActivity : AppCompatActivity() {
         setCursor(-1)
         setCatHighlight(null)
         banner.visibility = View.GONE
-        overlay.visibility = View.GONE
+        resultPanel.visibility = View.GONE
         rankListener?.remove(); rankListener = null
         centerTitle.text = "SelectTime"
         roundText.text = "Today Round: ${roundNumber(rid)}"
@@ -653,7 +653,7 @@ class GreedyEatActivity : AppCompatActivity() {
     private fun buildOverlay(host: FrameLayout) {
         val h = (resources.displayMetrics.heightPixels * 0.78f).toInt()
         val r = dp(28).toFloat()
-        overlay = LinearLayout(this).apply {
+        resultPanel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             visibility = View.GONE
@@ -669,9 +669,9 @@ class GreedyEatActivity : AppCompatActivity() {
         top.addView(ovCountdown, FrameLayout.LayoutParams(-2, -2, Gravity.START or Gravity.CENTER_VERTICAL))
         ovTitle = txt("", 16f)
         top.addView(ovTitle, FrameLayout.LayoutParams(-2, -2, Gravity.CENTER))
-        top.addView(txt("✕", 24f).apply { setOnClickListener { overlay.visibility = View.GONE } },
+        top.addView(txt("✕", 24f).apply { setOnClickListener { resultPanel.visibility = View.GONE } },
             FrameLayout.LayoutParams(dp(40), dp(40), Gravity.END or Gravity.CENTER_VERTICAL))
-        overlay.addView(top, LinearLayout.LayoutParams(-1, dp(44)))
+        resultPanel.addView(top, LinearLayout.LayoutParams(-1, dp(44)))
 
         val glow = FrameLayout(this).apply { background = ovalBg(Color.argb(70, 255, 220, 80), Color.TRANSPARENT, 0) }
         ovEmoji = TextView(this).apply {
@@ -680,16 +680,16 @@ class GreedyEatActivity : AppCompatActivity() {
             includeFontPadding = false
         }
         glow.addView(ovEmoji, FrameLayout.LayoutParams(-2, -2, Gravity.CENTER))
-        overlay.addView(glow, LinearLayout.LayoutParams(dp(160), dp(160)).apply { topMargin = dp(8) })
+        resultPanel.addView(glow, LinearLayout.LayoutParams(dp(160), dp(160)).apply { topMargin = dp(8) })
 
         ovEarn = txt("", 17f)
         ovBets = txt("", 17f)
-        overlay.addView(ovEarn, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(18) })
-        overlay.addView(ovBets, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(10) })
-        overlay.addView(txt("This Round's Ranking:", 17f), LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(16) })
+        resultPanel.addView(ovEarn, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(18) })
+        resultPanel.addView(ovBets, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(10) })
+        resultPanel.addView(txt("This Round's Ranking:", 17f), LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(16) })
         ovRank = LinearLayout(this).apply { gravity = Gravity.CENTER_HORIZONTAL }
-        overlay.addView(ovRank, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        host.addView(overlay, FrameLayout.LayoutParams(-1, h, Gravity.BOTTOM))
+        resultPanel.addView(ovRank, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        host.addView(resultPanel, FrameLayout.LayoutParams(-1, h, Gravity.BOTTOM))
     }
 
     private fun showResultOverlay(win: Food, total: Int, pay: Int) {
@@ -700,7 +700,7 @@ class GreedyEatActivity : AppCompatActivity() {
         ovBets.text = "This Round Bets:  🪙 ${fmt(total)}"
         ovCountdown.text = "${resultMs / 1000}s"
         renderRank(emptyList())
-        overlay.visibility = View.VISIBLE
+        resultPanel.visibility = View.VISIBLE
         listenRank(curRid)
     }
 
