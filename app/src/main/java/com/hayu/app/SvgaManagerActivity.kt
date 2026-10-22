@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageMetadata
 import com.opensource.svgaplayer.SVGAImageView
 import com.opensource.svgaplayer.SVGAParser
 import com.opensource.svgaplayer.SVGAVideoEntity
@@ -31,7 +30,6 @@ import java.io.FileInputStream
 class SvgaManagerActivity : AppCompatActivity() {
 
     private companion object {
-        const val MAX_BYTES = 8L * 1024 * 1024
         const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
         const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
     }
@@ -214,11 +212,6 @@ class SvgaManagerActivity : AppCompatActivity() {
             toast("File harus berekstensi .svga")
             return
         }
-        if (size > MAX_BYTES) {
-            toast("Ukuran maksimal 8 MB")
-            return
-        }
-
         val target = File(cacheDir, "pending_upload.svga")
         try {
             val input = contentResolver.openInputStream(uri)
@@ -228,8 +221,8 @@ class SvgaManagerActivity : AppCompatActivity() {
             toast("Gagal membaca file: ${e.message}")
             return
         }
-        if (target.length() == 0L || target.length() > MAX_BYTES) {
-            toast("Ukuran file tidak valid (maks 8 MB)")
+        if (target.length() == 0L) {
+            toast("File kosong")
             return
         }
 
@@ -272,7 +265,7 @@ class SvgaManagerActivity : AppCompatActivity() {
     private fun failMessage(prefix: String, e: Exception): String {
         val m = e.message ?: "tidak diketahui"
         val hint = if (m.contains("permission", true) || m.contains("not authorized", true)) {
-            "\nCek Firebase Rules (Storage & Firestore)."
+            "\nCek Firestore Rules untuk koleksi svgaAssets & svgaChunks."
         } else ""
         return "$prefix: $m$hint"
     }
@@ -293,52 +286,42 @@ class SvgaManagerActivity : AppCompatActivity() {
         val uid = auth.currentUser?.uid ?: return
         val type = selectedType
 
-        val safe = name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_').ifEmpty { "asset" }
-        val path = "svga/$type/${System.currentTimeMillis()}_$safe.svga"
-        val ref = FirebaseStorage.getInstance().reference.child(path)
-        val meta = StorageMetadata.Builder().setContentType("application/octet-stream").build()
-
         setUploading(true)
-        ref.putFile(Uri.fromFile(file), meta)
-            .addOnProgressListener { s ->
-                if (s.totalByteCount > 0) {
-                    progress.progress = (100 * s.bytesTransferred / s.totalByteCount).toInt()
+        SvgaStore.upload(
+            file,
+            onProgress = { progress.progress = it },
+            onDone = { assetId, chunks, err ->
+                if (assetId == null) {
+                    toast(failMessage("Upload gagal", err ?: IllegalStateException("tidak diketahui")))
+                    setUploading(false)
+                } else {
+                    val data = mapOf(
+                        "type" to type,
+                        "name" to name,
+                        "price" to price.toLong(),
+                        "emoji" to emoji,
+                        "url" to (SvgaStore.PREFIX + assetId),
+                        "storagePath" to "",
+                        "chunks" to chunks.toLong(),
+                        "size" to file.length(),
+                        "createdBy" to uid,
+                        "createdAt" to System.currentTimeMillis()
+                    )
+                    db.collection(SvgaCatalog.COLLECTION).document(assetId).set(data)
+                        .addOnSuccessListener {
+                            toast("Berhasil diunggah 🎉")
+                            resetForm()
+                            setUploading(false)
+                            loadList()
+                        }
+                        .addOnFailureListener { e ->
+                            SvgaStore.deleteChunks(assetId) {}
+                            toast(failMessage("Gagal menyimpan data", e))
+                            setUploading(false)
+                        }
                 }
             }
-            .addOnSuccessListener {
-                ref.downloadUrl
-                    .addOnSuccessListener { dl ->
-                        val data = mapOf(
-                            "type" to type,
-                            "name" to name,
-                            "price" to price.toLong(),
-                            "emoji" to emoji,
-                            "url" to dl.toString(),
-                            "storagePath" to path,
-                            "createdBy" to uid,
-                            "createdAt" to System.currentTimeMillis()
-                        )
-                        db.collection(SvgaCatalog.COLLECTION).add(data)
-                            .addOnSuccessListener {
-                                toast("Berhasil diunggah 🎉")
-                                resetForm()
-                                setUploading(false)
-                                loadList()
-                            }
-                            .addOnFailureListener { e ->
-                                toast(failMessage("Gagal menyimpan data", e))
-                                setUploading(false)
-                            }
-                    }
-                    .addOnFailureListener { e ->
-                        toast(failMessage("Gagal mengambil URL", e))
-                        setUploading(false)
-                    }
-            }
-            .addOnFailureListener { e ->
-                toast(failMessage("Upload gagal", e))
-                setUploading(false)
-            }
+        )
     }
 
     private fun resetForm() {
@@ -382,12 +365,15 @@ class SvgaManagerActivity : AppCompatActivity() {
                 if (a.storagePath.isNotEmpty()) {
                     FirebaseStorage.getInstance().reference.child(a.storagePath).delete()
                 }
-                db.collection(SvgaCatalog.COLLECTION).document(a.id).delete()
-                    .addOnSuccessListener {
-                        toast("Dihapus")
-                        loadList()
-                    }
-                    .addOnFailureListener { e -> toast(failMessage("Gagal menghapus", e)) }
+                File(cacheDir, "svga_${a.id}.svga").delete()
+                SvgaStore.deleteChunks(a.id) {
+                    db.collection(SvgaCatalog.COLLECTION).document(a.id).delete()
+                        .addOnSuccessListener {
+                            toast("Dihapus")
+                            loadList()
+                        }
+                        .addOnFailureListener { e -> toast(failMessage("Gagal menghapus", e)) }
+                }
             }
             .setNegativeButton("Batal", null)
             .show()

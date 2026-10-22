@@ -10,6 +10,7 @@ import com.opensource.svgaplayer.SVGACallback
 import com.opensource.svgaplayer.SVGAImageView
 import com.opensource.svgaplayer.SVGAParser
 import com.opensource.svgaplayer.SVGAVideoEntity
+import java.io.FileInputStream
 import java.net.URL
 
 object SvgaPlayer {
@@ -22,7 +23,7 @@ object SvgaPlayer {
         onError: (() -> Unit)? = null
     ) {
         try {
-            SVGAParser(view.context).decodeFromURL(URL(url), object : SVGAParser.ParseCompletion {
+            val completion = object : SVGAParser.ParseCompletion {
                 override fun onComplete(videoItem: SVGAVideoEntity) {
                     view.setVideoItem(videoItem)
                     view.loops = loops
@@ -38,7 +39,27 @@ object SvgaPlayer {
                 override fun onError() {
                     onError?.invoke()
                 }
-            })
+            }
+            val parser = SVGAParser(view.context)
+            if (SvgaStore.isStored(url)) {
+                // Aset disimpan di Firestore (potongan) -> susun jadi file cache lalu putar
+                val id = url.removePrefix(SvgaStore.PREFIX)
+                SvgaStore.openFile(view.context, id) { file ->
+                    if (file == null) {
+                        onError?.invoke()
+                    } else {
+                        try {
+                            parser.decodeFromInputStream(
+                                FileInputStream(file), "fs_${file.name}", completion, true
+                            )
+                        } catch (e: Exception) {
+                            onError?.invoke()
+                        }
+                    }
+                }
+            } else {
+                parser.decodeFromURL(URL(url), completion)
+            }
         } catch (e: Exception) {
             onError?.invoke()
         }
