@@ -18,8 +18,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -32,6 +34,9 @@ import java.util.TimeZone
  * Greedy Eat — ronde GLOBAL berdasarkan jam (jalan terus walau tidak ada yang main).
  * Hasil ronde sama untuk semua pemain (deterministik dari nomor ronde).
  * 8 makanan melingkar + tombol SALAD (semua sayur) dan PIZZA (semua daging).
+ * Saat hasil keluar muncul popup hasil + ranking 3 pemain dengan kemenangan terbesar.
+ *
+ * Firestore: greedy_rounds/{roundId}/players/{uid} -> uid, name, photo, net, expireAt
  */
 class GreedyEatActivity : AppCompatActivity() {
 
@@ -67,12 +72,14 @@ class GreedyEatActivity : AppCompatActivity() {
     private val db by lazy { FirebaseFirestore.getInstance() }
     private val uid: String? get() = FirebaseAuth.getInstance().currentUser?.uid
     private var coinListener: ListenerRegistration? = null
+    private var rankListener: ListenerRegistration? = null
     private val handler = Handler(Looper.getMainLooper())
 
     private var clockOffset = 0L
     private var balance = 0
     private var profit = 0
     private var myName = "Player"
+    private var myPhoto = ""
     private var selectedAmount = 1000
     private var phase = ""
     private var curRid = -1L
@@ -98,6 +105,13 @@ class GreedyEatActivity : AppCompatActivity() {
     private lateinit var revenueText: TextView
     private lateinit var autoBtn: TextView
     private lateinit var avatar: ImageView
+    private lateinit var overlay: LinearLayout
+    private lateinit var ovCountdown: TextView
+    private lateinit var ovTitle: TextView
+    private lateinit var ovEmoji: TextView
+    private lateinit var ovEarn: TextView
+    private lateinit var ovBets: TextView
+    private lateinit var ovRank: LinearLayout
     private val slots = ArrayList<FrameLayout>()
     private val catViews = HashMap<String, LinearLayout>()
     private val youTexts = HashMap<String, TextView>()
@@ -151,7 +165,10 @@ class GreedyEatActivity : AppCompatActivity() {
             setPadding(dp(8), dp(8), dp(8), dp(16))
         }
         scroll.addView(root)
-        setContentView(scroll)
+        val host = FrameLayout(this)
+        host.addView(scroll, FrameLayout.LayoutParams(-1, -1))
+        buildOverlay(host)
+        setContentView(host)
 
         // ---- header ----
         val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
@@ -449,6 +466,7 @@ class GreedyEatActivity : AppCompatActivity() {
             balance = (snap.getLong("coins") ?: 0L).toInt()
             myName = snap.getString("nickname") ?: myName
             val photo = snap.getString("photoUrl") ?: ""
+            myPhoto = photo
             if (photo.isNotEmpty()) avatar.load(photo)
             updateAll()
         }
@@ -552,6 +570,9 @@ class GreedyEatActivity : AppCompatActivity() {
                 val left = betMs - pos
                 centerValue.text = "${(left + 999) / 1000}s"
             }
+            if (ph == "RESULT" && overlay.visibility == View.VISIBLE) {
+                ovCountdown.text = "${(cycleMs - pos + 999) / 1000}s"
+            }
             handler.postDelayed(this, 100)
         }
     }
@@ -567,6 +588,8 @@ class GreedyEatActivity : AppCompatActivity() {
         setCursor(-1)
         setCatHighlight(null)
         banner.visibility = View.GONE
+        overlay.visibility = View.GONE
+        rankListener?.remove(); rankListener = null
         centerTitle.text = "SelectTime"
         roundText.text = "Today Round: ${roundNumber(rid)}"
         renderResults(rid, false)
@@ -622,6 +645,106 @@ class GreedyEatActivity : AppCompatActivity() {
         banner.visibility = View.VISIBLE
         settleRound(curRid)
         renderResults(curRid, true)
+        showResultOverlay(win, total, pay)
+    }
+
+    // ================= Popup hasil + ranking =================
+
+    private fun buildOverlay(host: FrameLayout) {
+        val h = (resources.displayMetrics.heightPixels * 0.78f).toInt()
+        val r = dp(28).toFloat()
+        overlay = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            visibility = View.GONE
+            isClickable = true
+            background = GradientDrawable().apply {
+                setColor(Color.argb(238, 120, 20, 40))
+                cornerRadii = floatArrayOf(r, r, r, r, 0f, 0f, 0f, 0f)
+            }
+            setPadding(dp(16), dp(14), dp(16), dp(16))
+        }
+        val top = FrameLayout(this)
+        ovCountdown = txt("", 16f)
+        top.addView(ovCountdown, FrameLayout.LayoutParams(-2, -2, Gravity.START or Gravity.CENTER_VERTICAL))
+        ovTitle = txt("", 16f)
+        top.addView(ovTitle, FrameLayout.LayoutParams(-2, -2, Gravity.CENTER))
+        top.addView(txt("✕", 24f).apply { setOnClickListener { overlay.visibility = View.GONE } },
+            FrameLayout.LayoutParams(dp(40), dp(40), Gravity.END or Gravity.CENTER_VERTICAL))
+        overlay.addView(top, LinearLayout.LayoutParams(-1, dp(44)))
+
+        val glow = FrameLayout(this).apply { background = ovalBg(Color.argb(70, 255, 220, 80), Color.TRANSPARENT, 0) }
+        ovEmoji = TextView(this).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 84f)
+            gravity = Gravity.CENTER
+            includeFontPadding = false
+        }
+        glow.addView(ovEmoji, FrameLayout.LayoutParams(-2, -2, Gravity.CENTER))
+        overlay.addView(glow, LinearLayout.LayoutParams(dp(160), dp(160)).apply { topMargin = dp(8) })
+
+        ovEarn = txt("", 17f)
+        ovBets = txt("", 17f)
+        overlay.addView(ovEarn, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(18) })
+        overlay.addView(ovBets, LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(10) })
+        overlay.addView(txt("This Round's Ranking:", 17f), LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(16) })
+        ovRank = LinearLayout(this).apply { gravity = Gravity.CENTER_HORIZONTAL }
+        overlay.addView(ovRank, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        host.addView(overlay, FrameLayout.LayoutParams(-1, h, Gravity.BOTTOM))
+    }
+
+    private fun showResultOverlay(win: Food, total: Int, pay: Int) {
+        val net = pay - total
+        ovTitle.text = "Round ${roundNumber(curRid)}'s Result:"
+        ovEmoji.text = win.emoji
+        ovEarn.text = "This Round Earnings:  🪙 " + (if (net < 0) "-${fmt(-net)}" else fmt(net))
+        ovBets.text = "This Round Bets:  🪙 ${fmt(total)}"
+        ovCountdown.text = "${resultMs / 1000}s"
+        renderRank(emptyList())
+        overlay.visibility = View.VISIBLE
+        listenRank(curRid)
+    }
+
+    private fun listenRank(rid: Long) {
+        rankListener?.remove()
+        rankListener = db.collection("greedy_rounds").document(rid.toString()).collection("players")
+            .orderBy("net", Query.Direction.DESCENDING)
+            .limit(3)
+            .addSnapshotListener { snap, err ->
+                if (err != null || snap == null || rid != curRid) return@addSnapshotListener
+                renderRank(snap.documents)
+            }
+    }
+
+    private fun renderRank(docs: List<DocumentSnapshot>) {
+        ovRank.removeAllViews()
+        val rows = docs.filter { (it.getLong("net") ?: 0L) > 0L }
+        if (rows.isEmpty()) {
+            ovRank.addView(txt("Belum ada pemenang ronde ini", 14f, Color.LTGRAY, false),
+                LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(24) })
+            return
+        }
+        rows.forEach { d ->
+            val col = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+            val av = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = ovalBg(Color.rgb(60, 20, 40), Color.WHITE, 3)
+                outlineProvider = ViewOutlineProvider.BACKGROUND
+                clipToOutline = true
+            }
+            val photo = d.getString("photo") ?: ""
+            if (photo.isNotEmpty()) av.load(photo)
+            col.addView(av, LinearLayout.LayoutParams(dp(84), dp(84)))
+            col.addView(txt(d.getString("name") ?: "Player", 15f).apply {
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+            }, LinearLayout.LayoutParams(dp(100), -2).apply { topMargin = dp(6) })
+            col.addView(txt("🪙 ${fmt(d.getLong("net") ?: 0L)}", 14f, Color.rgb(255, 230, 120)),
+                LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(2) })
+            ovRank.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
+        }
     }
 
     private fun settleRound(rid: Long) {
@@ -635,7 +758,21 @@ class GreedyEatActivity : AppCompatActivity() {
         saveProfit()
         saveHistory(rid, win, total, pay)
         if (pay > 0) adjustCoins(pay)
+        if (pay > total) reportWin(rid, (pay - total).toLong())
         updateAll()
+    }
+
+    private fun reportWin(rid: Long, net: Long) {
+        val me = uid ?: return
+        val data = hashMapOf<String, Any>(
+            "uid" to me,
+            "name" to myName,
+            "photo" to myPhoto,
+            "net" to net,
+            "expireAt" to Date(nowMs() + 2L * 24 * 3600 * 1000)
+        )
+        db.collection("greedy_rounds").document(rid.toString())
+            .collection("players").document(me).set(data)
     }
 
     // ================= Riwayat & profit (lokal) =================
@@ -704,6 +841,7 @@ class GreedyEatActivity : AppCompatActivity() {
             settleRound(betsRid)
         }
         coinListener?.remove()
+        rankListener?.remove()
         super.onDestroy()
     }
 
