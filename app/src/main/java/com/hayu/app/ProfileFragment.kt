@@ -1,6 +1,7 @@
 package com.hayu.app
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -171,6 +172,26 @@ class ProfileFragment : Fragment() {
                 val level = (doc.getLong("level") ?: 1L).toInt()
                 tvLevelBadge.text = "Lv. $level"
 
+                // Background header + badge VIP / SVIP mengikuti level
+                if (isAdded) {
+                    val vipLv = (doc.getLong("vipLevel") ?: 0L).toInt()
+                    val svipLv = VipActivity.svipLevel(doc.getLong("svipPoints") ?: 0L)
+                    rootView.findViewById<View>(R.id.profile_header)?.background =
+                        ProfileTheme.background(requireContext(), vipLv, svipLv)
+                    val row = rootView.findViewById<FlowRow>(R.id.badge_row)
+                    if (row != null) {
+                        for (i in row.childCount - 1 downTo 0) {
+                            if (row.getChildAt(i).tag == "tier") row.removeViewAt(i)
+                        }
+                        if (vipLv > 0) {
+                            row.addView(ProfileTheme.chip(requireContext(), "⭐ VIP $vipLv", Color.parseColor("#7C3AED")).also { it.tag = "tier" })
+                        }
+                        if (svipLv > 0) {
+                            row.addView(ProfileTheme.chip(requireContext(), "👑 SVIP $svipLv", Color.parseColor("#B45309")).also { it.tag = "tier" })
+                        }
+                    }
+                }
+
                 val photoUrl = doc.getString("photoUrl") ?: ""
                 if (photoUrl.isNotEmpty()) {
                     imgAvatar.setPadding(0, 0, 0, 0)
@@ -233,17 +254,18 @@ class ProfileFragment : Fragment() {
 
     private fun applyRolesToUI(rootView: View, roles: Set<String>) {
         if (!isAdded) return
-        val badge = rootView.findViewById<TextView>(R.id.tvRoleBadgeProfile)
+        val roleRow = rootView.findViewById<FlowRow>(R.id.role_row)
         val menuPanel = rootView.findViewById<View>(R.id.menu_dev_panel)
         val container = rootView.findViewById<LinearLayout>(R.id.panel_container)
 
-        val text = Role.badgeAll(roles)
-        if (text != null) {
-            badge?.text = text
-            badge?.visibility = View.VISIBLE
-        } else {
-            badge?.visibility = View.GONE
+        // Satu badge per role, diurutkan dari role tertinggi
+        roleRow?.removeAllViews()
+        val sorted = roles.sortedByDescending { Role.rankOf(it) }
+        for (r in sorted) {
+            val label = Role.badge(r) ?: continue
+            roleRow?.addView(ProfileTheme.chip(requireContext(), label, ProfileTheme.roleColor(r)))
         }
+        roleRow?.visibility = if (roleRow != null && roleRow.childCount > 0) View.VISIBLE else View.GONE
         // Menu lama disembunyikan; panel sekarang dinamis per role yang dimiliki
         menuPanel?.visibility = View.GONE
         if (container != null) RolePanels.build(requireContext(), container, roles)

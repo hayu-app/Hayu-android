@@ -11,17 +11,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- HEADER -->
+        <!-- HEADER (background mengikuti level VIP / SVIP) -->
         <RelativeLayout
+            android:id="@+id/profile_header"
             android:layout_width="match_parent"
-            android:layout_height="240dp"
+            android:layout_height="wrap_content"
+            android:minHeight="180dp"
+            android:paddingBottom="22dp"
             android:background="@drawable/bg_profile_header">
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_cover_gradient"
-                android:alpha="0.6" />
 
             <ImageView
                 android:id="@+id/btn_settings"
@@ -34,96 +31,103 @@
                 android:tint="#FFFFFF"
                 android:padding="4dp" />
 
+            <!-- Avatar paling kiri -->
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/img_avatar"
                 android:layout_width="90dp"
                 android:layout_height="90dp"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="46dp"
                 android:scaleType="centerCrop"
                 android:src="@android:drawable/ic_menu_myplaces"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.Hayu.Circle"
                 app:strokeColor="#A78BFA"
                 app:strokeWidth="2dp" />
 
-            <TextView
-                android:id="@+id/tv_level_badge"
-                android:layout_width="wrap_content"
-                android:layout_height="22dp"
-                android:layout_below="@id/img_avatar"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_level_badge"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="Lv. 1"
-                android:textColor="#080818"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:gravity="center" />
+            <!-- Di kanan avatar: nickname -> ID -> badge ROLE -> badge lainnya -->
+            <LinearLayout
+                android:id="@+id/info_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/img_avatar"
+                android:layout_alignTop="@id/img_avatar"
+                android:layout_marginStart="26dp"
+                android:layout_marginEnd="14dp"
+                android:layout_marginTop="-4dp"
+                android:gravity="start"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tv_nickname"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/tv_level_badge"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="4dp"
-                android:text="Nickname"
-                android:textColor="#FFFFFF"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tv_nickname"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="44dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="Nickname"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tv_user_id"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/tv_nickname"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="2dp"
-                android:text="ID: 000000"
-                android:textColor="#A78BFA"
-                android:textSize="11sp" />
-            <TextView
-                android:id="@+id/tv_profile_gender_age"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignTop="@id/tv_nickname"
-                android:layout_toEndOf="@id/tv_nickname"
-                android:layout_marginStart="8dp"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="2dp"
-                android:paddingBottom="2dp"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp" />
+                <TextView
+                    android:id="@+id/tv_user_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="ID: 000000"
+                    android:textColor="#C4B5FD"
+                    android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/tv_email"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/tv_user_id"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="2dp"
-                android:textColor="#8892AA"
-                android:textSize="11sp" />
+                <!-- Badge semua role (diisi lewat kode) -->
+                <com.hayu.app.FlowRow
+                    android:id="@+id/role_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/tvRoleBadgeProfile"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_margin="16dp"
-                android:background="@drawable/bg_role_badge"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:textColor="#FFFFFF"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                <!-- Badge lainnya: level, gender/umur, VIP, SVIP -->
+                <com.hayu.app.FlowRow
+                    android:id="@+id/badge_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:id="@+id/tv_level_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        android:background="@drawable/bg_level_badge"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="Lv. 1"
+                        android:textColor="#080818"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:id="@+id/tv_profile_gender_age"
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        android:gravity="center"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp" />
+                </com.hayu.app.FlowRow>
+
+                <TextView
+                    android:id="@+id/tv_email"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="#A0A8C0"
+                    android:textSize="11sp" />
+            </LinearLayout>
         </RelativeLayout>
 
         <!-- STATS ROW -->

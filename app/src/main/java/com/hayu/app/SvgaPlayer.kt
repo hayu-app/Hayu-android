@@ -3,6 +3,7 @@ package com.hayu.app
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RelativeLayout
@@ -126,8 +127,16 @@ object SvgaFrame {
         view.tag = TAG
         view.scaleType = ImageView.ScaleType.FIT_CENTER
         val frameLp = RelativeLayout.LayoutParams(size, size)
-        frameLp.addRule(RelativeLayout.CENTER_HORIZONTAL)
-        frameLp.topMargin = lp.topMargin - (size - lp.height) / 2
+        if (avatar.id != View.NO_ID) {
+            // Ikut posisi avatar di mana pun diletakkan (kiri / tengah)
+            frameLp.addRule(RelativeLayout.ALIGN_LEFT, avatar.id)
+            frameLp.addRule(RelativeLayout.ALIGN_TOP, avatar.id)
+            frameLp.leftMargin = -(size - lp.width) / 2
+            frameLp.topMargin = -(size - lp.height) / 2
+        } else {
+            frameLp.addRule(RelativeLayout.CENTER_HORIZONTAL)
+            frameLp.topMargin = lp.topMargin - (size - lp.height) / 2
+        }
         parent.addView(view, frameLp)
 
         SvgaPlayer.play(view, url, 0)
