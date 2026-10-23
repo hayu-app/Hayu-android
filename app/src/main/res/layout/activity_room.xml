@@ -153,7 +153,7 @@
         android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
         android:clipToPadding="false" android:paddingTop="8dp" android:paddingBottom="8dp" />
 
-    <!-- BAR BAWAH -->
+    <!-- BAR BAWAH: tombol disebar rata dengan Space berbobot (diatur di RoomActivity.applyBottomBar) -->
     <LinearLayout
         android:id="@+id/bottom_bar"
         android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -181,56 +181,65 @@
                 android:gravity="center" android:text="➤"
                 android:textColor="#FFFFFF" android:textSize="14sp" />
         </LinearLayout>
+        <Space android:id="@+id/sp_pill" android:layout_width="8dp" android:layout_height="1dp" />
 
-        <!-- Muncul saat sudah naik mic: tombol chat, mic, emoji (kolom chat disembunyikan) -->
         <TextView
             android:id="@+id/btn_chat_toggle"
             android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="💬" android:textSize="17sp"
             android:visibility="gone" />
+        <Space android:id="@+id/sp_chat" android:layout_width="8dp" android:layout_height="1dp" android:visibility="gone" />
 
+        <!-- Speaker: matikan suara orang lain (tidak mendengar) -->
         <TextView
             android:id="@+id/btn_volume"
-            android:layout_width="40dp" android:layout_height="40dp" android:layout_marginStart="8dp"
+            android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
-            android:gravity="center" android:text="🔊" android:textSize="17sp" />
+            android:gravity="center" />
+        <Space android:id="@+id/sp_volume" android:layout_width="8dp" android:layout_height="1dp" />
 
+        <!-- Mic: bicara / mute (muncul saat sudah on mic) -->
         <TextView
             android:id="@+id/btn_mic"
-            android:layout_width="38dp" android:layout_height="38dp" android:layout_marginStart="6dp"
+            android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
-            android:gravity="center" android:text="🎙️" android:textSize="17sp"
+            android:gravity="center"
             android:visibility="gone" />
+        <Space android:id="@+id/sp_mic" android:layout_width="8dp" android:layout_height="1dp" android:visibility="gone" />
 
         <TextView
             android:id="@+id/btn_emoji"
-            android:layout_width="38dp" android:layout_height="38dp" android:layout_marginStart="6dp"
+            android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="😜" android:textSize="17sp"
             android:visibility="gone" />
+        <Space android:id="@+id/sp_emoji" android:layout_width="8dp" android:layout_height="1dp" android:visibility="gone" />
 
         <TextView
             android:id="@+id/btn_notif"
-            android:layout_width="40dp" android:layout_height="40dp" android:layout_marginStart="8dp"
+            android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="🔔" android:textSize="17sp" />
+        <Space android:id="@+id/sp_notif" android:layout_width="8dp" android:layout_height="1dp" />
 
         <TextView
             android:id="@+id/btn_menu"
-            android:layout_width="40dp" android:layout_height="40dp" android:layout_marginStart="8dp"
+            android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="⚙️" android:textSize="17sp" />
+        <Space android:id="@+id/sp_menu" android:layout_width="8dp" android:layout_height="1dp" />
 
         <TextView
             android:id="@+id/btn_game"
-            android:layout_width="40dp" android:layout_height="40dp" android:layout_marginStart="8dp"
+            android:layout_width="38dp" android:layout_height="38dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="🎮" android:textSize="17sp" />
+        <Space android:id="@+id/sp_game" android:layout_width="8dp" android:layout_height="1dp" />
 
         <TextView
             android:id="@+id/btn_gift"
-            android:layout_width="48dp" android:layout_height="48dp" android:layout_marginStart="8dp"
+            android:layout_width="48dp" android:layout_height="48dp"
             android:background="@drawable/bg_gift_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="🎁" android:textSize="22sp" />
     </LinearLayout>

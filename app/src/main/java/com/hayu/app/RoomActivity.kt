@@ -51,13 +51,16 @@ import com.opensource.svgaplayer.SVGAImageView
 //   isMuted: Boolean  — muted atau tidak
 //   photoUrl: String  — foto profil (tampil di kursi)
 //   frameUrl: String  — bingkai SVGA yang dipakai (tampil melingkari foto)
+//   emoji / emojiAt   — reaksi emoji terakhir (bubble 1,5 detik di foto kursi)
 
 data class MicSlot(
     val uid: String = "",
     val nickname: String = "",
     val isMuted: Boolean = false,
     val photoUrl: String = "",
-    val frameUrl: String = ""
+    val frameUrl: String = "",
+    val emoji: String = "",
+    val emojiAt: Long = 0L
 )
 
 class RoomActivity : AppCompatActivity() {
@@ -89,6 +92,9 @@ class RoomActivity : AppCompatActivity() {
     private val joinedAt = System.currentTimeMillis() - 1500L
 
     private var myPhotoUrl: String = ""
+    private var soundOn = true                  // speaker: false = tidak mendengar orang lain
+    private var micFirstSnapshot = true
+    private val micEmojiViews = arrayOfNulls<TextView>(5)
     private var inputExpanded = false
     private lateinit var barInput: LinearLayout
     private lateinit var btnChatToggle: TextView
@@ -199,8 +205,16 @@ class RoomActivity : AppCompatActivity() {
             sendMessage(text)
         }
 
+        // Speaker = dengar / tidak dengar orang lain. Mic (di bawah) = bicara / mute.
+        updateSpeakerIcon()
         btnVolume.setOnClickListener {
-            toggleMuteMySlot()
+            soundOn = !soundOn
+            updateSpeakerIcon()
+            Toast.makeText(
+                this,
+                if (soundOn) "🔊 Suara room dinyalakan" else "🔇 Suara room dimatikan — kamu tidak mendengar orang lain",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         // Sudah on mic: kolom chat jadi tombol, ditambah tombol mic & emoji
@@ -415,19 +429,61 @@ class RoomActivity : AppCompatActivity() {
             .collection("micSlots")
             .addSnapshotListener { snapshot, _ ->
                 if (snapshot == null) return@addSnapshotListener
+                val bubbles = ArrayList<Pair<Int, String>>()
                 for (doc in snapshot.documents) {
                     val i = doc.id.toIntOrNull() ?: continue
                     if (i < 0 || i >= MIC_SLOT_COUNT) continue
-                    micSlots[i] = MicSlot(
+                    val old = micSlots[i]
+                    val ns = MicSlot(
                         uid      = doc.getString("uid") ?: "",
                         nickname = doc.getString("nickname") ?: "",
                         isMuted  = doc.getBoolean("isMuted") ?: false,
                         photoUrl = doc.getString("photoUrl") ?: "",
-                        frameUrl = doc.getString("frameUrl") ?: ""
+                        frameUrl = doc.getString("frameUrl") ?: "",
+                        emoji    = doc.getString("emoji") ?: "",
+                        emojiAt  = doc.getLong("emojiAt") ?: 0L
                     )
+                    micSlots[i] = ns
+                    // reaksi emoji baru dari orang yang sedang on mic (snapshot pertama diabaikan)
+                    if (!micFirstSnapshot && ns.uid.isNotEmpty() && ns.uid == old.uid &&
+                        ns.emoji.isNotEmpty() && ns.emojiAt != old.emojiAt
+                    ) {
+                        bubbles.add(Pair(i, ns.emoji))
+                    }
                 }
+                micFirstSnapshot = false
                 updateAllMicSeats()
+                for ((i, e) in bubbles) showEmojiBubble(i, e)
             }
+    }
+
+    /** Bubble emoji di atas foto kursi: muncul, tahan, lalu hilang — total ±1,5 detik. */
+    private fun showEmojiBubble(i: Int, emoji: String) {
+        val tv = micEmojiViews[i] ?: return
+        tv.animate().cancel()
+        tv.text = emoji
+        tv.visibility = android.view.View.VISIBLE
+        tv.alpha = 0f
+        tv.scaleX = 0.3f
+        tv.scaleY = 0.3f
+        tv.animate().setStartDelay(0).alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).withEndAction {
+            tv.animate().alpha(0f).setStartDelay(1000).setDuration(320).withEndAction {
+                tv.visibility = android.view.View.GONE
+            }.start()
+        }.start()
+    }
+
+    /** Kirim reaksi emoji lewat dokumen kursi milikku (bukan ke chat). */
+    private fun sendEmojiReaction(emoji: String) {
+        val me = auth.currentUser?.uid ?: return
+        val idx = micSlots.indexOfFirst { it.uid == me }
+        if (idx < 0) {
+            Toast.makeText(this, "Naik mic dulu untuk kirim emoji", Toast.LENGTH_SHORT).show()
+            return
+        }
+        db.collection("rooms").document(roomId!!)
+            .collection("micSlots").document(idx.toString())
+            .update(mapOf("emoji" to emoji, "emojiAt" to System.currentTimeMillis()))
     }
 
     private fun emptySlotData() = hashMapOf<String, Any>(
@@ -482,6 +538,18 @@ class RoomActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.BOTTOM or Gravity.END
             ))
+
+            // bubble emoji: muncul di atas foto selama 1,5 detik
+            val bubble = TextView(this)
+            bubble.gravity = Gravity.CENTER
+            bubble.textSize = 26f
+            bubble.visibility = android.view.View.GONE
+            bubble.background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.parseColor("#F2FFFFFF"))
+            }
+            wrap.addView(bubble, FrameLayout.LayoutParams(dpi(46), dpi(46), Gravity.CENTER))
+            micEmojiViews[i] = bubble
 
             column.addView(wrap, idx, LinearLayout.LayoutParams(dpi(60), dpi(60)))
             micAvatarViews[i] = avatar
@@ -577,7 +645,7 @@ class RoomActivity : AppCompatActivity() {
                 label.visibility = android.view.View.VISIBLE
                 label.text = ""
                 label.setCompoundDrawablesWithIntrinsicBounds(
-                    null, ContextCompat.getDrawable(this, R.drawable.ic_mic_seat), null, null
+                    ContextCompat.getDrawable(this, R.drawable.ic_mic_seat), null, null, null
                 )
                 view.alpha = 1f
                 view.setBackgroundResource(R.drawable.bg_seat_empty)
@@ -626,17 +694,56 @@ class RoomActivity : AppCompatActivity() {
         val on = android.view.View.VISIBLE
         val off = android.view.View.GONE
 
+        // Belum on mic : [kolom chat] speaker bel menu game gift
+        // Sudah on mic : chat speaker mic emoji menu game gift  (disebar rata)
+        // Mengetik     : [kolom chat] gift
         barInput.visibility = if (!onMic || expanded) on else off
         btnChatToggle.visibility = if (compact) on else off
         btnMic.visibility = if (compact) on else off
         btnEmoji.visibility = if (compact) on else off
-        val rest = if (expanded) off else on
-        // tombol speaker disembunyikan saat on mic: fungsinya (mute) sudah ada di tombol mic
-        btnVolumeView.visibility = if (onMic) off else on
-        btnNotifView.visibility = rest
-        btnMenuView.visibility = rest
-        btnGameView.visibility = rest
-        btnMic.text = if (mine?.isMuted == true) "🔇" else "🎙️"
+        btnVolumeView.visibility = if (expanded) off else on
+        btnNotifView.visibility = if (onMic) off else on
+        btnMenuView.visibility = if (expanded) off else on
+        btnGameView.visibility = if (expanded) off else on
+
+        updateMicIcon(mine?.isMuted == true)
+
+        // Spacer: compact = melar (sebar rata), lainnya = jarak tetap 8dp
+        val pairs = listOf(
+            barInput to R.id.sp_pill, btnChatToggle to R.id.sp_chat, btnVolumeView to R.id.sp_volume,
+            btnMic to R.id.sp_mic, btnEmoji to R.id.sp_emoji, btnNotifView to R.id.sp_notif,
+            btnMenuView to R.id.sp_menu, btnGameView to R.id.sp_game
+        )
+        for ((button, spaceId) in pairs) {
+            val space = findViewById<android.view.View>(spaceId) ?: continue
+            space.visibility = button.visibility
+            val lp = space.layoutParams as LinearLayout.LayoutParams
+            if (compact) {
+                lp.width = 0
+                lp.weight = 1f
+            } else {
+                lp.width = dpi(8)
+                lp.weight = 0f
+            }
+            space.layoutParams = lp
+        }
+    }
+
+    private fun updateSpeakerIcon() {
+        if (!::btnVolumeView.isInitialized) return
+        btnVolumeView.text = ""
+        btnVolumeView.setCompoundDrawablesWithIntrinsicBounds(
+            ContextCompat.getDrawable(this, if (soundOn) R.drawable.ic_speaker_on else R.drawable.ic_speaker_off),
+            null, null, null
+        )
+    }
+
+    private fun updateMicIcon(muted: Boolean) {
+        btnMic.text = ""
+        btnMic.setCompoundDrawablesWithIntrinsicBounds(
+            ContextCompat.getDrawable(this, if (muted) R.drawable.ic_mic_off else R.drawable.ic_mic_on),
+            null, null, null
+        )
     }
 
     private fun collapseInput() {
@@ -666,7 +773,7 @@ class RoomActivity : AppCompatActivity() {
             tv.setPadding(0, dpi(10), 0, dpi(10))
             tv.setOnClickListener {
                 sheet.dismiss()
-                sendMessage(e)
+                sendEmojiReaction(e)
             }
             val lp = android.widget.GridLayout.LayoutParams(
                 android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED),
