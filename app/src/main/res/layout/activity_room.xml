@@ -162,6 +162,7 @@
         android:paddingTop="8dp" android:paddingBottom="12dp">
 
         <LinearLayout
+            android:id="@+id/bar_input"
             android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
             android:background="@drawable/bg_pill_input"
             android:gravity="center_vertical" android:orientation="horizontal"
@@ -181,11 +182,33 @@
                 android:textColor="#FFFFFF" android:textSize="14sp" />
         </LinearLayout>
 
+        <!-- Muncul saat sudah naik mic: tombol chat, mic, emoji (kolom chat disembunyikan) -->
+        <TextView
+            android:id="@+id/btn_chat_toggle"
+            android:layout_width="38dp" android:layout_height="38dp"
+            android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
+            android:gravity="center" android:text="💬" android:textSize="17sp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/btn_volume"
             android:layout_width="40dp" android:layout_height="40dp" android:layout_marginStart="8dp"
             android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
             android:gravity="center" android:text="🔊" android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/btn_mic"
+            android:layout_width="38dp" android:layout_height="38dp" android:layout_marginStart="6dp"
+            android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
+            android:gravity="center" android:text="🎙️" android:textSize="17sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/btn_emoji"
+            android:layout_width="38dp" android:layout_height="38dp" android:layout_marginStart="6dp"
+            android:background="@drawable/bg_circle_btn" android:clickable="true" android:focusable="true"
+            android:gravity="center" android:text="😜" android:textSize="17sp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/btn_notif"

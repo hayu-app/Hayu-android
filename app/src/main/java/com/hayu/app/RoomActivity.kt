@@ -6,12 +6,16 @@ package com.hayu.app
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.ViewParent
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -83,6 +87,17 @@ class RoomActivity : AppCompatActivity() {
     private val micFrameShown = Array(5) { "\u0000" }
     // Chat dimulai kosong saat masuk room (pesan lama tidak ditampilkan)
     private val joinedAt = System.currentTimeMillis() - 1500L
+
+    private var myPhotoUrl: String = ""
+    private var inputExpanded = false
+    private lateinit var barInput: LinearLayout
+    private lateinit var btnChatToggle: TextView
+    private lateinit var btnMic: TextView
+    private lateinit var btnEmoji: TextView
+    private lateinit var btnVolumeView: TextView
+    private lateinit var btnNotifView: TextView
+    private lateinit var btnMenuView: TextView
+    private lateinit var btnGameView: TextView
     private var micSlotListener: ListenerRegistration? = null
     private var redPacketManager: RedPacketManager? = null
 
@@ -116,6 +131,14 @@ class RoomActivity : AppCompatActivity() {
         val btnMenu      = findViewById<TextView>(R.id.btn_menu)
         val btnGift      = findViewById<TextView>(R.id.btn_gift)
         val btnGame      = findViewById<TextView>(R.id.btn_game)
+        barInput      = findViewById(R.id.bar_input)
+        btnChatToggle = findViewById(R.id.btn_chat_toggle)
+        btnMic        = findViewById(R.id.btn_mic)
+        btnEmoji      = findViewById(R.id.btn_emoji)
+        btnVolumeView = btnVolume
+        btnNotifView  = btnNotif
+        btnMenuView   = btnMenu
+        btnGameView   = btnGame
 
         // bind mic slot views
         val slotIds = listOf(
@@ -158,8 +181,10 @@ class RoomActivity : AppCompatActivity() {
                 db.collection("users").document(uid).get()
                     .addOnSuccessListener { userDoc ->
                         myNickname = userDoc.getString("nickname") ?: "Pengguna HAYU"
+                        myPhotoUrl = userDoc.getString("photoUrl") ?: ""
                         setupMicSlots()
                         listenMicSlots()
+                        updateAllMicSeats()
                         announceCarEntrance(userDoc)
                     }
             }
@@ -176,6 +201,25 @@ class RoomActivity : AppCompatActivity() {
 
         btnVolume.setOnClickListener {
             toggleMuteMySlot()
+        }
+
+        // Sudah on mic: kolom chat jadi tombol, ditambah tombol mic & emoji
+        btnMic.setOnClickListener { toggleMuteMySlot() }
+        btnEmoji.setOnClickListener { showEmojiPicker() }
+        btnChatToggle.setOnClickListener {
+            inputExpanded = true
+            applyBottomBar()
+            etMessage.post {
+                etMessage.requestFocus()
+                (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+                    .showSoftInput(etMessage, InputMethodManager.SHOW_IMPLICIT)
+            }
+        }
+        etMessage.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && inputExpanded) {
+                inputExpanded = false
+                applyBottomBar()
+            }
         }
 
         btnNotif.setOnClickListener {
@@ -381,8 +425,8 @@ class RoomActivity : AppCompatActivity() {
                         photoUrl = doc.getString("photoUrl") ?: "",
                         frameUrl = doc.getString("frameUrl") ?: ""
                     )
-                    updateMicSlotView(i)
                 }
+                updateAllMicSeats()
             }
     }
 
@@ -454,53 +498,106 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateAllMicSeats() {
+        for (i in 0 until MIC_SLOT_COUNT) updateMicSlotView(i)
+        applyBottomBar()
+    }
+
+    /** Label di bawah kursi: angka, nama, nama owner (ikon rumah), atau tombol "Ambil Mic". */
+    private fun setSeatLabel(i: Int, text: String, pill: Boolean, owner: Boolean = false) {
+        val tv = micNameViews[i] ?: return
+        tv.text = text
+        if (pill) {
+            tv.setTextColor(Color.parseColor("#1F1F3A"))
+            tv.typeface = Typeface.DEFAULT_BOLD
+            tv.setPadding(dpi(12), dpi(4), dpi(12), dpi(4))
+            tv.background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadius = dpi(14).toFloat()
+            }
+            tv.maxWidth = dpi(90)
+            tv.setOnClickListener { requestMic(i) }
+        } else {
+            tv.setTextColor(Color.parseColor(if (owner) "#67E8F9" else "#C4B5FD"))
+            tv.typeface = if (owner) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+            tv.setPadding(0, 0, 0, 0)
+            tv.background = null
+            tv.maxWidth = dpi(64)
+            tv.setOnClickListener(null)
+            tv.isClickable = false
+        }
+    }
+
+    private fun showAvatar(i: Int, photoUrl: String) {
+        val avatar = micAvatarViews[i] ?: return
+        avatar.visibility = android.view.View.VISIBLE
+        if (micPhotoShown[i] != photoUrl) {
+            micPhotoShown[i] = photoUrl
+            if (photoUrl.isNotEmpty()) {
+                avatar.load(photoUrl) { crossfade(true) }
+            } else {
+                avatar.setImageResource(R.drawable.ic_profile)
+            }
+        }
+    }
+
+    private fun hideFrame(i: Int) {
+        val frame = micFrameViews[i] ?: return
+        if (micFrameShown[i] != "") {
+            frame.stopAnimation()
+            frame.setImageDrawable(null)
+            frame.visibility = android.view.View.GONE
+            micFrameShown[i] = ""
+        }
+    }
+
     private fun updateMicSlotView(i: Int) {
         val view = micSlotViews[i] ?: return
         val slot = micSlots[i]
         val label = view.getChildAt(0) as? TextView ?: return
-        val name = micNameViews[i]
-        val avatar = micAvatarViews[i]
         val frame = micFrameViews[i]
         val mute = micMuteBadges[i]
+        val me = auth.currentUser?.uid ?: ""
+
+        // Kursi 1 = kursi owner. Owner yang belum naik mic melihat fotonya + tombol "Ambil Mic".
+        val ownerSeatForMe = i == 0 && slot.uid.isEmpty() && me.isNotEmpty() &&
+            me == roomOwnerUid && micSlots.none { it.uid == me }
 
         if (slot.uid.isEmpty()) {
-            // kursi kosong: ikon mic + angka kursi
-            label.visibility = android.view.View.VISIBLE
-            label.text = "🎤"
-            label.textSize = 24f
-            view.alpha = 0.6f
-            view.setBackgroundResource(R.drawable.bg_seat_empty)
-            avatar?.visibility = android.view.View.GONE
-            micPhotoShown[i] = "\u0000"
-            if (micFrameShown[i] != "") {
-                frame?.stopAnimation()
-                frame?.setImageDrawable(null)
-                frame?.visibility = android.view.View.GONE
-                micFrameShown[i] = ""
-            }
             mute?.visibility = android.view.View.GONE
-            name?.text = (i + 1).toString()
+            hideFrame(i)
+            if (ownerSeatForMe) {
+                label.visibility = android.view.View.GONE
+                view.alpha = 1f
+                view.setBackgroundResource(R.drawable.bg_seat_active)
+                showAvatar(i, myPhotoUrl)
+                setSeatLabel(i, "Ambil Mic", pill = true)
+            } else {
+                // kursi kosong: ikon mic + angka kursi
+                label.visibility = android.view.View.VISIBLE
+                label.text = ""
+                label.setCompoundDrawablesWithIntrinsicBounds(
+                    null, ContextCompat.getDrawable(this, R.drawable.ic_mic_seat), null, null
+                )
+                view.alpha = 1f
+                view.setBackgroundResource(R.drawable.bg_seat_empty)
+                micAvatarViews[i]?.visibility = android.view.View.GONE
+                micPhotoShown[i] = "\u0000"
+                setSeatLabel(i, (i + 1).toString(), pill = false)
+            }
             return
         }
 
-        // kursi terisi: foto + bingkai, dan angka berubah jadi nickname
+        // kursi terisi: foto + bingkai, dan angka berubah jadi nickname (owner: ikon rumah)
         view.alpha = 1f
         view.setBackgroundResource(if (slot.isMuted) R.drawable.bg_seat_muted else R.drawable.bg_seat_active)
         label.visibility = android.view.View.GONE
-        name?.text = slot.nickname.ifBlank { "…" }
+        val isOwner = slot.uid == roomOwnerUid
+        val shown = slot.nickname.ifBlank { "…" }
+        setSeatLabel(i, if (isOwner) "🏠 $shown" else shown, pill = false, owner = isOwner)
         mute?.visibility = if (slot.isMuted) android.view.View.VISIBLE else android.view.View.GONE
+        showAvatar(i, slot.photoUrl)
 
-        if (avatar != null) {
-            avatar.visibility = android.view.View.VISIBLE
-            if (micPhotoShown[i] != slot.photoUrl) {
-                micPhotoShown[i] = slot.photoUrl
-                if (slot.photoUrl.isNotEmpty()) {
-                    avatar.load(slot.photoUrl) { crossfade(true) }
-                } else {
-                    avatar.setImageResource(R.drawable.ic_profile)
-                }
-            }
-        }
         if (frame != null && micFrameShown[i] != slot.frameUrl) {
             micFrameShown[i] = slot.frameUrl
             if (slot.frameUrl.isEmpty()) {
@@ -512,6 +609,74 @@ class RoomActivity : AppCompatActivity() {
                 SvgaPlayer.play(frame, slot.frameUrl, 0)
             }
         }
+    }
+
+    // ────────────────────────────────────────────
+    // BAR BAWAH: sebelum naik mic = kolom chat; sesudah naik mic = tombol chat + mic + emoji
+    // ────────────────────────────────────────────
+
+    private fun applyBottomBar() {
+        if (!::barInput.isInitialized) return
+        val me = auth.currentUser?.uid ?: return
+        val mine = micSlots.firstOrNull { it.uid == me }
+        val onMic = mine != null
+        if (!onMic) inputExpanded = false
+        val expanded = onMic && inputExpanded
+        val compact = onMic && !expanded
+        val on = android.view.View.VISIBLE
+        val off = android.view.View.GONE
+
+        barInput.visibility = if (!onMic || expanded) on else off
+        btnChatToggle.visibility = if (compact) on else off
+        btnMic.visibility = if (compact) on else off
+        btnEmoji.visibility = if (compact) on else off
+        val rest = if (expanded) off else on
+        // tombol speaker disembunyikan saat on mic: fungsinya (mute) sudah ada di tombol mic
+        btnVolumeView.visibility = if (onMic) off else on
+        btnNotifView.visibility = rest
+        btnMenuView.visibility = rest
+        btnGameView.visibility = rest
+        btnMic.text = if (mine?.isMuted == true) "🔇" else "🎙️"
+    }
+
+    private fun collapseInput() {
+        if (!inputExpanded) return
+        inputExpanded = false
+        etMessage.clearFocus()
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(etMessage.windowToken, 0)
+        applyBottomBar()
+    }
+
+    private fun showEmojiPicker() {
+        val sheet = BottomSheetDialog(this)
+        val grid = android.widget.GridLayout(this)
+        grid.columnCount = 6
+        grid.setBackgroundColor(Color.parseColor("#12122A"))
+        grid.setPadding(dpi(12), dpi(16), dpi(12), dpi(24))
+        val emojis = listOf(
+            "😀", "😂", "🤣", "😍", "🥰", "😘", "😎", "😜", "🤔", "😭", "😡", "😴",
+            "👍", "👏", "🙌", "🙏", "👋", "💪", "🔥", "💜", "💯", "🎉", "🎁", "🌹"
+        )
+        for (e in emojis) {
+            val tv = TextView(this)
+            tv.text = e
+            tv.textSize = 28f
+            tv.gravity = Gravity.CENTER
+            tv.setPadding(0, dpi(10), 0, dpi(10))
+            tv.setOnClickListener {
+                sheet.dismiss()
+                sendMessage(e)
+            }
+            val lp = android.widget.GridLayout.LayoutParams(
+                android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED),
+                android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED, 1f)
+            )
+            lp.width = 0
+            grid.addView(tv, lp)
+        }
+        sheet.setContentView(grid)
+        sheet.show()
     }
 
     // ────────────────────────────────────────────
@@ -755,6 +920,7 @@ class RoomActivity : AppCompatActivity() {
     private fun sendMessage(text: String) {
         val uid = auth.currentUser?.uid ?: return
         etMessage.setText("")
+        collapseInput()
         db.collection("users").document(uid).get()
             .addOnSuccessListener { userDoc ->
                 val name = userDoc.getString("nickname") ?: "Pengguna HAYU"
