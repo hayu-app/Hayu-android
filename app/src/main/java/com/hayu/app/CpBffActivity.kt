@@ -70,7 +70,7 @@ class CpBffActivity : ListPageActivity() {
         }
         active.forEach { b ->
             val other = if (b.getString("fromUid") == myUid) b.getString("toName") else b.getString("fromName")
-            addRow("${icon()} ${other ?: "-"}", "${label()} sejak ${timeStr(num(b, "acceptedAt"))} • ketuk untuk putuskan") {
+            addRow("${icon()} ${other ?: "-"}", "${label()} sejak ${timeStr(num(b, "acceptedAt"))} • 💗 ${fmt(num(b, "points"))} poin • ketuk untuk putuskan") {
                 confirm("Putuskan ${label()}", "Putuskan ikatan ${label()} dengan ${other ?: "-"}? Biaya undangan tidak dikembalikan.") {
                     endBond(b)
                 }
