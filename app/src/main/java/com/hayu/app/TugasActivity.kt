@@ -40,12 +40,11 @@ class TugasActivity : SimplePageActivity() {
 
         container.addView(Ui.text(this, "Tugas Harian & Misi", 12f, Ui.GRAY))
 
-        val lastDaily = user.getLong("lastDailyClaim") ?: 0L
-        val dailyDone = System.currentTimeMillis() - lastDaily < 24 * 60 * 60 * 1000L
-        val dailyBtn = Ui.button(this, if (dailyDone) "Selesai ✅" else "Klaim", !dailyDone) {
+        val dailyDone = user.getString("lastDailyClaimDate") == DailyCoinActivity.todayWib()
+        val dailyBtn = Ui.button(this, if (dailyDone) "Selesai ✅" else "Check-in", !dailyDone) {
             startActivity(Intent(this, DailyCoinActivity::class.java))
         }
-        container.addView(Ui.row(this, "📅", "Absen harian", "+10 🪙  +5 EXP", dailyBtn))
+        container.addView(Ui.row(this, "📅", "Check-in harian", "Hadiah naik tiap hari berturut-turut", dailyBtn))
 
         for (t in tasks) {
             val isClaimed = t.id in claimed

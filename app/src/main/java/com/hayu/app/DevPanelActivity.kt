@@ -39,6 +39,7 @@ class DevPanelActivity : AppCompatActivity() {
         PanelItem("📈", "Reports",             "report"),
         PanelItem("⚙️", "System & Dev Tools", "system"),
         PanelItem("🎞️", "SVGA Manager",       "svga"),
+        PanelItem("📅", "Check-in Harian",    "checkin"),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -173,6 +174,10 @@ class DevPanelActivity : AppCompatActivity() {
     }
 
     private fun openPanel(key: String, label: String) {
+        if (key == "checkin") {
+            startActivity(Intent(this, CheckinConfigActivity::class.java))
+            return
+        }
         if (key == "svga") {
             startActivity(Intent(this, SvgaManagerActivity::class.java))
             return

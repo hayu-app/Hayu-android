@@ -154,23 +154,6 @@ class WalletActivity : AppCompatActivity() {
         sheet.addView(gridBox, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
         gridBox.addView(txt("Memuat paket…", 13f, Color.GRAY, false))
 
-        // koin harian
-        val daily = LinearLayout(this).apply {
-            gravity = Gravity.CENTER_VERTICAL
-            background = GradientDrawable().apply {
-                setColor(Color.rgb(255, 244, 224)); cornerRadius = dp(14).toFloat()
-            }
-            setPadding(dp(14), dp(10), dp(14), dp(10))
-            setOnClickListener { startActivity(Intent(this@WalletActivity, DailyCoinActivity::class.java)) }
-        }
-        daily.addView(txt("🎁", 26f), LinearLayout.LayoutParams(-2, -2))
-        val dailyCol = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        dailyCol.addView(txt("Koin Harian", 15f, ink).apply { gravity = Gravity.START })
-        dailyCol.addView(txt("Klaim koin gratis tiap hari", 12f, Color.GRAY, false).apply { gravity = Gravity.START })
-        daily.addView(dailyCol, LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(12) })
-        daily.addView(txt("Klaim ›", 14f, Color.rgb(255, 110, 40)), LinearLayout.LayoutParams(-2, -2))
-        sheet.addView(daily, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-
         // umpan balik
         sheet.addView(txt("🎧  Umpan balik masalah", 15f, ink).apply {
             setPadding(0, dp(18), 0, dp(8))

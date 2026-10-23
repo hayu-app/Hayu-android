@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
                     android.widget.Toast.makeText(this, "Akun kamu diblokir 🚫", android.widget.Toast.LENGTH_LONG).show()
                     startActivity(Intent(this, LoginActivity::class.java))
                     finishAffinity()
+                } else if (savedInstanceState == null && d.getString("lastDailyClaimDate") != DailyCoinActivity.todayWib()) {
+                    startActivity(Intent(this, DailyCoinActivity::class.java))
                 }
             }
         }

@@ -52,6 +52,11 @@
 
         <activity
             android:name=".DailyCoinActivity"
+            android:exported="false"
+            android:theme="@style/Theme.HAYU.Translucent" />
+
+        <activity
+            android:name=".CheckinConfigActivity"
             android:exported="false" />
 
         <activity
