@@ -34,7 +34,6 @@ class ProfileFragment : Fragment() {
 
         val tvNickname = view.findViewById<TextView>(R.id.tv_nickname)
         val tvUserId = view.findViewById<TextView>(R.id.tv_user_id)
-        val tvEmail = view.findViewById<TextView>(R.id.tv_email)
         val tvProfileGenderAge = view.findViewById<TextView>(R.id.tv_profile_gender_age)
         val tvLevelBadge = view.findViewById<TextView>(R.id.tv_level_badge)
         val tvCoins = view.findViewById<TextView>(R.id.tv_coins)
@@ -42,7 +41,6 @@ class ProfileFragment : Fragment() {
         val tvFollowingCount = view.findViewById<TextView>(R.id.tv_following_count)
         val tvFollowersCount = view.findViewById<TextView>(R.id.tv_followers_count)
         val btnEditProfile = view.findViewById<TextView>(R.id.btn_edit_profile)
-        val btnLogout = view.findViewById<TextView>(R.id.btn_logout)
 
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -50,8 +48,6 @@ class ProfileFragment : Fragment() {
             requireActivity().finishAffinity()
             return
         }
-
-        tvEmail.text = currentUser.email ?: ""
 
         loadProfile(view, tvNickname, tvUserId, tvProfileGenderAge, tvLevelBadge, tvCoins)
         loadFollowStats(tvFriendsCount, tvFollowingCount, tvFollowersCount)
@@ -65,7 +61,9 @@ class ProfileFragment : Fragment() {
             startActivity(Intent(requireContext(), EditProfileActivity::class.java))
         }
 
-        btnLogout.setOnClickListener { doLogout() }
+        // Email & Keluar ada di halaman Pengaturan
+        val openSettings = View.OnClickListener { startActivity(Intent(requireContext(), SettingsActivity::class.java)) }
+        view.findViewById<View>(R.id.btn_settings)?.setOnClickListener(openSettings)
 
         view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { startActivity(Intent(requireContext(), LencanaActivity::class.java)) }
         view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { startActivity(Intent(requireContext(), TokoActivity::class.java)) }
@@ -85,7 +83,7 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
-        view.findViewById<View>(R.id.menu_settings).setOnClickListener { notif("Pengaturan segera hadir ⚙️") }
+        view.findViewById<View>(R.id.menu_settings).setOnClickListener(openSettings)
         view.findViewById<View>(R.id.menu_help).setOnClickListener { startActivity(Intent(requireContext(), SupportActivity::class.java)) }
         view.findViewById<View>(R.id.menu_about).setOnClickListener {
             Toast.makeText(requireContext(), "HAYU v1.0 — Teman baru, obrolan seru 💜", Toast.LENGTH_LONG).show()
@@ -273,12 +271,5 @@ class ProfileFragment : Fragment() {
 
     private fun notif(msg: String) {
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun doLogout() {
-        auth.signOut()
-        Toast.makeText(requireContext(), "Berhasil logout 👋", Toast.LENGTH_SHORT).show()
-        startActivity(Intent(requireContext(), LoginActivity::class.java))
-        requireActivity().finishAffinity()
     }
 }

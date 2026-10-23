@@ -118,15 +118,6 @@
                         android:textSize="11sp" />
                 </com.hayu.app.FlowRow>
 
-                <TextView
-                    android:id="@+id/tv_email"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textColor="#A0A8C0"
-                    android:textSize="11sp" />
             </LinearLayout>
         </RelativeLayout>
 
@@ -596,21 +587,8 @@
             android:orientation="vertical"
             android:visibility="gone" />
 
-        <!-- LOGOUT -->
-        <TextView
-            android:id="@+id/btn_logout"
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="32dp"
-            android:background="@drawable/bg_card_category"
-            android:gravity="center"
-            android:text="🚪  Keluar"
-            android:textColor="#EF4444"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+        <!-- email & keluar ada di Pengaturan -->
+        <View android:layout_width="match_parent" android:layout_height="32dp" />
 
     </LinearLayout>
 </ScrollView>
