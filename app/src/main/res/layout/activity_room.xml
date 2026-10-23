@@ -38,11 +38,6 @@
                 android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:ellipsize="end" android:maxLines="1" android:text="Nama Room"
                 android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
-            <TextView
-                android:id="@+id/tv_room_owner"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:layout_marginTop="2dp" android:text="Owner"
-                android:textColor="#C4B5FD" android:textSize="11sp" />
         </LinearLayout>
 
         <TextView

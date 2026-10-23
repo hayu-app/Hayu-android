@@ -92,6 +92,9 @@ class RoomActivity : AppCompatActivity() {
     private val joinedAt = System.currentTimeMillis() - 1500L
 
     private var myPhotoUrl: String = ""
+    private var myFrameUrl: String = ""
+    private val liveFrames = HashMap<String, String>()          // uid -> bingkai terbaru dari profil
+    private val liveFramePending = HashSet<String>()
     private var soundOn = true                  // speaker: false = tidak mendengar orang lain
     private var micFirstSnapshot = true
     private val micEmojiViews = arrayOfNulls<TextView>(5)
@@ -127,7 +130,6 @@ class RoomActivity : AppCompatActivity() {
 
         val btnBack      = findViewById<TextView>(R.id.btn_back)
         val tvRoomName   = findViewById<TextView>(R.id.tv_room_name)
-        val tvRoomOwner  = findViewById<TextView>(R.id.tv_room_owner)
         val tvRoomUsers  = findViewById<TextView>(R.id.tv_room_users)
         rvMessages       = findViewById(R.id.rv_messages)
         etMessage        = findViewById(R.id.et_message)
@@ -175,7 +177,6 @@ class RoomActivity : AppCompatActivity() {
                 val currentUsers = (doc.getLong("currentUsers") ?: 1L).toInt()
 
                 tvRoomName.text  = roomName
-                tvRoomOwner.text = "Owner: $ownerName"
                 tvRoomUsers.text = "👤 $currentUsers"
 
                 session.setActiveRoomId(roomId!!)
@@ -188,6 +189,7 @@ class RoomActivity : AppCompatActivity() {
                     .addOnSuccessListener { userDoc ->
                         myNickname = userDoc.getString("nickname") ?: "Pengguna HAYU"
                         myPhotoUrl = userDoc.getString("photoUrl") ?: ""
+                        myFrameUrl = userDoc.getString("equippedFrameUrl") ?: ""
                         setupMicSlots()
                         listenMicSlots()
                         updateAllMicSeats()
@@ -609,21 +611,40 @@ class RoomActivity : AppCompatActivity() {
         }
     }
 
-    private fun hideFrame(i: Int) {
+    private fun hideFrame(i: Int) = applyFrame(i, "")
+
+    /** Pasang / ganti / hapus bingkai SVGA di kursi i (hanya memuat ulang kalau URL berubah). */
+    private fun applyFrame(i: Int, url: String) {
         val frame = micFrameViews[i] ?: return
-        if (micFrameShown[i] != "") {
+        if (micFrameShown[i] == url) return
+        micFrameShown[i] = url
+        if (url.isEmpty()) {
             frame.stopAnimation()
             frame.setImageDrawable(null)
             frame.visibility = android.view.View.GONE
-            micFrameShown[i] = ""
+        } else {
+            frame.visibility = android.view.View.VISIBLE
+            SvgaPlayer.play(frame, url, 0)
         }
+    }
+
+    /** Ambil bingkai TERBARU dari profil user (bingkai di dokumen kursi bisa kosong / usang). */
+    private fun fetchLiveFrame(uid: String) {
+        if (uid.isEmpty() || !liveFramePending.add(uid)) return
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                liveFrames[uid] = doc.getString("equippedFrameUrl") ?: ""
+                for (i in 0 until MIC_SLOT_COUNT) if (micSlots[i].uid == uid) updateMicSlotView(i)
+            }
+            .addOnFailureListener {
+                liveFrames[uid] = micSlots.firstOrNull { it.uid == uid }?.frameUrl ?: ""
+            }
     }
 
     private fun updateMicSlotView(i: Int) {
         val view = micSlotViews[i] ?: return
         val slot = micSlots[i]
         val label = view.getChildAt(0) as? TextView ?: return
-        val frame = micFrameViews[i]
         val mute = micMuteBadges[i]
         val me = auth.currentUser?.uid ?: ""
 
@@ -633,7 +654,7 @@ class RoomActivity : AppCompatActivity() {
 
         if (slot.uid.isEmpty()) {
             mute?.visibility = android.view.View.GONE
-            hideFrame(i)
+            if (ownerSeatForMe) applyFrame(i, myFrameUrl) else hideFrame(i)
             if (ownerSeatForMe) {
                 label.visibility = android.view.View.GONE
                 view.alpha = 1f
@@ -666,17 +687,9 @@ class RoomActivity : AppCompatActivity() {
         mute?.visibility = if (slot.isMuted) android.view.View.VISIBLE else android.view.View.GONE
         showAvatar(i, slot.photoUrl)
 
-        if (frame != null && micFrameShown[i] != slot.frameUrl) {
-            micFrameShown[i] = slot.frameUrl
-            if (slot.frameUrl.isEmpty()) {
-                frame.stopAnimation()
-                frame.setImageDrawable(null)
-                frame.visibility = android.view.View.GONE
-            } else {
-                frame.visibility = android.view.View.VISIBLE
-                SvgaPlayer.play(frame, slot.frameUrl, 0)
-            }
-        }
+        val liveFrame = liveFrames[slot.uid]
+        if (liveFrame == null) fetchLiveFrame(slot.uid)
+        applyFrame(i, liveFrame ?: slot.frameUrl)
     }
 
     // ────────────────────────────────────────────
