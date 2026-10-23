@@ -7,8 +7,14 @@ package com.hayu.app
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.TextUtils
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.view.ViewParent
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -18,7 +24,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.imageview.ShapeableImageView
+import com.google.android.material.shape.RelativeCornerSize
+import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
@@ -28,17 +38,22 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.hayu.app.adapter.RoomMessageAdapter
 import com.hayu.app.model.RoomMessage
 import com.hayu.app.util.SessionManager
+import com.opensource.svgaplayer.SVGAImageView
 
 // struktur slot mic di Firestore:
 // rooms/{roomId}/micSlots/{slotIndex}
 //   uid: String       — uid user yang on mic, "" kalau kosong
 //   nickname: String  — nama tampil
 //   isMuted: Boolean  — muted atau tidak
+//   photoUrl: String  — foto profil (tampil di kursi)
+//   frameUrl: String  — bingkai SVGA yang dipakai (tampil melingkari foto)
 
 data class MicSlot(
     val uid: String = "",
     val nickname: String = "",
-    val isMuted: Boolean = false
+    val isMuted: Boolean = false,
+    val photoUrl: String = "",
+    val frameUrl: String = ""
 )
 
 class RoomActivity : AppCompatActivity() {
@@ -60,6 +75,14 @@ class RoomActivity : AppCompatActivity() {
     // 5 slot mic — index 0–4 = slot 1–5
     private val micSlots = Array(5) { MicSlot() }
     private val micSlotViews = arrayOfNulls<LinearLayout>(5)
+    private val micNameViews = arrayOfNulls<TextView>(5)          // angka -> nickname saat duduk
+    private val micAvatarViews = arrayOfNulls<ShapeableImageView>(5)
+    private val micFrameViews = arrayOfNulls<SVGAImageView>(5)
+    private val micMuteBadges = arrayOfNulls<TextView>(5)
+    private val micPhotoShown = Array(5) { "\u0000" }             // penanda: belum pernah dimuat
+    private val micFrameShown = Array(5) { "\u0000" }
+    // Chat dimulai kosong saat masuk room (pesan lama tidak ditampilkan)
+    private val joinedAt = System.currentTimeMillis() - 1500L
     private var micSlotListener: ListenerRegistration? = null
     private var redPacketManager: RedPacketManager? = null
 
@@ -102,6 +125,7 @@ class RoomActivity : AppCompatActivity() {
         slotIds.forEachIndexed { i, id ->
             micSlotViews[i] = findViewById(id)
         }
+        buildMicSeatOverlays()
 
         btnBack.setOnClickListener { showLeaveDialog() }
 
@@ -242,10 +266,26 @@ class RoomActivity : AppCompatActivity() {
     }
 
     private fun claimMicSlot(slotIndex: Int, uid: String) {
-        val slotData = hashMapOf(
+        // Ambil foto & bingkai terbaru supaya tampil di kursi untuk semua orang di room
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { u ->
+                writeMicSlot(
+                    slotIndex, uid,
+                    u.getString("nickname") ?: myNickname,
+                    u.getString("photoUrl") ?: "",
+                    u.getString("equippedFrameUrl") ?: ""
+                )
+            }
+            .addOnFailureListener { writeMicSlot(slotIndex, uid, myNickname, "", "") }
+    }
+
+    private fun writeMicSlot(slotIndex: Int, uid: String, nick: String, photo: String, frame: String) {
+        val slotData = hashMapOf<String, Any>(
             "uid"      to uid,
-            "nickname" to myNickname,
-            "isMuted"  to false
+            "nickname" to nick,
+            "isMuted"  to false,
+            "photoUrl" to photo,
+            "frameUrl" to frame
         )
         db.collection("rooms").document(roomId!!)
             .collection("micSlots").document(slotIndex.toString())
@@ -308,7 +348,7 @@ class RoomActivity : AppCompatActivity() {
     private fun leaveMicSlot(slotIndex: Int) {
         db.collection("rooms").document(roomId!!)
             .collection("micSlots").document(slotIndex.toString())
-            .set(hashMapOf("uid" to "", "nickname" to "", "isMuted" to false))
+            .set(emptySlotData())
             .addOnSuccessListener {
                 Toast.makeText(this, "⬇️ Kamu turun dari mic", Toast.LENGTH_SHORT).show()
                 sendSystemMessage("⬇️ $myNickname turun dari slot mic ${slotIndex + 1}")
@@ -318,7 +358,7 @@ class RoomActivity : AppCompatActivity() {
     private fun kickFromMicSlot(slotIndex: Int, targetNickname: String) {
         db.collection("rooms").document(roomId!!)
             .collection("micSlots").document(slotIndex.toString())
-            .set(hashMapOf("uid" to "", "nickname" to "", "isMuted" to false))
+            .set(emptySlotData())
             .addOnSuccessListener {
                 Toast.makeText(this, "👢 $targetNickname di-kick dari mic", Toast.LENGTH_SHORT).show()
                 sendSystemMessage("👢 $targetNickname di-kick dari slot mic ${slotIndex + 1} oleh owner")
@@ -337,36 +377,139 @@ class RoomActivity : AppCompatActivity() {
                     micSlots[i] = MicSlot(
                         uid      = doc.getString("uid") ?: "",
                         nickname = doc.getString("nickname") ?: "",
-                        isMuted  = doc.getBoolean("isMuted") ?: false
+                        isMuted  = doc.getBoolean("isMuted") ?: false,
+                        photoUrl = doc.getString("photoUrl") ?: "",
+                        frameUrl = doc.getString("frameUrl") ?: ""
                     )
                     updateMicSlotView(i)
                 }
             }
     }
 
+    private fun emptySlotData() = hashMapOf<String, Any>(
+        "uid" to "", "nickname" to "", "isMuted" to false, "photoUrl" to "", "frameUrl" to ""
+    )
+
+    private fun dpi(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    /**
+     * Bungkus tiap kursi dengan FrameLayout supaya bisa ditumpuk:
+     * lingkaran kursi (lama) -> foto profil -> bingkai SVGA -> lencana mute.
+     * Ukuran kursi tidak berubah (60dp); bingkai boleh sedikit keluar dari kotak.
+     */
+    private fun buildMicSeatOverlays() {
+        for (i in 0 until MIC_SLOT_COUNT) {
+            val seat = micSlotViews[i] ?: continue
+            val column = seat.parent as? LinearLayout ?: continue
+            val idx = column.indexOfChild(seat)
+            micNameViews[i] = column.getChildAt(idx + 1) as? TextView
+            micNameViews[i]?.apply {
+                isSingleLine = true
+                ellipsize = TextUtils.TruncateAt.END
+                maxWidth = dpi(64)
+            }
+
+            column.removeView(seat)
+            val wrap = FrameLayout(this)
+            wrap.clipChildren = false
+            wrap.addView(seat, FrameLayout.LayoutParams(dpi(60), dpi(60), Gravity.CENTER))
+
+            val avatar = ShapeableImageView(this)
+            avatar.shapeAppearanceModel = ShapeAppearanceModel.builder()
+                .setAllCornerSizes(RelativeCornerSize(0.5f)).build()
+            avatar.scaleType = ImageView.ScaleType.CENTER_CROP
+            avatar.isClickable = false
+            avatar.isFocusable = false
+            avatar.visibility = android.view.View.GONE
+            wrap.addView(avatar, FrameLayout.LayoutParams(dpi(54), dpi(54), Gravity.CENTER))
+
+            val frame = SVGAImageView(this)
+            frame.scaleType = ImageView.ScaleType.FIT_CENTER
+            frame.isClickable = false
+            frame.isFocusable = false
+            frame.visibility = android.view.View.GONE
+            wrap.addView(frame, FrameLayout.LayoutParams(dpi(78), dpi(78), Gravity.CENTER))
+
+            val mute = TextView(this)
+            mute.text = "🔇"
+            mute.textSize = 11f
+            mute.visibility = android.view.View.GONE
+            wrap.addView(mute, FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM or Gravity.END
+            ))
+
+            column.addView(wrap, idx, LinearLayout.LayoutParams(dpi(60), dpi(60)))
+            micAvatarViews[i] = avatar
+            micFrameViews[i] = frame
+            micMuteBadges[i] = mute
+
+            // supaya bingkai yang lebih besar dari kursi tidak terpotong
+            var p: ViewParent? = wrap
+            while (p is ViewGroup) {
+                p.clipChildren = false
+                if (p.id == android.R.id.content) break
+                p = p.parent
+            }
+        }
+    }
+
     private fun updateMicSlotView(i: Int) {
         val view = micSlotViews[i] ?: return
         val slot = micSlots[i]
         val label = view.getChildAt(0) as? TextView ?: return
+        val name = micNameViews[i]
+        val avatar = micAvatarViews[i]
+        val frame = micFrameViews[i]
+        val mute = micMuteBadges[i]
 
-        when {
-            slot.uid.isEmpty() -> {
-                label.text = "🎤"
-                label.textSize = 24f
-                view.alpha = 0.6f
-                view.setBackgroundResource(R.drawable.bg_seat_empty)
+        if (slot.uid.isEmpty()) {
+            // kursi kosong: ikon mic + angka kursi
+            label.visibility = android.view.View.VISIBLE
+            label.text = "🎤"
+            label.textSize = 24f
+            view.alpha = 0.6f
+            view.setBackgroundResource(R.drawable.bg_seat_empty)
+            avatar?.visibility = android.view.View.GONE
+            micPhotoShown[i] = "\u0000"
+            if (micFrameShown[i] != "") {
+                frame?.stopAnimation()
+                frame?.setImageDrawable(null)
+                frame?.visibility = android.view.View.GONE
+                micFrameShown[i] = ""
             }
-            slot.isMuted -> {
-                label.text = "🔇\n${slot.nickname.take(6)}"
-                label.textSize = 11f
-                view.alpha = 1f
-                view.setBackgroundResource(R.drawable.bg_seat_muted)
+            mute?.visibility = android.view.View.GONE
+            name?.text = (i + 1).toString()
+            return
+        }
+
+        // kursi terisi: foto + bingkai, dan angka berubah jadi nickname
+        view.alpha = 1f
+        view.setBackgroundResource(if (slot.isMuted) R.drawable.bg_seat_muted else R.drawable.bg_seat_active)
+        label.visibility = android.view.View.GONE
+        name?.text = slot.nickname.ifBlank { "…" }
+        mute?.visibility = if (slot.isMuted) android.view.View.VISIBLE else android.view.View.GONE
+
+        if (avatar != null) {
+            avatar.visibility = android.view.View.VISIBLE
+            if (micPhotoShown[i] != slot.photoUrl) {
+                micPhotoShown[i] = slot.photoUrl
+                if (slot.photoUrl.isNotEmpty()) {
+                    avatar.load(slot.photoUrl) { crossfade(true) }
+                } else {
+                    avatar.setImageResource(R.drawable.ic_profile)
+                }
             }
-            else -> {
-                label.text = "🎙️\n${slot.nickname.take(6)}"
-                label.textSize = 11f
-                view.alpha = 1f
-                view.setBackgroundResource(R.drawable.bg_seat_active)
+        }
+        if (frame != null && micFrameShown[i] != slot.frameUrl) {
+            micFrameShown[i] = slot.frameUrl
+            if (slot.frameUrl.isEmpty()) {
+                frame.stopAnimation()
+                frame.setImageDrawable(null)
+                frame.visibility = android.view.View.GONE
+            } else {
+                frame.visibility = android.view.View.VISIBLE
+                SvgaPlayer.play(frame, slot.frameUrl, 0)
             }
         }
     }
@@ -539,6 +682,7 @@ class RoomActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         micSlotListener?.remove()
+        micFrameViews.forEach { it?.stopAnimation() }
         redPacketManager?.stop()
         leaveMicIfOn()
         updateLastActive()
@@ -593,6 +737,7 @@ class RoomActivity : AppCompatActivity() {
         roomId?.let { id ->
             db.collection("rooms").document(id)
                 .collection("messages")
+                .whereGreaterThanOrEqualTo("timestamp", joinedAt)
                 .orderBy("timestamp")
                 .limitToLast(100)
                 .addSnapshotListener { snapshot, _ ->

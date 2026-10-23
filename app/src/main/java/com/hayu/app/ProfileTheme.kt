@@ -69,19 +69,24 @@ object ProfileTheme {
     )
 
     /** Badge bulat-lonjong sederhana. */
-    fun chip(ctx: Context, text: String, bgColor: Int, fgColor: Int = Color.WHITE): TextView {
+    fun chip(
+        ctx: Context, text: String, bgColor: Int, fgColor: Int = Color.WHITE,
+        compact: Boolean = false
+    ): TextView {
         val d = ctx.resources.displayMetrics.density
         val tv = TextView(ctx)
         tv.text = text
         tv.setTextColor(fgColor)
-        tv.textSize = 11f
+        tv.textSize = if (compact) 9.5f else 11f
         tv.typeface = Typeface.DEFAULT_BOLD
         tv.gravity = Gravity.CENTER
         val bg = GradientDrawable()
         bg.setColor(bgColor)
-        bg.cornerRadius = 10 * d
+        bg.cornerRadius = (if (compact) 8 else 10) * d
         tv.background = bg
-        tv.setPadding((9 * d).toInt(), (3 * d).toInt(), (9 * d).toInt(), (3 * d).toInt())
+        val ph = ((if (compact) 6 else 9) * d).toInt()
+        val pv = ((if (compact) 1.5f else 3f) * d).toInt()
+        tv.setPadding(ph, pv, ph, pv)
         return tv
     }
 }
