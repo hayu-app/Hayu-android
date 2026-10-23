@@ -60,6 +60,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".BannerAdminActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ChatActivity"
             android:exported="false" />
 

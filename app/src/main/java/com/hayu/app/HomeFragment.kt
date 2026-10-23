@@ -164,13 +164,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun setupBanner(root: View) {
-        val pager = root.findViewById<ViewPager2>(R.id.banner_pager)
-        val dots = root.findViewById<LinearLayout>(R.id.banner_dots)
-        val banners = HomeBannerAdapter.defaultBanners()
+    private fun applyBanners(pager: ViewPager2, dots: LinearLayout, banners: List<HomeBannerAdapter.Banner>) {
         pager.adapter = HomeBannerAdapter(banners)
-        pager.offscreenPageLimit = 1
-
         dots.removeAllViews()
         banners.forEachIndexed { i, _ ->
             val dot = View(requireContext())
@@ -180,6 +175,13 @@ class HomeFragment : Fragment() {
                 marginStart = dp(3); marginEnd = dp(3)
             })
         }
+        dots.visibility = if (banners.size > 1) View.VISIBLE else View.GONE
+    }
+
+    private fun setupBanner(root: View) {
+        val pager = root.findViewById<ViewPager2>(R.id.banner_pager)
+        val dots = root.findViewById<LinearLayout>(R.id.banner_dots)
+        pager.offscreenPageLimit = 1
 
         pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -187,9 +189,19 @@ class HomeFragment : Fragment() {
             }
         })
 
+        applyBanners(pager, dots, HomeBannerAdapter.defaultBanners())
+
+        // Banner dari panel developer (kalau ada)
+        db.collection("app_config").document("home_banners").get()
+            .addOnSuccessListener { doc ->
+                if (!isAdded || view == null) return@addOnSuccessListener
+                val list = HomeBannerAdapter.fromConfig(doc.get("items"))
+                if (list != null) applyBanners(pager, dots, list)
+            }
+
         bannerRunnable = object : Runnable {
             override fun run() {
-                val count = banners.size
+                val count = pager.adapter?.itemCount ?: 0
                 if (count > 1 && isAdded) pager.setCurrentItem((pager.currentItem + 1) % count, true)
                 pager.postDelayed(this, 4000L)
             }
