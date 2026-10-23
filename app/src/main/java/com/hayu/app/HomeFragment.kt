@@ -62,6 +62,14 @@ class HomeFragment : Fragment() {
 
         emptyLayout = layoutEmpty
 
+        view.findViewById<LinearLayout>(R.id.menu_cp_bff).setOnClickListener {
+            startActivity(
+                Intent(requireContext(), CpBffActivity::class.java)
+                    .putExtra("title", "CP & BFF")
+                    .putExtra("mode", "cp")
+            )
+        }
+
         requireContext()
             .getSharedPreferences("hayu_room_favorites", Context.MODE_PRIVATE)
             .getStringSet("room_ids", emptySet())
