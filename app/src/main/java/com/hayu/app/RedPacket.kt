@@ -1,6 +1,7 @@
 package com.hayu.app
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
@@ -312,9 +313,12 @@ class RedPacketManager(
     private val handler = Handler(Looper.getMainLooper())
 
     private var reg: ListenerRegistration? = null
-    private var badge: TextView? = null
+    private var badge: View? = null
+    private var badgeIcon: TextView? = null
+    private var badgeCount: TextView? = null
     private var packets: List<RedPacket> = emptyList()
     private val refunding = HashSet<String>()
+    private val claimedIds = HashSet<String>()   // sudah kuambil (langsung disembunyikan)
 
     private var dialog: BottomSheetDialog? = null
     private var detailRefresh: (() -> Unit)? = null
@@ -354,57 +358,101 @@ class RedPacketManager(
         dialog = null
         badge?.let { (it.parent as? ViewGroup)?.removeView(it) }
         badge = null
+        badgeIcon = null
+        badgeCount = null
     }
 
     // ---------- tombol melayang ----------
 
     private fun addBadge() {
         val root = activity.findViewById<ViewGroup>(android.R.id.content)
-        val tv = TextView(activity)
-        tv.gravity = Gravity.CENTER
-        tv.textSize = 11f
-        tv.setTextColor(Color.WHITE)
-        tv.elevation = Ui.dp(activity, 8).toFloat()
+        val size = Ui.dp(activity, 58)
+
+        val box = FrameLayout(activity)
+        box.elevation = Ui.dp(activity, 8).toFloat()
+        box.visibility = View.GONE
+        box.setOnClickListener { onBadgeClick() }
+
+        val icon = TextView(activity)
+        icon.gravity = Gravity.CENTER
+        icon.textSize = 11f
+        icon.setTextColor(Color.WHITE)
         val bg = GradientDrawable()
         bg.shape = GradientDrawable.OVAL
         bg.setColor(Color.parseColor("#EF4444"))
         bg.setStroke(Ui.dp(activity, 2), Color.parseColor("#FBBF24"))
-        tv.background = bg
-        tv.visibility = View.GONE
-        tv.setOnClickListener { onBadgeClick() }
-        val lp = FrameLayout.LayoutParams(Ui.dp(activity, 58), Ui.dp(activity, 58))
+        icon.background = bg
+        box.addView(icon, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+
+        // angka kecil di kanan atas: jumlah Red Packet yang belum kamu ambil
+        val cnt = TextView(activity)
+        cnt.gravity = Gravity.CENTER
+        cnt.textSize = 11f
+        cnt.setTextColor(Color.parseColor("#EF4444"))
+        cnt.setTypeface(null, Typeface.BOLD)
+        cnt.setPadding(Ui.dp(activity, 5), 0, Ui.dp(activity, 5), 0)
+        cnt.minWidth = Ui.dp(activity, 20)
+        cnt.minHeight = Ui.dp(activity, 20)
+        val cbg = GradientDrawable()
+        cbg.shape = GradientDrawable.RECTANGLE
+        cbg.cornerRadius = Ui.dp(activity, 20).toFloat()
+        cbg.setColor(Color.WHITE)
+        cbg.setStroke(Ui.dp(activity, 1), Color.parseColor("#FBBF24"))
+        cnt.background = cbg
+        cnt.visibility = View.GONE
+        box.addView(
+            cnt,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END
+            )
+        )
+
+        val lp = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
         lp.gravity = Gravity.END or Gravity.CENTER_VERTICAL
         lp.rightMargin = Ui.dp(activity, 8)
-        root.addView(tv, lp)
-        badge = tv
+        root.addView(box, lp)
+        badge = box
+        badgeIcon = icon
+        badgeCount = cnt
     }
 
     private fun visiblePackets(now: Long): List<RedPacket> =
         packets.filter { !it.isExpired(now) && it.remainingCount > 0 }
 
+    private fun isDone(p: RedPacket): Boolean = p.hasClaimed(myUid) || claimedIds.contains(p.id)
+
     private fun refreshBadge() {
-        val tv = badge ?: return
+        val box = badge ?: return
         val now = System.currentTimeMillis()
-        val visible = visiblePackets(now)
-        if (visible.isEmpty()) {
-            tv.visibility = View.GONE
+        val available = visiblePackets(now).filter { !isDone(it) }
+        if (available.isEmpty()) {
+            box.visibility = View.GONE
             return
         }
-        val available = visible.filter { !it.hasClaimed(myUid) }
-        val first = available.firstOrNull() ?: visible.first()
+        val first = available.first()
         val wait = first.openAt - now
-        val sub = when {
-            wait > 0 -> "${(wait + 999) / 1000}s"
-            first.hasClaimed(myUid) -> "✓"
-            else -> "Ambil"
+        badgeIcon?.text = "🧧\n" + if (wait > 0) "${(wait + 999) / 1000}s" else "Ambil"
+
+        // angka kecil di kanan atas ikon jika Red Packet lebih dari 1
+        val n = available.size
+        badgeCount?.let { c ->
+            if (n >= 2) {
+                c.text = if (n > 99) "99+" else n.toString()
+                c.visibility = View.VISIBLE
+            } else {
+                c.visibility = View.GONE
+            }
         }
-        tv.text = "🧧\n$sub"
-        tv.visibility = View.VISIBLE
+        box.visibility = View.VISIBLE
     }
 
     private fun onBadgeClick() {
-        val visible = visiblePackets(System.currentTimeMillis())
-        val target = visible.firstOrNull { !it.hasClaimed(myUid) } ?: visible.firstOrNull() ?: return
+        val target = visiblePackets(System.currentTimeMillis()).firstOrNull { !isDone(it) } ?: return
         openDetail(target.id)
     }
 
@@ -421,7 +469,6 @@ class RedPacketManager(
         root.setPadding(d(16), d(16), d(16), d(24))
 
         val tvTitle = Ui.text(activity, "🧧 Red Packet", 18f, Ui.WHITE_SOFT, true)
-        val tvInfo = Ui.text(activity, "", 12f, Ui.GRAY)
         val tvStatus = Ui.text(activity, "", 15f, Ui.GOLD, true)
         tvStatus.setPadding(0, d(12), 0, d(8))
         val btn = Ui.text(activity, "Ambil 🧧", 15f, Color.WHITE, true)
@@ -436,7 +483,6 @@ class RedPacketManager(
         scroll.addView(claimsBox)
 
         root.addView(tvTitle)
-        root.addView(tvInfo)
         root.addView(tvStatus)
         root.addView(btn, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         root.addView(tvList)
@@ -451,7 +497,6 @@ class RedPacketManager(
                 val mine = p.claimOf(myUid)
                 val wait = p.openAt - now
                 tvTitle.text = "🧧 Red Packet dari ${p.senderName}"
-                tvInfo.text = "Sisa ${p.remainingCount}/${p.count} bagian  •  🪙${p.remainingCoins}/${p.totalCoins}"
 
                 val canClaim = mine == null && p.remainingCount > 0 && !p.isExpired(now) && wait <= 0
                 tvStatus.text = when {
@@ -488,7 +533,10 @@ class RedPacketManager(
             claim(packetId) { amount, err ->
                 claiming = false
                 if (amount != null) {
+                    claimedIds.add(packetId)
                     Toast.makeText(activity, "🧧 Kamu dapat 🪙$amount!", Toast.LENGTH_LONG).show()
+                    refreshBadge()
+                    sheet.dismiss()
                 } else {
                     Toast.makeText(activity, err ?: "Gagal mengambil", Toast.LENGTH_SHORT).show()
                 }
