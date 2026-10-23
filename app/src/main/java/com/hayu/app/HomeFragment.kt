@@ -64,8 +64,8 @@ class HomeFragment : Fragment() {
 
         view.findViewById<LinearLayout>(R.id.menu_cp_bff).setOnClickListener {
             startActivity(
-                Intent(requireContext(), CpBffActivity::class.java)
-                    .putExtra("title", "CP & BFF")
+                Intent(requireContext(), CpBffRankActivity::class.java)
+                    .putExtra("title", "Peringkat CP & BFF")
                     .putExtra("mode", "cp")
             )
         }

@@ -125,6 +125,7 @@
             <activity android:name=".TopUpAdminActivity" android:exported="false" />
             <activity android:name=".WalletActivity" android:exported="false" />
             <activity android:name=".CpBffActivity" android:exported="false" />
+            <activity android:name=".CpBffRankActivity" android:exported="false" />
             <activity android:name=".PanelDetailActivity" android:exported="false" />
         <activity android:name=".LionVsTigerActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".GreedyEatActivity" android:exported="false" android:screenOrientation="portrait" />

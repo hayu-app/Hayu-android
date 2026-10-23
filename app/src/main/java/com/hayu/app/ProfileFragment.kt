@@ -79,6 +79,9 @@ class ProfileFragment : Fragment() {
 
         view.findViewById<View>(R.id.menu_tugas).setOnClickListener { startActivity(Intent(requireContext(), TugasActivity::class.java)) }
         view.findViewById<View>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
+        view.findViewById<View>(R.id.menu_cp_bff).setOnClickListener {
+            startActivity(Intent(requireContext(), CpBffActivity::class.java).putExtra("title", "CP & BFF").putExtra("mode", "cp"))
+        }
         view.findViewById<View>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
@@ -137,8 +140,7 @@ class ProfileFragment : Fragment() {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
-                val gelar = doc.getString("equippedTitle") ?: ""
-                tvNickname.text = if (gelar.isNotBlank()) "$gelar $nickname" else nickname
+                tvNickname.text = nickname
                 SvgaFrame.attach(imgAvatar, doc.getString("equippedFrameUrl"))
 
                 val age = (doc.getLong("age") ?: 0L).toInt()
