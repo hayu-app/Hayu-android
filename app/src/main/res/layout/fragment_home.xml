@@ -16,14 +16,36 @@
         android:background="@drawable/bg_home_header">
 
         <!-- TABS -->
-        <TextView
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Milikku  •  Populer  •  Event"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Milikku"
+                android:textColor="#9AA3BD"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Populer"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Event"
+                android:textColor="#9AA3BD"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- SEARCH BUTTON -->
         <TextView
@@ -98,34 +120,27 @@
             android:orientation="vertical"
             android:paddingBottom="80dp">
 
-            <!-- BANNER -->
-            <LinearLayout
+            <!-- BANNER (geser) -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="150dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/bg_banner_event">
+                android:layout_marginTop="12dp">
 
-                <TextView
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/banner_pager"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <LinearLayout
+                    android:id="@+id/banner_dots"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="HAYU STAR ⭐"
-                    android:textColor="#FFFFFF"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="BFF Weekly Star"
-                    android:textColor="#C4CAFF"
-                    android:textSize="13sp"
-                    android:layout_marginTop="4dp" />
-            </LinearLayout>
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="8dp"
+                    android:orientation="horizontal" />
+            </FrameLayout>
 
             <!-- QUICK MENU: Peringkat, CP & BFF, Keluarga -->
             <LinearLayout
@@ -139,65 +154,71 @@
                 <LinearLayout
                     android:id="@+id/menu_peringkat"
                     android:layout_width="0dp"
-                    android:layout_height="72dp"
+                    android:layout_height="84dp"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_card_category"
-                    android:layout_marginEnd="6dp">
+                    android:background="@drawable/bg_tile_peringkat"
+                    android:layout_marginEnd="8dp">
                     <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🏆" android:textSize="26sp" />
+                        android:text="Peringkat" android:textColor="#FFFFFF"
+                        android:textSize="15sp" android:textStyle="bold"
+                        android:shadowColor="#66000000" android:shadowDy="2" android:shadowRadius="3" />
                     <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Peringkat" android:textColor="#C4CAFF"
-                        android:textSize="11sp" android:layout_marginTop="4dp" />
+                        android:text="🏆" android:textSize="30sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/menu_cp_bff"
                     android:layout_width="0dp"
-                    android:layout_height="72dp"
+                    android:layout_height="84dp"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_card_category"
-                    android:layout_marginEnd="6dp">
+                    android:background="@drawable/bg_tile_cp"
+                    android:layout_marginEnd="8dp">
                     <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="💕" android:textSize="26sp" />
+                        android:text="CP&amp;BFF" android:textColor="#FFFFFF"
+                        android:textSize="15sp" android:textStyle="bold"
+                        android:shadowColor="#66000000" android:shadowDy="2" android:shadowRadius="3" />
                     <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CP &amp; BFF" android:textColor="#C4CAFF"
-                        android:textSize="11sp" android:layout_marginTop="4dp" />
+                        android:text="💕" android:textSize="30sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/menu_keluarga"
                     android:layout_width="0dp"
-                    android:layout_height="72dp"
+                    android:layout_height="84dp"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_card_category">
+                    android:background="@drawable/bg_tile_keluarga">
                     <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="👨‍👩‍👧" android:textSize="26sp" />
+                        android:text="Keluarga" android:textColor="#FFFFFF"
+                        android:textSize="15sp" android:textStyle="bold"
+                        android:shadowColor="#66000000" android:shadowDy="2" android:shadowRadius="3" />
                     <TextView android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Keluarga" android:textColor="#C4CAFF"
-                        android:textSize="11sp" android:layout_marginTop="4dp" />
+                        android:text="👨‍👩‍👧" android:textSize="30sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- FILTER TABS -->
+            <!-- FILTER -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="14dp">
 
                 <TextView
                     android:id="@+id/filter_populer"
@@ -205,12 +226,13 @@
                     android:layout_height="36dp"
                     android:text="Populer"
                     android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
+                    android:textSize="14sp"
                     android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:background="@drawable/bg_button_primary"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/bg_chip_selected"
                     android:layout_marginEnd="8dp" />
 
                 <TextView
@@ -218,25 +240,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:text="Terbaru"
-                    android:textColor="#8892AA"
-                    android:textSize="13sp"
+                    android:textColor="#9AA3BD"
+                    android:textSize="14sp"
                     android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:background="@drawable/bg_quick_item"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/bg_chip"
                     android:layout_marginEnd="8dp" />
 
                 <TextView
-                    android:id="@+id/filter_aktif"
+                    android:id="@+id/filter_favorit"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:text="Aktif"
-                    android:textColor="#8892AA"
-                    android:textSize="13sp"
+                    android:text="Favorit"
+                    android:textColor="#9AA3BD"
+                    android:textSize="14sp"
                     android:gravity="center"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:background="@drawable/bg_quick_item" />
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/bg_chip" />
             </LinearLayout>
 
             <!-- ROOM LIST -->
@@ -244,9 +270,9 @@
                 android:id="@+id/rv_rooms"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="8dp"
                 android:nestedScrollingEnabled="false" />
 
             <!-- EMPTY STATE -->

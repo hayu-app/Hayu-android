@@ -40,10 +40,6 @@ class RoomAdapter(
             itemView.findViewById(R.id.tv_room_name)
         private val tvRoomTopic: TextView =
             itemView.findViewById(R.id.tv_room_topic)
-        private val tvRoomOwner: TextView =
-            itemView.findViewById(R.id.tv_room_owner)
-        private val tvRoomMic: TextView =
-            itemView.findViewById(R.id.tv_room_mic)
         private val tvRoomUsers: TextView =
             itemView.findViewById(R.id.tv_room_users)
         private val tvRoomPrivacy: TextView =
@@ -58,12 +54,10 @@ class RoomAdapter(
         fun bind(room: Room) {
             tvRoomName.text =
                 if (room.name.isEmpty()) "Room Tanpa Nama" else room.name
-            tvRoomTopic.text =
-                if (room.topic.isEmpty()) "Belum ada topik" else room.topic
-            tvRoomOwner.text =
-                "👑 " + room.ownerName.ifBlank { "Pemilik room" }
-            tvRoomMic.text = "🪑 ${room.maxMic}"
-            tvRoomUsers.text = "👤 ${room.currentUsers}"
+            tvRoomTopic.text = room.topic
+            tvRoomTopic.visibility =
+                if (room.topic.isBlank()) View.GONE else View.VISIBLE
+            tvRoomUsers.text = "🎙 ${room.currentUsers}"
 
             val isPrivate = room.privacy.trim().lowercase() in
                 setOf("privat", "private", "pribadi", "locked")

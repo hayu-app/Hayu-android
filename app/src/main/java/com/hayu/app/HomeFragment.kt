@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.hayu.app.adapter.RoomAdapter
@@ -39,6 +40,8 @@ class HomeFragment : Fragment() {
     private var searchInput: EditText? = null
     private var sortMode = "Populer"
     private var emptyLayout: LinearLayout? = null
+    private var bannerPager: ViewPager2? = null
+    private var bannerRunnable: Runnable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -92,7 +95,8 @@ class HomeFragment : Fragment() {
         }
         rvRooms.adapter = adapter
 
-        addSearchAndFilters(rvRooms)
+        setupFilters(view)
+        setupBanner(view)
 
         btnSearchRoom.setOnClickListener {
             val input = searchInput ?: return@setOnClickListener
@@ -124,112 +128,73 @@ class HomeFragment : Fragment() {
         return (value * resources.displayMetrics.density).toInt()
     }
 
-    private fun roundedBackground(color: Int): GradientDrawable {
-        return GradientDrawable().apply {
-            setColor(color)
-            cornerRadius = dp(14).toFloat()
-        }
-    }
-
-    private fun addSearchAndFilters(rvRooms: RecyclerView) {
-        val parent = rvRooms.parent as? ViewGroup ?: return
-        val index = parent.indexOfChild(rvRooms)
-        if (index < 0) return
-
-        val search = EditText(requireContext()).apply {
-            hint = "Cari nama room atau topik..."
-            setSingleLine(true)
-            textSize = 14f
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.LTGRAY)
-            setPadding(dp(14), 0, dp(14), 0)
-            background = roundedBackground(Color.rgb(39, 39, 54))
-            visibility = View.GONE
-            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
-        }
+    private fun setupFilters(root: View) {
+        val search = root.findViewById<EditText>(R.id.et_search_room)
         searchInput = search
-
-        parent.addView(
-            search,
-            index,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(46)
-            ).apply {
-                setMargins(dp(12), dp(10), dp(12), dp(6))
-            }
-        )
-
         search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence?, start: Int, count: Int, after: Int
-            ) = Unit
-
-            override fun onTextChanged(
-                s: CharSequence?, start: Int, before: Int, count: Int
-            ) {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 searchQuery = s?.toString()?.trim()?.lowercase().orEmpty()
                 applyFilters()
             }
-
             override fun afterTextChanged(s: Editable?) = Unit
         })
 
-        val sortRow = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-
-        parent.addView(
-            sortRow,
-            index + 1,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(42)
-            ).apply {
-                setMargins(dp(12), dp(12), dp(12), dp(8))
+        mapOf(
+            "Populer" to R.id.filter_populer,
+            "Terbaru" to R.id.filter_terbaru,
+            "Favorit" to R.id.filter_favorit
+        ).forEach { (mode, id) ->
+            val chip = root.findViewById<TextView>(id)
+            sortButtons[mode] = chip
+            chip.setOnClickListener {
+                sortMode = mode
+                updateSortStyles()
+                applyFilters()
             }
-        )
-
-        listOf("Populer", "Terbaru", "Favorit").forEach { mode ->
-            val button = TextView(requireContext()).apply {
-                text = mode
-                textSize = 12f
-                gravity = Gravity.CENTER
-                setTextColor(Color.WHITE)
-                background = roundedBackground(Color.rgb(39, 39, 54))
-                isClickable = true
-                isFocusable = true
-                setOnClickListener {
-                    sortMode = mode
-                    updateSortStyles()
-                    applyFilters()
-                }
-            }
-
-            sortButtons[mode] = button
-            sortRow.addView(
-                button,
-                LinearLayout.LayoutParams(
-                    0,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    1f
-                ).apply {
-                    setMargins(dp(3), 0, dp(3), 0)
-                }
-            )
         }
-
         updateSortStyles()
     }
 
     private fun updateSortStyles() {
-        sortButtons.forEach { (mode, button) ->
-            button.background = roundedBackground(
-                if (mode == sortMode) Color.rgb(105, 75, 230)
-                else Color.rgb(39, 39, 54)
-            )
+        sortButtons.forEach { (mode, chip) ->
+            val selected = mode == sortMode
+            chip.setBackgroundResource(if (selected) R.drawable.bg_chip_selected else R.drawable.bg_chip)
+            chip.setTextColor(if (selected) Color.WHITE else Color.parseColor("#9AA3BD"))
         }
+    }
+
+    private fun setupBanner(root: View) {
+        val pager = root.findViewById<ViewPager2>(R.id.banner_pager)
+        val dots = root.findViewById<LinearLayout>(R.id.banner_dots)
+        val banners = HomeBannerAdapter.defaultBanners()
+        pager.adapter = HomeBannerAdapter(banners)
+        pager.offscreenPageLimit = 1
+
+        dots.removeAllViews()
+        banners.forEachIndexed { i, _ ->
+            val dot = View(requireContext())
+            dot.setBackgroundResource(R.drawable.bg_banner_dot)
+            dot.alpha = if (i == 0) 1f else 0.4f
+            dots.addView(dot, LinearLayout.LayoutParams(dp(6), dp(6)).apply {
+                marginStart = dp(3); marginEnd = dp(3)
+            })
+        }
+
+        pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                for (i in 0 until dots.childCount) dots.getChildAt(i).alpha = if (i == position) 1f else 0.4f
+            }
+        })
+
+        bannerRunnable = object : Runnable {
+            override fun run() {
+                val count = banners.size
+                if (count > 1 && isAdded) pager.setCurrentItem((pager.currentItem + 1) % count, true)
+                pager.postDelayed(this, 4000L)
+            }
+        }
+        bannerPager = pager
     }
 
     private fun isPublicRoom(room: Room): Boolean {
@@ -295,8 +260,24 @@ class HomeFragment : Fragment() {
         applyFilters()
     }
 
+    override fun onPause() {
+        super.onPause()
+        bannerRunnable?.let { bannerPager?.removeCallbacks(it) }
+    }
+
+    override fun onDestroyView() {
+        bannerRunnable?.let { bannerPager?.removeCallbacks(it) }
+        bannerPager = null
+        bannerRunnable = null
+        super.onDestroyView()
+    }
+
     override fun onResume() {
         super.onResume()
+        bannerRunnable?.let {
+            bannerPager?.removeCallbacks(it)
+            bannerPager?.postDelayed(it, 4000L)
+        }
         view?.let {
             val layoutEmpty = it.findViewById<LinearLayout>(R.id.layout_empty)
             if (::db.isInitialized && ::adapter.isInitialized) {
