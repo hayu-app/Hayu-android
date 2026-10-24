@@ -152,7 +152,7 @@ object GiftSheet {
         if (recipients.isEmpty()) return
 
         db.collection("users").document(myUid).get().addOnSuccessListener { me ->
-            val coins = (me.getLong("coins") ?: 0L).toInt()
+            val coins = me.getLong("coins") ?: 0L
             val dialog = BottomSheetDialog(activity)
             val d = { v: Int -> Ui.dp(activity, v) }
 
@@ -332,15 +332,46 @@ object GiftSheet {
                 Ui.text(activity, "🪙 $coins", 16f, Ui.GOLD, true),
                 LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             )
-            val qtyBtn = Ui.button(activity, "x1") {}
+            val qtyBtn = Ui.button(activity, "⌄ 1") {}
             qtyBtn.setBackgroundResource(R.drawable.bg_quick_item)
-            qtyBtn.setOnClickListener {
-                qty = when (qty) {
-                    1 -> 5
-                    5 -> 10
-                    else -> 1
+            qtyBtn.setOnClickListener { anchor ->
+                val options = listOf(7777, 777, 555, 77, 17, 7, 1)
+                val itemH = d(46)
+                val popW = d(140)
+                val box = LinearLayout(activity)
+                box.orientation = LinearLayout.VERTICAL
+                val popup = android.widget.PopupWindow(box, popW, itemH * options.size)
+                popup.isOutsideTouchable = true
+                popup.isFocusable = true
+                popup.setBackgroundDrawable(
+                    android.graphics.drawable.GradientDrawable().apply {
+                        setColor(Color.parseColor("#F2000000"))
+                        cornerRadius = d(10).toFloat()
+                        setStroke(d(1), Color.parseColor("#33FFFFFF"))
+                    }
+                )
+                options.forEachIndexed { idx, n ->
+                    val row = TextView(activity)
+                    row.text = n.toString()
+                    row.textSize = if (n == qty) 22f else 20f
+                    row.setTypeface(null, Typeface.BOLD)
+                    row.setTextColor(if (n == qty) Color.parseColor("#FF8A65") else Color.WHITE)
+                    row.gravity = Gravity.CENTER
+                    row.setOnClickListener {
+                        qty = n
+                        qtyBtn.text = "⌄ $qty"
+                        popup.dismiss()
+                    }
+                    box.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemH))
+                    if (idx < options.size - 1) {
+                        val line = android.view.View(activity)
+                        line.setBackgroundColor(Color.parseColor("#22FFFFFF"))
+                        box.addView(line, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1))
+                    }
                 }
-                qtyBtn.text = "x$qty"
+                qtyBtn.text = "⌃ $qty"
+                popup.setOnDismissListener { qtyBtn.text = "⌄ $qty" }
+                popup.showAsDropDown(anchor, 0, -(itemH * options.size + anchor.height))
             }
             val qtyLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             qtyLp.rightMargin = d(8)
@@ -349,7 +380,7 @@ object GiftSheet {
             val sendBtn = Ui.button(activity, "Kirim") {}
             sendBtn.setOnClickListener {
                 val g = selectedGift
-                val total = g.price * qty
+                val total = g.price.toLong() * qty
                 if (coins < total) {
                     Toast.makeText(activity, "Koin tidak cukup", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
@@ -431,8 +462,8 @@ object GiftSheet {
         val toRef = db.collection("users").document(to.first)
         val bondRef = bondId?.let { db.collection("bonds").document(it) }
         val isSelf = to.first == myUid
-        val total = g.price * qty
-        val pts = g.points * qty
+        val total = g.price.toLong() * qty
+        val pts = g.points.toLong() * qty
 
         // Cashback diundi SEKALI di luar transaksi (transaksi bisa diulang), tiap hadiah diundi sendiri.
         val rolls = if (g.kind == "lucky") List(qty) { LuckyOdds.roll() } else emptyList()
@@ -448,8 +479,8 @@ object GiftSheet {
             val coins = me.getLong("coins") ?: 0L
             if (coins < total) throw IllegalStateException("Koin tidak cukup")
             val exp = (me.getLong("exp") ?: 0L) + total / 10
-            val share = (total / 2).toLong()
-            val level = Ui.levelForExp(exp.toInt()).toLong()
+            val share = total / 2
+            val level = Ui.levelForExp(exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()).toLong()
             val sent = (me.getLong("giftsSent") ?: 0L) + qty
 
             val myUpdate = HashMap<String, Any>()
@@ -480,7 +511,7 @@ object GiftSheet {
             // poin keharmonisan CP/BFF
             var applied = false
             if (bondRef != null && bond != null && bond.getString("status") == "active") {
-                tx.update(bondRef, "points", FieldValue.increment(pts.toLong()))
+                tx.update(bondRef, "points", FieldValue.increment(pts))
                 applied = true
             }
             applied
