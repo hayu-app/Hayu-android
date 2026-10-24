@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import java.util.Locale
 import kotlin.random.Random
 
@@ -129,6 +130,7 @@ object GiftSheet {
         activity: AppCompatActivity,
         myNickname: String,
         recipients: List<Pair<String, String>>,
+        roomId: String? = null,
         onSent: (String, String, String?) -> Unit
     ) {
         SvgaCatalog.load(SvgaCatalog.GIFT) { assets ->
@@ -136,7 +138,7 @@ object GiftSheet {
                 Gift(it.emoji.ifBlank { "🎁" }, it.name, it.price, it.url)
             }
             LuckyOdds.load(FirebaseFirestore.getInstance()) {
-                showInternal(activity, myNickname, recipients, onSent)
+                showInternal(activity, myNickname, recipients, roomId, onSent)
             }
         }
     }
@@ -145,6 +147,7 @@ object GiftSheet {
         activity: AppCompatActivity,
         myNickname: String,
         recipients: List<Pair<String, String>>,
+        roomId: String?,
         onSent: (String, String, String?) -> Unit
     ) {
         val db = FirebaseFirestore.getInstance()
@@ -387,7 +390,7 @@ object GiftSheet {
                 }
                 val to = recipients.first { it.first == selectedUid }
                 sendBtn.isEnabled = false
-                send(activity, db, myUid, myNickname, to, g, qty,
+                send(activity, db, myUid, myNickname, to, g, qty, roomId,
                     onDone = { text ->
                         dialog.dismiss()
                         onSent(text, if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
@@ -433,16 +436,17 @@ object GiftSheet {
         to: Pair<String, String>,
         g: Gift,
         qty: Int,
+        roomId: String?,
         onDone: (String) -> Unit,
         onFail: () -> Unit
     ) {
         val isSelf = to.first == myUid
         if (g.kind == "cp" && !isSelf) {
             findBond(db, myUid, to.first, g) { bondId ->
-                doSend(activity, db, myUid, myName, to, g, qty, bondId, onDone, onFail)
+                doSend(activity, db, myUid, myName, to, g, qty, roomId, bondId, onDone, onFail)
             }
         } else {
-            doSend(activity, db, myUid, myName, to, g, qty, null, onDone, onFail)
+            doSend(activity, db, myUid, myName, to, g, qty, roomId, null, onDone, onFail)
         }
     }
 
@@ -454,6 +458,7 @@ object GiftSheet {
         to: Pair<String, String>,
         g: Gift,
         qty: Int,
+        roomId: String?,
         bondId: String?,
         onDone: (String) -> Unit,
         onFail: () -> Unit
@@ -461,6 +466,9 @@ object GiftSheet {
         val meRef = db.collection("users").document(myUid)
         val toRef = db.collection("users").document(to.first)
         val bondRef = bondId?.let { db.collection("bonds").document(it) }
+        val pointsRef = roomId?.let {
+            db.collection("rooms").document(it).collection("giftPoints").document(myUid)
+        }
         val isSelf = to.first == myUid
         val total = g.price.toLong() * qty
         val pts = g.points.toLong() * qty
@@ -505,6 +513,20 @@ object GiftSheet {
                         "totalCoinsEarned" to ((rc.getLong("totalCoinsEarned") ?: 0L) + share),
                         "giftsReceived" to ((rc.getLong("giftsReceived") ?: 0L) + qty)
                     )
+                )
+            }
+
+            // poin gift di room = total koin yang dikirim
+            if (pointsRef != null) {
+                tx.set(
+                    pointsRef,
+                    mapOf(
+                        "uid" to myUid,
+                        "nickname" to myName,
+                        "points" to FieldValue.increment(total),
+                        "updatedAt" to System.currentTimeMillis()
+                    ),
+                    SetOptions.merge()
                 )
             }
 

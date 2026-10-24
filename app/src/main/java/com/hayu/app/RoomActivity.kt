@@ -86,6 +86,9 @@ class RoomActivity : AppCompatActivity() {
     private val micAvatarViews = arrayOfNulls<ShapeableImageView>(5)
     private val micFrameViews = arrayOfNulls<SVGAImageView>(5)
     private val micMuteBadges = arrayOfNulls<TextView>(5)
+    private val micPointViews = arrayOfNulls<TextView>(5)           // "💎 poin" di bawah nama
+    private val giftPoints = HashMap<String, Long>()                // uid -> total koin yang dikirim di room ini
+    private var giftPointsListener: ListenerRegistration? = null
     private val micPhotoShown = Array(5) { "\u0000" }             // penanda: belum pernah dimuat
     private val micFrameShown = Array(5) { "\u0000" }
     // Chat dimulai kosong saat masuk room (pesan lama tidak ditampilkan)
@@ -192,6 +195,7 @@ class RoomActivity : AppCompatActivity() {
                         myFrameUrl = userDoc.getString("equippedFrameUrl") ?: ""
                         setupMicSlots()
                         listenMicSlots()
+                        listenGiftPoints()
                         updateAllMicSeats()
                         announceCarEntrance(userDoc)
                     }
@@ -263,8 +267,11 @@ class RoomActivity : AppCompatActivity() {
             view?.setOnClickListener {
                 val slot = micSlots[i]
                 when {
-                    // slot kosong — request naik
-                    slot.uid.isEmpty() -> requestMic(i)
+                    // slot kosong — naik mic, atau PINDAH kalau sudah on mic di slot lain
+                    slot.uid.isEmpty() -> {
+                        val mine = micSlots.indexOfFirst { it.uid == uid }
+                        if (mine >= 0) moveMic(mine, i) else requestMic(i)
+                    }
 
                     // slot Sam sendiri — mute toggle atau turun
                     slot.uid == uid -> showMySlotOptions(i)
@@ -278,6 +285,35 @@ class RoomActivity : AppCompatActivity() {
                     ).show()
                 }
             }
+        }
+    }
+
+    /** Pindah kursi langsung (tanpa turun dulu): isi slot tujuan dan kosongkan slot lama dalam satu transaksi. */
+    private fun moveMic(from: Int, to: Int) {
+        val me = auth.currentUser?.uid ?: return
+        val col = db.collection("rooms").document(roomId!!).collection("micSlots")
+        val fromRef = col.document(from.toString())
+        val toRef = col.document(to.toString())
+        db.runTransaction { tx ->
+            val target = tx.get(toRef)
+            val src = tx.get(fromRef)
+            if ((target.getString("uid") ?: "").isNotEmpty()) throw IllegalStateException("Slot sudah terisi")
+            if (src.getString("uid") != me) throw IllegalStateException("Kamu sudah tidak on mic di slot itu")
+            tx.set(
+                toRef, hashMapOf<String, Any>(
+                    "uid" to me,
+                    "nickname" to (src.getString("nickname") ?: myNickname),
+                    "isMuted" to (src.getBoolean("isMuted") ?: false),
+                    "photoUrl" to (src.getString("photoUrl") ?: ""),
+                    "frameUrl" to (src.getString("frameUrl") ?: "")
+                )
+            )
+            tx.set(fromRef, emptySlotData())
+            Unit
+        }.addOnSuccessListener {
+            Toast.makeText(this, "🎙️ Pindah ke slot mic ${to + 1}", Toast.LENGTH_SHORT).show()
+        }.addOnFailureListener {
+            Toast.makeText(this, "Gagal pindah: ${it.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -426,6 +462,24 @@ class RoomActivity : AppCompatActivity() {
     }
 
     // listen perubahan mic slot realtime
+    private fun fmtPoints(n: Long): String = when {
+        n >= 1_000_000L -> String.format(java.util.Locale.US, "%.1fM", n / 1_000_000.0)
+        n >= 1_000L -> String.format(java.util.Locale.US, "%.1fK", n / 1_000.0)
+        else -> n.toString()
+    }
+
+    /** Poin gift = total koin yang dikirim tiap orang di room ini (rooms/{id}/giftPoints/{uid}.points). */
+    private fun listenGiftPoints() {
+        giftPointsListener = db.collection("rooms").document(roomId!!)
+            .collection("giftPoints")
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot == null) return@addSnapshotListener
+                giftPoints.clear()
+                for (doc in snapshot.documents) giftPoints[doc.id] = doc.getLong("points") ?: 0L
+                updateAllMicSeats()
+            }
+    }
+
     private fun listenMicSlots() {
         micSlotListener = db.collection("rooms").document(roomId!!)
             .collection("micSlots")
@@ -554,6 +608,18 @@ class RoomActivity : AppCompatActivity() {
             micEmojiViews[i] = bubble
 
             column.addView(wrap, idx, LinearLayout.LayoutParams(dpi(60), dpi(60)))
+
+            val pts = TextView(this)
+            pts.textSize = 10f
+            pts.setTextColor(Color.parseColor("#FFD54F"))
+            pts.typeface = Typeface.DEFAULT_BOLD
+            pts.gravity = Gravity.CENTER
+            pts.isSingleLine = true
+            pts.visibility = android.view.View.GONE
+            column.addView(pts, idx + 2, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ))
+            micPointViews[i] = pts
             micAvatarViews[i] = avatar
             micFrameViews[i] = frame
             micMuteBadges[i] = mute
@@ -648,32 +714,21 @@ class RoomActivity : AppCompatActivity() {
         val mute = micMuteBadges[i]
         val me = auth.currentUser?.uid ?: ""
 
-        // Kursi 1 = kursi owner. Owner yang belum naik mic melihat fotonya + tombol "Ambil Mic".
-        val ownerSeatForMe = i == 0 && slot.uid.isEmpty() && me.isNotEmpty() &&
-            me == roomOwnerUid && micSlots.none { it.uid == me }
-
         if (slot.uid.isEmpty()) {
             mute?.visibility = android.view.View.GONE
-            if (ownerSeatForMe) applyFrame(i, myFrameUrl) else hideFrame(i)
-            if (ownerSeatForMe) {
-                label.visibility = android.view.View.GONE
-                view.alpha = 1f
-                view.setBackgroundResource(R.drawable.bg_seat_active)
-                showAvatar(i, myPhotoUrl)
-                setSeatLabel(i, "Ambil Mic", pill = true)
-            } else {
-                // kursi kosong: ikon mic + angka kursi
-                label.visibility = android.view.View.VISIBLE
-                label.text = ""
-                label.setCompoundDrawablesWithIntrinsicBounds(
-                    ContextCompat.getDrawable(this, R.drawable.ic_mic_seat), null, null, null
-                )
-                view.alpha = 1f
-                view.setBackgroundResource(R.drawable.bg_seat_empty)
-                micAvatarViews[i]?.visibility = android.view.View.GONE
-                micPhotoShown[i] = "\u0000"
-                setSeatLabel(i, (i + 1).toString(), pill = false)
-            }
+            micPointViews[i]?.visibility = android.view.View.GONE
+            hideFrame(i)
+            // kursi kosong: ikon mic + angka kursi
+            label.visibility = android.view.View.VISIBLE
+            label.text = ""
+            label.setCompoundDrawablesWithIntrinsicBounds(
+                ContextCompat.getDrawable(this, R.drawable.ic_mic_seat), null, null, null
+            )
+            view.alpha = 1f
+            view.setBackgroundResource(R.drawable.bg_seat_empty)
+            micAvatarViews[i]?.visibility = android.view.View.GONE
+            micPhotoShown[i] = "\u0000"
+            setSeatLabel(i, (i + 1).toString(), pill = false)
             return
         }
 
@@ -686,6 +741,11 @@ class RoomActivity : AppCompatActivity() {
         setSeatLabel(i, if (isOwner) "🏠 $shown" else shown, pill = false, owner = isOwner)
         mute?.visibility = if (slot.isMuted) android.view.View.VISIBLE else android.view.View.GONE
         showAvatar(i, slot.photoUrl)
+
+        micPointViews[i]?.let {
+            it.text = "💎 ${fmtPoints(giftPoints[slot.uid] ?: 0L)}"
+            it.visibility = android.view.View.VISIBLE
+        }
 
         val liveFrame = liveFrames[slot.uid]
         if (liveFrame == null) fetchLiveFrame(slot.uid)
@@ -862,7 +922,7 @@ class RoomActivity : AppCompatActivity() {
             }
         }
         list.add(Pair(me, "Saya"))
-        GiftSheet.show(this, myNickname, list) { text, emoji, svgaUrl ->
+        GiftSheet.show(this, myNickname, list, roomId) { text, emoji, svgaUrl ->
             sendGiftMessage(text, svgaUrl)
             if (emoji.isNotBlank()) playGiftAnimation(emoji)
         }
@@ -967,6 +1027,7 @@ class RoomActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         micSlotListener?.remove()
+        giftPointsListener?.remove()
         micFrameViews.forEach { it?.stopAnimation() }
         redPacketManager?.stop()
         leaveMicIfOn()
