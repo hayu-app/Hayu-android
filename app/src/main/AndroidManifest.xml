@@ -64,6 +64,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".LuckyConfigActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ChatActivity"
             android:exported="false" />
 

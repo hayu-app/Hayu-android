@@ -76,9 +76,9 @@ object GiftSheet {
      * Bawaan: kembali rata-rata sekitar x0.70 dari harga, maksimal x500.
      * Bisa diganti tanpa update app lewat Firestore app_config/lucky_gift -> "table": [{x: 5, w: 250}, ...]
      */
-    private object LuckyOdds {
+    object LuckyOdds {
         const val MAX_X = 500
-        private val DEFAULT = listOf(
+        val DEFAULT = listOf(
             0 to 7324, 1 to 1800, 2 to 500, 5 to 250, 10 to 100, 50 to 20, 100 to 5, 500 to 1
         )
         var table: List<Pair<Int, Int>> = DEFAULT

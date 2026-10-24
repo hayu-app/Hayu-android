@@ -41,6 +41,7 @@ class DevPanelActivity : AppCompatActivity() {
         PanelItem("🎞️", "SVGA Manager",       "svga"),
         PanelItem("📅", "Check-in Harian",    "checkin"),
         PanelItem("🖼️", "Banner Beranda",     "banner"),
+        PanelItem("🍀", "Lucky Gift",         "lucky"),
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -175,6 +176,10 @@ class DevPanelActivity : AppCompatActivity() {
     }
 
     private fun openPanel(key: String, label: String) {
+        if (key == "lucky") {
+            startActivity(Intent(this, LuckyConfigActivity::class.java))
+            return
+        }
         if (key == "banner") {
             startActivity(Intent(this, BannerAdminActivity::class.java))
             return
