@@ -67,7 +67,7 @@ class ProfileFragment : Fragment() {
 
         view.findViewById<LinearLayout>(R.id.quick_badge).setOnClickListener { startActivity(Intent(requireContext(), LencanaActivity::class.java)) }
         view.findViewById<LinearLayout>(R.id.quick_shop).setOnClickListener { startActivity(Intent(requireContext(), TokoActivity::class.java)) }
-        view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { notif("Hubungan segera hadir! 🤝") }
+        view.findViewById<LinearLayout>(R.id.quick_relations).setOnClickListener { startActivity(Intent(requireContext(), HubunganActivity::class.java)) }
         view.findViewById<LinearLayout>(R.id.quick_level).setOnClickListener { startActivity(Intent(requireContext(), LevelActivity::class.java)) }
 
         view.findViewById<LinearLayout>(R.id.card_svip).setOnClickListener { startActivity(Intent(requireContext(), SvipActivity::class.java)) }
@@ -79,9 +79,6 @@ class ProfileFragment : Fragment() {
 
         view.findViewById<View>(R.id.menu_tugas).setOnClickListener { startActivity(Intent(requireContext(), TugasActivity::class.java)) }
         view.findViewById<View>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
-        view.findViewById<View>(R.id.menu_cp_bff).setOnClickListener {
-            startActivity(Intent(requireContext(), CpBffActivity::class.java).putExtra("title", "CP & BFF").putExtra("mode", "cp"))
-        }
         view.findViewById<View>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }

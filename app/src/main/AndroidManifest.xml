@@ -72,6 +72,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".HubunganActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ChatActivity"
             android:exported="false" />
 
