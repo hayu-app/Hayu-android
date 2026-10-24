@@ -28,6 +28,7 @@ object SvgaCatalog {
         val type: String,
         val name: String,
         val price: Int,
+        val days: Int,          // masa berlaku (hari); 0 = permanen
         val url: String,
         val emoji: String,
         val storagePath: String,
@@ -47,6 +48,7 @@ object SvgaCatalog {
                         type = d.getString("type") ?: OTHER,
                         name = d.getString("name") ?: "Tanpa nama",
                         price = (d.getLong("price") ?: 0L).toInt(),
+                        days = (d.getLong("days") ?: 0L).toInt(),
                         url = url,
                         emoji = d.getString("emoji") ?: "",
                         storagePath = d.getString("storagePath") ?: "",

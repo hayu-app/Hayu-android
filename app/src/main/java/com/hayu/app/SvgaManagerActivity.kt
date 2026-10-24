@@ -43,6 +43,7 @@ class SvgaManagerActivity : AppCompatActivity() {
 
     private lateinit var etName: EditText
     private lateinit var etPrice: EditText
+    private lateinit var etDays: EditText
     private lateinit var etEmoji: EditText
     private lateinit var tvFile: TextView
     private lateinit var preview: SVGAImageView
@@ -146,10 +147,12 @@ class SvgaManagerActivity : AppCompatActivity() {
 
         etName = field("Nama (mis. Mobil Sport, Bingkai Emas)", InputType.TYPE_CLASS_TEXT)
         etPrice = field("Harga koin (0 = gratis)", InputType.TYPE_CLASS_NUMBER)
+        etDays = field("Masa berlaku hari (0 = permanen)", InputType.TYPE_CLASS_NUMBER)
         etEmoji = field("Emoji ikon (opsional)", InputType.TYPE_CLASS_TEXT)
         val fieldLp = { LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = d(8) } }
         form.addView(etName, fieldLp())
         form.addView(etPrice, fieldLp())
+        form.addView(etDays, fieldLp())
         form.addView(etEmoji, fieldLp())
 
         form.addView(
@@ -282,6 +285,7 @@ class SvgaManagerActivity : AppCompatActivity() {
             return
         }
         val price = etPrice.text.toString().trim().toIntOrNull() ?: 0
+        val days = etDays.text.toString().trim().toIntOrNull() ?: 0
         val emoji = etEmoji.text.toString().trim()
         val uid = auth.currentUser?.uid ?: return
         val type = selectedType
@@ -299,6 +303,7 @@ class SvgaManagerActivity : AppCompatActivity() {
                         "type" to type,
                         "name" to name,
                         "price" to price.toLong(),
+                        "days" to days.toLong(),
                         "emoji" to emoji,
                         "url" to (SvgaStore.PREFIX + assetId),
                         "storagePath" to "",
@@ -327,6 +332,7 @@ class SvgaManagerActivity : AppCompatActivity() {
     private fun resetForm() {
         etName.setText("")
         etPrice.setText("")
+        etDays.setText("")
         etEmoji.setText("")
         pickedFile = null
         tvFile.text = "Belum ada file"
@@ -351,7 +357,7 @@ class SvgaManagerActivity : AppCompatActivity() {
                 right.addView(play)
                 right.addView(del, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginStart = d(6) })
                 val priceText = if (a.price > 0) "🪙 ${a.price}" else "Gratis"
-                val desc = SvgaCatalog.typeLabel(a.type) + " • " + priceText
+                val desc = SvgaCatalog.typeLabel(a.type) + " • " + priceText + " • " + ShopUtil.durationText(a.days)
                 listBox.addView(Ui.row(this, a.emoji.ifBlank { "🎞️" }, a.name, desc, right))
             }
         }

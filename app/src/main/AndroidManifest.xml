@@ -68,6 +68,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".HiasanActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ChatActivity"
             android:exported="false" />
 
