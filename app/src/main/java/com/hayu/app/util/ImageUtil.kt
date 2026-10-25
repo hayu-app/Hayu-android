@@ -9,6 +9,24 @@ import java.io.FileOutputStream
 
 object ImageUtil {
 
+    // Untuk ikon gift: kecilkan (maks 256px) & simpan sebagai PNG supaya transparansi tetap ada
+    fun uriToIconFile(ctx: Context, uri: Uri, maxSide: Int = 256): File? {
+        return try {
+            val bmp = ctx.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: return null
+            val scale = maxSide.toFloat() / maxOf(bmp.width, bmp.height)
+            val result = if (scale < 1f) {
+                Bitmap.createScaledBitmap(bmp, (bmp.width * scale).toInt().coerceAtLeast(1), (bmp.height * scale).toInt().coerceAtLeast(1), true)
+            } else {
+                bmp
+            }
+            val file = File.createTempFile("icon_", ".png", ctx.cacheDir)
+            FileOutputStream(file).use { result.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            file
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     // Baca gambar dari Uri, kecilkan (maks sisi 1024px), simpan sebagai JPEG di cache
     fun uriToFile(ctx: Context, uri: Uri, maxSide: Int = 1024): File? {
         return try {

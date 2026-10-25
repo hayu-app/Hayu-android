@@ -6,8 +6,11 @@ import android.graphics.Typeface
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import coil.load
 import kotlin.math.sqrt
 
 object Ui {
@@ -28,6 +31,24 @@ object Ui {
         tv.setTextColor(color)
         if (bold) tv.setTypeface(tv.typeface, Typeface.BOLD)
         return tv
+    }
+
+    /** Ikon gambar (iconUrl) dengan emoji sebagai cadangan: emoji hilang begitu gambar berhasil dimuat. */
+    fun iconView(ctx: Context, emoji: String, iconUrl: String, sizeDp: Int, emojiSize: Float): View {
+        val box = FrameLayout(ctx)
+        val px = dp(ctx, sizeDp)
+        val tv = text(ctx, emoji, emojiSize)
+        tv.gravity = Gravity.CENTER
+        box.addView(tv, FrameLayout.LayoutParams(px, px, Gravity.CENTER))
+        if (iconUrl.isNotBlank()) {
+            val img = ImageView(ctx)
+            img.scaleType = ImageView.ScaleType.FIT_CENTER
+            box.addView(img, FrameLayout.LayoutParams(px, px, Gravity.CENTER))
+            img.load(iconUrl) {
+                listener(onSuccess = { _, _ -> tv.visibility = View.GONE })
+            }
+        }
+        return box
     }
 
     fun card(ctx: Context): LinearLayout {
@@ -56,12 +77,12 @@ object Ui {
         return b
     }
 
-    fun row(ctx: Context, emoji: String, title: String, desc: String, right: View?): LinearLayout {
+    fun row(ctx: Context, emoji: String, title: String, desc: String, right: View?, iconUrl: String = ""): LinearLayout {
         val c = card(ctx)
         val h = LinearLayout(ctx)
         h.orientation = LinearLayout.HORIZONTAL
         h.gravity = Gravity.CENTER_VERTICAL
-        h.addView(text(ctx, emoji, 26f))
+        h.addView(if (iconUrl.isBlank()) text(ctx, emoji, 26f) else iconView(ctx, emoji, iconUrl, 36, 26f))
         val mid = LinearLayout(ctx)
         mid.orientation = LinearLayout.VERTICAL
         mid.setPadding(dp(ctx, 12), 0, dp(ctx, 8), 0)

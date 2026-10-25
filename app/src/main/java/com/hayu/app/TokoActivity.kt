@@ -199,7 +199,10 @@ class TokoActivity : AppCompatActivity() {
         fallback.text = a.emoji.ifBlank { if (a.type == SvgaCatalog.FRAME) "🖼️" else "🚗" }
         fallback.textSize = 48f
         fallback.gravity = Gravity.CENTER
-        stage.addView(fallback, FrameLayout.LayoutParams(-1, -1))
+        stage.addView(
+            if (a.iconUrl.isNotBlank()) Ui.iconView(this, fallback.text.toString(), a.iconUrl, 64, 48f) else fallback,
+            FrameLayout.LayoutParams(-1, -1)
+        )
         val anim = SVGAImageView(this)
         anim.scaleType = ImageView.ScaleType.FIT_CENTER
         anim.isClickable = false

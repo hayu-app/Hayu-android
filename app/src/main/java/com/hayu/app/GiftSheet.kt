@@ -33,7 +33,8 @@ object GiftSheet {
         val price: Int,
         val svgaUrl: String? = null,
         val kind: String = "normal",
-        val bond: String = ""
+        val bond: String = "",
+        val iconUrl: String = ""
     ) {
         /** Poin keharmonisan yang didapat per 1 hadiah CP/BFF. */
         val points: Int get() = (price / 10).coerceAtLeast(1)
@@ -135,7 +136,7 @@ object GiftSheet {
     ) {
         SvgaCatalog.load(SvgaCatalog.GIFT) { assets ->
             gifts = baseGifts + assets.map {
-                Gift(it.emoji.ifBlank { "🎁" }, it.name, it.price, it.url)
+                Gift(it.emoji.ifBlank { "🎁" }, it.name, it.price, it.url, iconUrl = it.iconUrl)
             }
             LuckyOdds.load(FirebaseFirestore.getInstance()) {
                 showInternal(activity, myNickname, recipients, roomId, onSent)
@@ -280,7 +281,10 @@ object GiftSheet {
                         tile.orientation = LinearLayout.VERTICAL
                         tile.gravity = Gravity.CENTER_HORIZONTAL
                         tile.setPadding(d(4), d(10), d(4), d(10))
-                        tile.addView(Ui.text(activity, g.emoji, 30f))
+                        tile.addView(
+                            if (g.iconUrl.isBlank()) Ui.text(activity, g.emoji, 30f)
+                            else Ui.iconView(activity, g.emoji, g.iconUrl, 40, 30f)
+                        )
                         tile.addView(Ui.text(activity, g.name, 11f, Ui.WHITE_SOFT, true))
                         tile.addView(Ui.text(activity, "🪙 ${g.price}", 10f, Ui.GOLD))
                         when (g.kind) {

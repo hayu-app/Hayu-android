@@ -9,6 +9,7 @@ import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
@@ -20,6 +21,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.hayu.app.util.ImageUtil
+import com.hayu.app.util.ImgbbUploader
 import com.opensource.svgaplayer.SVGAImageView
 import com.opensource.svgaplayer.SVGAParser
 import com.opensource.svgaplayer.SVGAVideoEntity
@@ -45,6 +48,9 @@ class SvgaManagerActivity : AppCompatActivity() {
     private lateinit var etPrice: EditText
     private lateinit var etDays: EditText
     private lateinit var etEmoji: EditText
+    private lateinit var ivIcon: ImageView
+    private var pickedIconUri: Uri? = null
+    private var iconTarget: SvgaCatalog.Asset? = null
     private lateinit var tvFile: TextView
     private lateinit var preview: SVGAImageView
     private lateinit var progress: ProgressBar
@@ -54,6 +60,22 @@ class SvgaManagerActivity : AppCompatActivity() {
 
     private val picker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) onPicked(uri)
+    }
+
+    // ikon untuk aset yang sedang dibuat (form upload)
+    private val formIconPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            pickedIconUri = uri
+            ivIcon.setImageURI(uri)
+            ivIcon.visibility = android.view.View.VISIBLE
+        }
+    }
+
+    // ikon untuk aset yang sudah ada (tombol 🖼 di daftar)
+    private val listIconPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val target = iconTarget
+        iconTarget = null
+        if (uri != null && target != null) setIconFor(target, uri)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -154,6 +176,18 @@ class SvgaManagerActivity : AppCompatActivity() {
         form.addView(etPrice, fieldLp())
         form.addView(etDays, fieldLp())
         form.addView(etEmoji, fieldLp())
+
+        form.addView(
+            Ui.button(this, "🖼️ Pilih ikon gambar (opsional)") { formIconPicker.launch("image/*") },
+            LinearLayout.LayoutParams(MATCH, WRAP).apply { topMargin = d(8) }
+        )
+        form.addView(Ui.text(this, "Ikon tampil di tombol Gift & Toko menggantikan emoji. PNG transparan disarankan.", 11f, Ui.GRAY).also {
+            it.setPadding(0, d(4), 0, 0)
+        })
+        ivIcon = ImageView(this)
+        ivIcon.scaleType = ImageView.ScaleType.FIT_CENTER
+        ivIcon.visibility = android.view.View.GONE
+        form.addView(ivIcon, LinearLayout.LayoutParams(d(72), d(72)).apply { topMargin = d(6) })
 
         form.addView(
             Ui.button(this, "📂 Pilih file .svga") { picker.launch(arrayOf("*/*")) },
@@ -299,33 +333,82 @@ class SvgaManagerActivity : AppCompatActivity() {
                     toast(failMessage("Upload gagal", err ?: IllegalStateException("tidak diketahui")))
                     setUploading(false)
                 } else {
-                    val data = mapOf(
-                        "type" to type,
-                        "name" to name,
-                        "price" to price.toLong(),
-                        "days" to days.toLong(),
-                        "emoji" to emoji,
-                        "url" to (SvgaStore.PREFIX + assetId),
-                        "storagePath" to "",
-                        "chunks" to chunks.toLong(),
-                        "size" to file.length(),
-                        "createdBy" to uid,
-                        "createdAt" to System.currentTimeMillis()
-                    )
-                    db.collection(SvgaCatalog.COLLECTION).document(assetId).set(data)
-                        .addOnSuccessListener {
-                            toast("Berhasil diunggah 🎉")
-                            resetForm()
-                            setUploading(false)
-                            loadList()
-                        }
-                        .addOnFailureListener { e ->
-                            SvgaStore.deleteChunks(assetId) {}
-                            toast(failMessage("Gagal menyimpan data", e))
-                            setUploading(false)
-                        }
+                    val size = file.length()
+                    val iconUri = pickedIconUri
+                    if (iconUri == null) {
+                        saveAsset(assetId, chunks, type, name, price, days, emoji, size, uid, "")
+                    } else {
+                        uploadIcon(iconUri,
+                            onOk = { url -> saveAsset(assetId, chunks, type, name, price, days, emoji, size, uid, url) },
+                            onFail = { msg ->
+                                toast("Ikon gagal diunggah ($msg). Aset tetap disimpan, ikon bisa ditambah lewat tombol 🖼 di daftar.")
+                                saveAsset(assetId, chunks, type, name, price, days, emoji, size, uid, "")
+                            }
+                        )
+                    }
                 }
             }
+        )
+    }
+
+    private fun saveAsset(
+        assetId: String, chunks: Int, type: String, name: String, price: Int, days: Int,
+        emoji: String, size: Long, uid: String, iconUrl: String
+    ) {
+        val data = mapOf(
+            "type" to type,
+            "name" to name,
+            "price" to price.toLong(),
+            "days" to days.toLong(),
+            "emoji" to emoji,
+            "iconUrl" to iconUrl,
+            "url" to (SvgaStore.PREFIX + assetId),
+            "storagePath" to "",
+            "chunks" to chunks.toLong(),
+            "size" to size,
+            "createdBy" to uid,
+            "createdAt" to System.currentTimeMillis()
+        )
+        db.collection(SvgaCatalog.COLLECTION).document(assetId).set(data)
+            .addOnSuccessListener {
+                toast("Berhasil diunggah 🎉")
+                resetForm()
+                setUploading(false)
+                loadList()
+            }
+            .addOnFailureListener { e ->
+                SvgaStore.deleteChunks(assetId) {}
+                toast(failMessage("Gagal menyimpan data", e))
+                setUploading(false)
+            }
+    }
+
+    // Ikon: kecilkan jadi PNG 256px, unggah ke imgbb (sama seperti foto profil), hasilnya URL gambar.
+    private fun uploadIcon(uri: Uri, onOk: (String) -> Unit, onFail: (String) -> Unit) {
+        val f = ImageUtil.uriToIconFile(this, uri)
+        if (f == null) {
+            onFail("gambar tidak terbaca")
+            return
+        }
+        ImgbbUploader.uploadImage(
+            imageFile = f,
+            onSuccess = { url -> runOnUiThread { onOk(url) } },
+            onError = { msg -> runOnUiThread { onFail(msg) } }
+        )
+    }
+
+    private fun setIconFor(a: SvgaCatalog.Asset, uri: Uri) {
+        toast("Mengunggah ikon...")
+        uploadIcon(uri,
+            onOk = { url ->
+                db.collection(SvgaCatalog.COLLECTION).document(a.id).update("iconUrl", url)
+                    .addOnSuccessListener {
+                        toast("Ikon ${a.name} tersimpan ✅")
+                        loadList()
+                    }
+                    .addOnFailureListener { e -> toast(failMessage("Gagal menyimpan ikon", e)) }
+            },
+            onFail = { msg -> toast("Ikon gagal diunggah: $msg") }
         )
     }
 
@@ -334,6 +417,9 @@ class SvgaManagerActivity : AppCompatActivity() {
         etPrice.setText("")
         etDays.setText("")
         etEmoji.setText("")
+        pickedIconUri = null
+        ivIcon.setImageDrawable(null)
+        ivIcon.visibility = android.view.View.GONE
         pickedFile = null
         tvFile.text = "Belum ada file"
         preview.stopAnimation()
@@ -351,14 +437,19 @@ class SvgaManagerActivity : AppCompatActivity() {
             }
             for (a in all) {
                 val play = Ui.button(this, "▶") { SvgaOverlay.show(this, a.url) }
+                val icon = Ui.button(this, "🖼") {
+                    iconTarget = a
+                    listIconPicker.launch("image/*")
+                }
                 val del = Ui.button(this, "🗑") { confirmDelete(a) }
                 val right = LinearLayout(this)
                 right.orientation = LinearLayout.HORIZONTAL
                 right.addView(play)
+                right.addView(icon, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginStart = d(6) })
                 right.addView(del, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginStart = d(6) })
                 val priceText = if (a.price > 0) "🪙 ${a.price}" else "Gratis"
                 val desc = SvgaCatalog.typeLabel(a.type) + " • " + priceText + " • " + ShopUtil.durationText(a.days)
-                listBox.addView(Ui.row(this, a.emoji.ifBlank { "🎞️" }, a.name, desc, right))
+                listBox.addView(Ui.row(this, a.emoji.ifBlank { "🎞️" }, a.name, desc, right, a.iconUrl))
             }
         }
     }

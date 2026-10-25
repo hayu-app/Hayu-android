@@ -32,7 +32,8 @@ object SvgaCatalog {
         val url: String,
         val emoji: String,
         val storagePath: String,
-        val createdAt: Long
+        val createdAt: Long,
+        val iconUrl: String = ""   // gambar ikon (tampil di tombol Gift/Toko menggantikan emoji)
     )
 
     /** type = null → semua jenis. Gagal memuat → daftar kosong. */
@@ -52,7 +53,8 @@ object SvgaCatalog {
                         url = url,
                         emoji = d.getString("emoji") ?: "",
                         storagePath = d.getString("storagePath") ?: "",
-                        createdAt = d.getLong("createdAt") ?: 0L
+                        createdAt = d.getLong("createdAt") ?: 0L,
+                        iconUrl = d.getString("iconUrl") ?: ""
                     )
                 }.sortedByDescending { it.createdAt }
                 onDone(list)
