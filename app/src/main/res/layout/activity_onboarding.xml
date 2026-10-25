@@ -225,6 +225,21 @@
                 android:textSize="16sp" />
         </LinearLayout>
 
+        <!-- KODE UNDANGAN (opsional) -->
+        <EditText
+            android:id="@+id/et_invite_code"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_input"
+            android:hint="Kode undangan (opsional)"
+            android:inputType="textCapCharacters|textNoSuggestions"
+            android:maxLength="6"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="@color/hayu_text"
+            android:textColorHint="@color/hayu_text_secondary" />
+
         <!-- TOMBOL SELESAI -->
         <TextView
             android:id="@+id/btn_finish_onboarding"

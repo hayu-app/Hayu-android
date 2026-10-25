@@ -80,7 +80,7 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.menu_tugas).setOnClickListener { startActivity(Intent(requireContext(), TugasActivity::class.java)) }
         view.findViewById<View>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
         view.findViewById<View>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
-        view.findViewById<View>(R.id.menu_invite).setOnClickListener { notif("Invite Friends segera hadir! 👥") }
+        view.findViewById<View>(R.id.menu_invite).setOnClickListener { startActivity(Intent(requireContext(), InviteFriendsActivity::class.java)) }
         view.findViewById<View>(R.id.menu_gift).setOnClickListener { notif("Kotak Hadiah segera hadir! 🎁") }
 
         view.findViewById<View>(R.id.menu_settings).setOnClickListener(openSettings)

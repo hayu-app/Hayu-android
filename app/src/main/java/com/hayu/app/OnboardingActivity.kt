@@ -23,6 +23,7 @@ class OnboardingActivity : AppCompatActivity() {
     private var selectedGender: String = "pria"
     private var selectedCountry: String = ""
     private var selectedImageUri: Uri? = null
+    private var inviteCode: String = ""
 
     private val pickImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -119,6 +120,7 @@ class OnboardingActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            inviteCode = findViewById<EditText>(R.id.et_invite_code).text.toString().trim().uppercase()
             uploadThenSave(nickname, age, btnFinish)
         }
     }
@@ -156,6 +158,12 @@ class OnboardingActivity : AppCompatActivity() {
         )
     }
 
+    private fun goMain(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+        startActivity(Intent(this, MainActivity::class.java))
+        finishAffinity()
+    }
+
     private fun saveProfile(nickname: String, age: Int, photoUrl: String? = null) {
         val uid = auth.currentUser?.uid ?: run {
             Toast.makeText(this, "Sesi habis, login ulang", Toast.LENGTH_SHORT).show()
@@ -176,9 +184,14 @@ class OnboardingActivity : AppCompatActivity() {
         // Pakai set() dengan merge — kalau dokumen belum ada, dibuat baru
         db.collection("users").document(uid).set(updates, com.google.firebase.firestore.SetOptions.merge())
             .addOnSuccessListener {
-                Toast.makeText(this, "Profil siap! Selamat datang 🎉", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this, MainActivity::class.java))
-                finishAffinity()
+                if (inviteCode.isEmpty()) {
+                    goMain("Profil siap! Selamat datang 🎉")
+                } else {
+                    ReferralManager.redeem(this, inviteCode) { ok, msg ->
+                        // Gagal isi kode tidak menghalangi masuk; bisa diulang dari menu Invite Friends
+                        goMain(if (ok) msg else "Profil siap! (Kode undangan: $msg)")
+                    }
+                }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal simpan: ${e.message}", Toast.LENGTH_LONG).show()

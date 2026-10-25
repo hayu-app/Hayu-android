@@ -355,6 +355,10 @@ class CoinAdminActivity : AppCompatActivity() {
         "topup_approved" -> "💳 Top up disetujui"
         "seller_send" -> "📤 Penjualan coinseller"
         "seller_stock" -> "💼 Isi wallet coinseller"
+        "referral_invitee" -> "🎁 Bonus kode undangan"
+        "referral_inviter" -> "👥 Teman undangan aktif"
+        "referral_topup_first" -> "💳 Bonus top up pertama teman"
+        "referral_topup_percent" -> "💳 Persen top up teman"
         else -> "🪙 $t"
     }
 

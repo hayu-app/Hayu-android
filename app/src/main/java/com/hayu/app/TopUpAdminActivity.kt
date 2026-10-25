@@ -62,6 +62,7 @@ class TopUpAdminActivity : SimplePageActivity() {
 
             if (approve) {
                 val u = tx.get(userRef)
+                val refPlan = ReferralManager.prepareTopup(db, tx, uid, amount)
                 val oldPts = u.getLong("svipPoints") ?: 0L
                 val newPts = oldPts + amount
                 val oldLv = VipActivity.svipLevel(oldPts)
@@ -82,6 +83,7 @@ class TopUpAdminActivity : SimplePageActivity() {
                         "byUid" to adminUid, "at" to System.currentTimeMillis()
                     )
                 )
+                if (refPlan != null) ReferralManager.commitTopup(db, tx, refPlan, amount)
             }
 
             tx.update(

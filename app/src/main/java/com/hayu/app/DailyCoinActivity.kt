@@ -313,13 +313,15 @@ class DailyCoinActivity : AppCompatActivity() {
                     "exp" to exp + DAILY_EXP,
                     "lastDailyClaimDate" to today,
                     "lastDailyClaim" to System.currentTimeMillis(),
-                    "dailyStreak" to newStreak
+                    "dailyStreak" to newStreak,
+                    "checkinTotal" to ((snap.getLong("checkinTotal") ?: 0L) + 1L)
                 )
             )
             reward
         }.addOnSuccessListener { reward ->
             if (isFinishing || isDestroyed) return@addOnSuccessListener
             if (reward != null && reward > 0L) {
+                ReferralManager.checkActivation(force = true)
                 showReward(reward)
                 load()
             } else {

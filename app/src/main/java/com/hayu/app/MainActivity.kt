@@ -80,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         updateFloatingIcon()
         updateNotifBadge()
+        ReferralManager.checkActivation()
     }
 
     private fun updateFloatingIcon() {
