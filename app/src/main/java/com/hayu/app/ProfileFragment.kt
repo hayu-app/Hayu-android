@@ -166,8 +166,9 @@ class ProfileFragment : Fragment() {
                 val coins = (doc.getLong("coins") ?: 100L).toInt()
                 tvCoins.text = "🪙 $coins"
 
-                val level = (doc.getLong("level") ?: 1L).toInt()
-                tvLevelBadge.text = "Lv. $level"
+                val level = LevelCurve.levelForExp((doc.getLong("exp") ?: 0L).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
+                if ((doc.getLong("level") ?: 1L).toInt() != level) doc.reference.update("level", level.toLong())
+                LevelBadge.style(tvLevelBadge, level)
 
                 // Background header + badge VIP / SVIP mengikuti level
                 if (isAdded) {

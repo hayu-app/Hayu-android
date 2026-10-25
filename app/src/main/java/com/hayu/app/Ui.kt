@@ -21,8 +21,8 @@ object Ui {
     fun dp(ctx: Context, v: Int): Int = (v * ctx.resources.displayMetrics.density).toInt()
 
     // Level 2 = 50 EXP, level 3 = 200, level 4 = 450, level 5 = 800, dst.
-    fun levelForExp(exp: Int): Int = sqrt(exp / 50.0).toInt() + 1
-    fun expForLevel(level: Int): Int = 50 * (level - 1) * (level - 1)
+    fun levelForExp(exp: Int): Int = LevelCurve.levelForExp(exp)
+    fun expForLevel(level: Int): Int = LevelCurve.expForLevel(level)
 
     fun text(ctx: Context, s: String, size: Float = 14f, color: Int = WHITE_SOFT, bold: Boolean = false): TextView {
         val tv = TextView(ctx)
