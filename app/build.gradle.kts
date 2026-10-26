@@ -9,6 +9,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
+        ndk { abiFilters += listOf("arm64-v8a") }
         applicationId = "com.hayu.app"
         minSdk = 24
         targetSdk = 34
@@ -38,6 +39,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     buildFeatures {
@@ -74,7 +81,7 @@ dependencies {
     implementation("com.github.yyued:SVGAPlayer-Android:2.6.1")
 
     // Agora RTC SDK — voice room realtime
-    implementation("io.agora.rtc:full-sdk:4.3.2")
+    implementation("io.agora.rtc:voice-rtc-basic:4.5.2")
 
     // Firebase Cloud Messaging — push notification
     implementation("com.google.firebase:firebase-messaging-ktx")
