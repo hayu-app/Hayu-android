@@ -192,7 +192,7 @@ class RoomActivity : AppCompatActivity() {
                     .addOnSuccessListener { userDoc ->
                         myNickname = userDoc.getString("nickname") ?: "Pengguna HAYU"
                         myPhotoUrl = userDoc.getString("photoUrl") ?: ""
-                        myFrameUrl = userDoc.getString("equippedFrameUrl") ?: ""
+                        myFrameUrl = VipAssets.frameUrl(userDoc)
                         setupMicSlots()
                         listenMicSlots()
                         listenGiftPoints()
@@ -369,7 +369,7 @@ class RoomActivity : AppCompatActivity() {
                     slotIndex, uid,
                     u.getString("nickname") ?: myNickname,
                     u.getString("photoUrl") ?: "",
-                    u.getString("equippedFrameUrl") ?: ""
+                    VipAssets.frameUrl(u)
                 )
             }
             .addOnFailureListener { writeMicSlot(slotIndex, uid, myNickname, "", "") }
@@ -699,7 +699,7 @@ class RoomActivity : AppCompatActivity() {
         if (uid.isEmpty() || !liveFramePending.add(uid)) return
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                liveFrames[uid] = doc.getString("equippedFrameUrl") ?: ""
+                liveFrames[uid] = VipAssets.frameUrl(doc)
                 for (i in 0 until MIC_SLOT_COUNT) if (micSlots[i].uid == uid) updateMicSlotView(i)
             }
             .addOnFailureListener {
@@ -1062,10 +1062,11 @@ class RoomActivity : AppCompatActivity() {
 
     /** Kalau punya mobil terpasang: putar animasinya & umumkan ke semua orang di room. */
     private fun announceCarEntrance(userDoc: DocumentSnapshot) {
-        val url = userDoc.getString("equippedCarUrl") ?: ""
+        val carUrl = userDoc.getString("equippedCarUrl") ?: ""
+        val url = if (carUrl.isNotEmpty()) carUrl else VipAssets.entryUrl(userDoc)
         if (url.isEmpty()) return
         val uid = auth.currentUser?.uid ?: return
-        val carName = userDoc.getString("equippedCarName") ?: "kendaraan"
+        val carName = if (carUrl.isNotEmpty()) (userDoc.getString("equippedCarName") ?: "kendaraan") else VipAssets.tierName(userDoc)
         SvgaOverlay.show(this, url)
         val msg = hashMapOf<String, Any>(
             "senderUid"  to uid,

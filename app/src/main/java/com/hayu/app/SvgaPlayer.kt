@@ -42,7 +42,10 @@ object SvgaPlayer {
                 }
             }
             val parser = SVGAParser(view.context)
-            if (SvgaStore.isStored(url)) {
+            if (url.startsWith(VipAssets.PREFIX)) {
+                // aset bawaan app (VIP / SVIP) di folder assets
+                parser.decodeFromAssets(url.removePrefix(VipAssets.PREFIX), completion)
+            } else if (SvgaStore.isStored(url)) {
                 // Aset disimpan di Firestore (potongan) -> susun jadi file cache lalu putar
                 val id = url.removePrefix(SvgaStore.PREFIX)
                 SvgaStore.openFile(view.context, id) { file ->

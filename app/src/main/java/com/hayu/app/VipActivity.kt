@@ -11,13 +11,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.opensource.svgaplayer.SVGAImageView
 
-/** Halaman Bangsawan (VIP). SVIP ada di SvipActivity. */
+/** Halaman Bangsawan (VIP 1-8). SVIP ada di SvipActivity. */
 class VipActivity : AppCompatActivity() {
 
     companion object {
-        val VIP_PRICES = intArrayOf(100, 300, 600, 1000, 1500, 2200, 3000)
-        val SVIP_POINTS = intArrayOf(1000, 3000, 6000, 10000, 15000, 25000, 40000)
+        val VIP_PRICES = intArrayOf(100, 300, 600, 1000, 1500, 2200, 3000, 4500)
+        val SVIP_POINTS = intArrayOf(1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000)
 
         fun svipLevel(points: Long): Int {
             var lv = 0
@@ -38,7 +39,8 @@ class VipActivity : AppCompatActivity() {
         Perk("🔇", "Perlindungan mute", 3), Perk("🕵️", "Masuk ke ruangan secara diam-diam", 3),
         Perk("🎤", "Mikrofon eksklusif", 4), Perk("🔤", "Nama pengguna yang unik", 4),
         Perk("🧧", "Kulit Amplop Khusus", 5), Perk("💬", "Obrolan pribadi dengan orang asing", 5),
-        Perk("🎭", "Orang Misterius peringkat", 6)
+        Perk("🎭", "Orang Misterius peringkat", 6),
+        Perk("🌟", "Efek masuk eksklusif", 7), Perk("🔥", "Bingkai & medali Legend", 8)
     )
 
     private val gold = Color.rgb(240, 205, 130)
@@ -86,7 +88,7 @@ class VipActivity : AppCompatActivity() {
         val tabScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         tabRow = LinearLayout(this)
         tabScroll.addView(tabRow)
-        root.addView(tabScroll, LinearLayout.LayoutParams(-1, dp(48)))
+        root.addView(tabScroll, LinearLayout.LayoutParams(-1, dp(52)))
 
         val scroll = ScrollView(this)
         content = LinearLayout(this).apply {
@@ -142,47 +144,102 @@ class VipActivity : AppCompatActivity() {
         db.collection("users").document(uid).get().addOnSuccessListener { d ->
             vipLv = (d.getLong("vipLevel") ?: 0L).toInt()
             coins = (d.getLong("coins") ?: 0L).toInt()
-            if (sel == 1 && vipLv < 7) sel = vipLv + 1 else if (vipLv >= 7) sel = 7
+            if (sel == 1 && vipLv < 8) sel = vipLv + 1 else if (vipLv >= 8) sel = 8
             render()
         }.addOnFailureListener { toast("Gagal memuat data") }
     }
 
+    private fun section(title: String) = tv("✦  $title  ✦", 16f, gold, true).apply {
+        gravity = Gravity.CENTER
+        setPadding(0, dp(16), 0, dp(10))
+    }
+
+    /** Kartu pratinjau satu hiasan. Ketuk = putar animasi (kalau ada .svga). Null kalau gambarnya tidak ada. */
+    private fun showcase(label: String, path: String, heightDp: Int, svga: String?, lit: Boolean): LinearLayout? {
+        if (!VipAssets.exists(this, path)) return null
+        val c = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(44, 36, 20)); cornerRadius = dp(14).toFloat()
+                setStroke(dp(1), Color.rgb(110, 90, 40))
+            }
+            setPadding(dp(8), dp(10), dp(8), dp(8))
+            alpha = if (lit) 1f else 0.55f
+            if (svga != null) setOnClickListener { SvgaOverlay.show(this@VipActivity, VipAssets.PREFIX + svga) }
+        }
+        val iv = ImageView(this).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        VipAssets.load(iv, path)
+        c.addView(iv, LinearLayout.LayoutParams(-1, dp(heightDp)))
+        c.addView(tv(label, 12f, gold).apply { gravity = Gravity.CENTER },
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(6) })
+        return c
+    }
+
     private fun render() {
-        // tab
+        // tab: tag VIP 1..8
         tabRow.removeAllViews()
-        for (i in 1..7) {
+        for (i in 1..8) {
             val on = i == sel
-            tabRow.addView(tv("VIP $i", if (on) 24f else 17f,
-                if (on) Color.WHITE else Color.rgb(150, 140, 120), on).apply {
-                gravity = Gravity.CENTER
-                setPadding(dp(14), 0, dp(14), 0)
+            val h = dp(if (on) 38 else 28)
+            val iv = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                alpha = if (on) 1f else 0.55f
                 setOnClickListener { sel = i; render() }
-            }, LinearLayout.LayoutParams(-2, -1))
+            }
+            VipAssets.load(iv, "vip/tag/$i.webp")
+            tabRow.addView(iv, LinearLayout.LayoutParams((h * 2.35f).toInt(), h).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                setMargins(dp(8), 0, dp(8), 0)
+            })
         }
 
         content.removeAllViews()
         val unlocked = perks.count { it.minLevel <= sel }
+        val lit = sel <= vipLv
 
-        // hero
+        // hero: lengkung emas + medali (animasi)
         val hero = FrameLayout(this)
-        val badge = tv("🛡️", 84f).apply {
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.rgb(70, 56, 28)); setStroke(dp(4), gold)
-            }
+        val arch = ImageView(this).apply { scaleType = ImageView.ScaleType.FIT_CENTER; alpha = 0.9f }
+        VipAssets.load(arch, "vip/hero_arch.webp")
+        hero.addView(arch, FrameLayout.LayoutParams(-1, -1))
+        val medalParams = { FrameLayout.LayoutParams(dp(210), dp(210), Gravity.CENTER_HORIZONTAL or Gravity.TOP)
+            .apply { topMargin = dp(44) } }
+        val medalStatic = ImageView(this).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        VipAssets.load(medalStatic, "vip/medal/$sel.webp")
+        hero.addView(medalStatic, medalParams())
+        val medal = SVGAImageView(this).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        hero.addView(medal, medalParams())
+        SvgaPlayer.play(medal, VipAssets.PREFIX + "vip/medal/$sel.svga", 0)
+        content.addView(hero, LinearLayout.LayoutParams(-1, dp(330)))
+
+        val tag = ImageView(this).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        VipAssets.load(tag, "vip/tag/$sel.webp")
+        content.addView(tag, LinearLayout.LayoutParams(dp(120), dp(50)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+        })
+
+        // hiasan
+        content.addView(section("Hiasan VIP $sel"))
+        val cells = listOfNotNull(
+            showcase("Bingkai Avatar", "vip/frame/$sel.webp", 110, "vip/frame/$sel.svga", lit),
+            showcase("Bingkai Mic", "vip/mic/$sel.webp", 110, "vip/mic/$sel.svga", lit)
+        )
+        if (cells.isNotEmpty()) {
+            val r = LinearLayout(this)
+            cells.forEach { r.addView(it, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(dp(4), 0, dp(4), 0) }) }
+            content.addView(r, LinearLayout.LayoutParams(-1, -2))
         }
-        hero.addView(badge, FrameLayout.LayoutParams(dp(170), dp(170), Gravity.CENTER_HORIZONTAL))
-        hero.addView(tv("VIP $sel", 20f, Color.rgb(40, 28, 8), true).apply {
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply { setColor(gold); cornerRadius = dp(14).toFloat() }
-            setPadding(dp(14), dp(2), dp(14), dp(2))
-        }, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
-        content.addView(hero, LinearLayout.LayoutParams(-1, dp(190)))
+        showcase("Efek Masuk", "vip/entry/$sel.webp", 56, null, lit)?.let {
+            content.addView(it, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(4), dp(8), dp(4), 0) })
+        }
+        showcase("Header Profil", "vip/header/$sel.webp", 150, null, lit)?.let {
+            content.addView(it, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(4), dp(8), dp(4), 0) })
+        }
 
         content.addView(tv("✦  Jumlah hak istimewa $unlocked/${perks.size}  ✦", 15f, gold, true).apply {
             gravity = Gravity.CENTER
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10); bottomMargin = dp(14) })
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18); bottomMargin = dp(14) })
 
         // grid hak istimewa (4 kolom)
         var rowLayout: LinearLayout? = null
@@ -191,16 +248,16 @@ class VipActivity : AppCompatActivity() {
                 rowLayout = LinearLayout(this)
                 content.addView(rowLayout, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
             }
-            val lit = p.minLevel <= sel
+            val on = p.minLevel <= sel
             val cell = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
-                alpha = if (lit) 1f else 0.35f
+                alpha = if (on) 1f else 0.35f
             }
             cell.addView(tv(p.icon, 28f).apply {
                 gravity = Gravity.CENTER
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL; setColor(Color.rgb(60, 50, 34))
-                    setStroke(dp(2), if (lit) gold else Color.rgb(90, 80, 60))
+                    setStroke(dp(2), if (on) gold else Color.rgb(90, 80, 60))
                 }
             }, LinearLayout.LayoutParams(dp(62), dp(62)))
             cell.addView(tv(p.label, 11f, gold).apply { gravity = Gravity.CENTER },

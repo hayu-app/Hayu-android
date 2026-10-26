@@ -138,7 +138,7 @@ class ProfileFragment : Fragment() {
             .addOnSuccessListener { doc ->
                 val nickname = doc.getString("nickname") ?: "Pengguna HAYU"
                 tvNickname.text = nickname
-                SvgaFrame.attach(imgAvatar, doc.getString("equippedFrameUrl"))
+                SvgaFrame.attach(imgAvatar, VipAssets.frameUrl(doc))
 
                 val age = (doc.getLong("age") ?: 0L).toInt()
                 val gender = doc.getString("gender") ?: ""
@@ -182,10 +182,10 @@ class ProfileFragment : Fragment() {
                             if (row.getChildAt(i).tag == "tier") row.removeViewAt(i)
                         }
                         if (vipLv > 0) {
-                            row.addView(ProfileTheme.chip(requireContext(), "⭐ VIP $vipLv", Color.parseColor("#7C3AED")).also { it.tag = "tier" })
+                            row.addView(VipAssets.vipTag(requireContext(), vipLv).also { it.tag = "tier" })
                         }
                         if (svipLv > 0) {
-                            row.addView(ProfileTheme.chip(requireContext(), "👑 SVIP $svipLv", Color.parseColor("#B45309")).also { it.tag = "tier" })
+                            row.addView(VipAssets.svipBadge(requireContext(), svipLv).also { it.tag = "tier" })
                         }
                     }
                 }
