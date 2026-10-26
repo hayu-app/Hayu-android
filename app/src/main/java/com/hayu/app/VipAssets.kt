@@ -47,15 +47,22 @@ object VipAssets {
         return if (v > 0) "VIP $v" else ""
     }
 
-    fun exists(ctx: Context, path: String): Boolean = try {
-        ctx.assets.open(path).close()
-        true
-    } catch (e: Exception) {
-        false
+    fun exists(ctx: Context, path: String): Boolean {
+        if (HayuAssetManager.getFile(ctx, path)?.isFile == true) return true
+        return try {
+            ctx.assets.open(path).use { true }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     fun load(view: ImageView, path: String) {
-        view.load(ANDROID_ASSET + path)
+        val downloaded = HayuAssetManager.getFile(view.context, path)
+        if (downloaded != null) {
+            view.load(downloaded)
+        } else {
+            view.load(ANDROID_ASSET + path)
+        }
     }
 
     private fun image(ctx: Context, path: String, w: Int, h: Int): ImageView {
@@ -85,17 +92,20 @@ object VipAssets {
         val iv = ImageView(ctx)
         iv.layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
         try {
-            ctx.assets.open(path).use { input ->
-                val bmp = BitmapFactory.decodeStream(input)
-                if (bmp != null) {
-                    iv.scaleType = ImageView.ScaleType.MATRIX
-                    iv.setImageBitmap(bmp)
-                    val s = widthPx.toFloat() / bmp.width
-                    iv.imageMatrix = Matrix().apply { setScale(s, s) }
-                }
+            val downloaded = HayuAssetManager.getFile(ctx, path)
+            val bmp = if (downloaded != null) {
+                downloaded.inputStream().use { BitmapFactory.decodeStream(it) }
+            } else {
+                ctx.assets.open(path).use { BitmapFactory.decodeStream(it) }
+            }
+            if (bmp != null) {
+                iv.scaleType = ImageView.ScaleType.MATRIX
+                iv.setImageBitmap(bmp)
+                val s = widthPx.toFloat() / bmp.width
+                iv.imageMatrix = Matrix().apply { setScale(s, s) }
             }
         } catch (e: Exception) {
-            // aset tidak ada -> biarkan kosong
+            // Jika aset gagal dibaca, biarkan kosong.
         }
         return iv
     }

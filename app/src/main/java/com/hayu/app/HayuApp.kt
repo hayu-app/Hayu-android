@@ -11,6 +11,9 @@ class HayuApp : Application() {
 
         FirebaseApp.initializeApp(this)
 
+        // Unduh aset VIP/SVIP di latar belakang; aset APK tetap menjadi cadangan.
+        HayuAssetManager.ensureDownloaded(this)
+
         val settings = FirebaseFirestoreSettings.Builder()
             .setPersistenceEnabled(true)
             .build()
