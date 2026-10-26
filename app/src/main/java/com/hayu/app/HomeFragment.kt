@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.hayu.app.adapter.RoomAdapter
 import com.hayu.app.model.Room
 import com.hayu.app.util.SessionManager
@@ -42,6 +43,7 @@ class HomeFragment : Fragment() {
     private var emptyLayout: LinearLayout? = null
     private var bannerPager: ViewPager2? = null
     private var bannerRunnable: Runnable? = null
+    private var roomsListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -281,6 +283,8 @@ class HomeFragment : Fragment() {
         bannerRunnable?.let { bannerPager?.removeCallbacks(it) }
         bannerPager = null
         bannerRunnable = null
+        roomsListener?.remove()   // stop realtime listener saat fragment destroyed
+        roomsListener = null
         super.onDestroyView()
     }
 
@@ -374,30 +378,38 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadRooms(layoutEmpty: LinearLayout) {
+        // Hentikan listener lama kalau ada (cegah duplikat saat onResume)
+        roomsListener?.remove()
+
         val fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000)
 
-        db.collection("rooms")
+        // addSnapshotListener → update otomatis setiap ada perubahan di Firestore
+        // Termasuk saat currentUsers berubah karena user masuk/keluar room
+        roomsListener = db.collection("rooms")
             .limit(50)
-            .get()
-            .addOnSuccessListener { snapshot ->
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    layoutEmpty.visibility = View.VISIBLE
+                    if (::adapter.isInitialized) adapter.submitList(emptyList())
+                    return@addSnapshotListener
+                }
+
+                val now = System.currentTimeMillis()
                 val rooms = snapshot.documents
                     .mapNotNull { doc ->
                         doc.data?.let { Room.fromDoc(doc.id, it) }
                     }
                     .filter {
                         it.active &&
-                        it.lastActiveAt > fiveMinutesAgo &&
+                        it.lastActiveAt > now - (5 * 60 * 1000) &&
                         isPublicRoom(it)
                     }
                     .sortedByDescending { it.createdAt }
 
                 allRooms.clear()
                 allRooms.addAll(rooms)
+                layoutEmpty.visibility = if (rooms.isEmpty()) View.VISIBLE else View.GONE
                 applyFilters()
-            }
-            .addOnFailureListener {
-                layoutEmpty.visibility = View.VISIBLE
-                if (::adapter.isInitialized) adapter.submitList(emptyList())
             }
     }
 }
