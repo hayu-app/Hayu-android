@@ -168,24 +168,51 @@ object GiftSheet {
             root.addView(Ui.text(activity, "🎁 Kirim Hadiah", 18f, Ui.WHITE_SOFT, true))
             root.addView(Ui.text(activity, "Kirim ke:", 12f, Ui.GRAY))
 
-            // ---- penerima ----
-            var selectedUid = (recipients.firstOrNull { it.first != myUid } ?: recipients[0]).first
+            // ---- penerima (multi-select) ----
+            // selectedUids: set uid yang dipilih. Default: semua kecuali diri sendiri.
+            val onMicUids = recipients.filter { it.first != myUid }.map { it.first }.toSet()
+            val selectedUids = onMicUids.toMutableSet()
+            if (selectedUids.isEmpty()) selectedUids.add(myUid) // fallback kalau sendiri
+
             val chips = ArrayList<Pair<TextView, String>>()
+
             val refreshChips = {
                 for ((tv, uid) in chips) {
                     tv.setBackgroundResource(
-                        if (uid == selectedUid) R.drawable.bg_button_primary else R.drawable.bg_quick_item
+                        if (uid in selectedUids) R.drawable.bg_button_primary else R.drawable.bg_quick_item
                     )
+                    tv.alpha = if (uid in selectedUids) 1f else 0.5f
                 }
             }
+
             val chipRow = LinearLayout(activity)
             chipRow.orientation = LinearLayout.HORIZONTAL
+
+            // Tombol "Semua Mic" di posisi pertama
+            val allMicBtn = Ui.text(activity, "👥 Semua Mic", 12f, Color.WHITE, true)
+            allMicBtn.setPadding(d(12), d(6), d(12), d(6))
+            allMicBtn.setBackgroundResource(R.drawable.bg_button_primary)
+            allMicBtn.setOnClickListener {
+                selectedUids.clear()
+                selectedUids.addAll(onMicUids)
+                if (selectedUids.isEmpty()) selectedUids.add(myUid)
+                refreshChips()
+            }
+            val allLp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            allLp.rightMargin = d(8)
+            chipRow.addView(allMicBtn, allLp)
+
             for ((uid, name) in recipients) {
                 val label = if (uid == myUid) "👤 Saya" else name.take(16)
                 val tv = Ui.text(activity, label, 12f, Color.WHITE, true)
                 tv.setPadding(d(12), d(6), d(12), d(6))
                 tv.setOnClickListener {
-                    selectedUid = uid
+                    if (uid in selectedUids) {
+                        if (selectedUids.size > 1) selectedUids.remove(uid)
+                        // minimal 1 penerima tetap dipilih
+                    } else {
+                        selectedUids.add(uid)
+                    }
                     refreshChips()
                 }
                 val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -387,20 +414,39 @@ object GiftSheet {
             val sendBtn = Ui.button(activity, "Kirim") {}
             sendBtn.setOnClickListener {
                 val g = selectedGift
-                val total = g.price.toLong() * qty
+                val targets = recipients.filter { it.first in selectedUids }
+                val total = g.price.toLong() * qty * targets.size
                 if (coins < total) {
-                    Toast.makeText(activity, "Koin tidak cukup", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "Koin tidak cukup (butuh $total 🪙)", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                val to = recipients.first { it.first == selectedUid }
                 sendBtn.isEnabled = false
-                send(activity, db, myUid, myNickname, to, g, qty, roomId,
-                    onDone = { text ->
-                        dialog.dismiss()
-                        onSent(text, if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
-                    },
-                    onFail = { sendBtn.isEnabled = true }
-                )
+                var doneCount = 0
+                var failCount = 0
+                val texts = ArrayList<String>()
+                val totalTargets = targets.size
+
+                fun checkAllDone() {
+                    if (doneCount + failCount < totalTargets) return
+                    dialog.dismiss()
+                    val combined = texts.joinToString(" | ")
+                    onSent(combined, if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
+                }
+
+                for (to in targets) {
+                    send(activity, db, myUid, myNickname, to, g, qty, roomId,
+                        onDone = { text ->
+                            texts.add(text)
+                            doneCount++
+                            checkAllDone()
+                        },
+                        onFail = {
+                            failCount++
+                            if (failCount == totalTargets) sendBtn.isEnabled = true
+                            checkAllDone()
+                        }
+                    )
+                }
             }
             bar.addView(sendBtn)
             root.addView(bar, barLp)
