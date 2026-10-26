@@ -137,7 +137,7 @@ class RoomActivity : AppCompatActivity() {
                 // User lain keluar channel
             }
             override fun onError(code: Int, message: String) {
-                Toast.makeText(this@RoomActivity, "⚠️ Voice error: $message", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@RoomActivity, "⚠️ Voice error: $message", Toast.LENGTH_LONG).show()
             }
         })
         agoraEngine?.init()

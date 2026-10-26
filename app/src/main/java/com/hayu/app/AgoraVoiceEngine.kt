@@ -41,12 +41,13 @@ class AgoraVoiceEngine(
     // ── Inisialisasi ────────────────────────────────────────────────────────
 
     fun init() {
+        if (engine != null) return
         try {
-            val config = RtcEngineConfig().apply {
-                mContext    = context.applicationContext
-                mAppId      = AGORA_APP_ID
-                mEventHandler = handler
-            }
+            val appCtx: Context = context.applicationContext ?: context
+            val config = RtcEngineConfig()
+            config.mContext = appCtx
+            config.mAppId = AGORA_APP_ID
+            config.mEventHandler = handler
             engine = RtcEngine.create(config)
             // Mode suara: audio call berkualitas tinggi dengan noise suppression
             engine?.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING)
@@ -55,9 +56,10 @@ class AgoraVoiceEngine(
                 Constants.AUDIO_SCENARIO_GAME_STREAMING
             )
             Log.d(TAG, "Agora engine siap")
-        } catch (e: Exception) {
-            Log.e(TAG, "Gagal init Agora: ${e.message}")
-            callback.onError(-1, "Gagal inisialisasi Agora: ${e.message}")
+        } catch (e: Throwable) {
+            val where = e.stackTrace.firstOrNull()?.toString() ?: "?"
+            Log.e(TAG, "Gagal init Agora", e)
+            callback.onError(-1, "Gagal inisialisasi Agora: ${e.javaClass.simpleName}: ${e.message} @ $where")
         }
     }
 
