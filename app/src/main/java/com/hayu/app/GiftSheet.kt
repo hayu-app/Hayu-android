@@ -1,9 +1,20 @@
 package com.hayu.app
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
+import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.drawable.GradientDrawable
 import android.graphics.Typeface
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -415,37 +426,31 @@ object GiftSheet {
             sendBtn.setOnClickListener {
                 val g = selectedGift
                 val targets = recipients.filter { it.first in selectedUids }
-                val total = g.price.toLong() * qty * targets.size
+                val roundQty = qty
+                val total = g.price.toLong() * roundQty * targets.size
                 if (coins < total) {
                     Toast.makeText(activity, "Koin tidak cukup (butuh $total 🪙)", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 sendBtn.isEnabled = false
-                var doneCount = 0
-                var failCount = 0
-                val texts = ArrayList<String>()
-                val totalTargets = targets.size
-
-                fun checkAllDone() {
-                    if (doneCount + failCount < totalTargets) return
+                sendRound(activity, db, myUid, myNickname, targets, g, roundQty, roomId, 1) { texts, okCount ->
+                    if (okCount == 0) {
+                        // semua gagal: sheet tetap terbuka supaya bisa dicoba lagi
+                        sendBtn.isEnabled = true
+                        return@sendRound
+                    }
                     dialog.dismiss()
-                    val combined = texts.joinToString(" | ")
-                    onSent(combined, if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
-                }
+                    onSent(texts.joinToString(" | "), if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
 
-                for (to in targets) {
-                    send(activity, db, myUid, myNickname, to, g, qty, roomId,
-                        onDone = { text ->
-                            texts.add(text)
-                            doneCount++
-                            checkAllDone()
-                        },
-                        onFail = {
-                            failCount++
-                            if (failCount == totalTargets) sendBtn.isEnabled = true
-                            checkAllDone()
+                    // Tombol COMBO: ketuk lagi untuk kirim hadiah yang sama ke penerima yang sama
+                    ComboOverlay.show(activity) { comboNo, finished ->
+                        sendRound(activity, db, myUid, myNickname, targets, g, roundQty, roomId, comboNo) { t2, ok2 ->
+                            if (ok2 > 0) {
+                                onSent(t2.joinToString(" | "), if (g.svgaUrl != null) "" else g.emoji, g.svgaUrl)
+                            }
+                            finished(ok2 > 0)
                         }
-                    )
+                    }
                 }
             }
             bar.addView(sendBtn)
@@ -456,6 +461,154 @@ object GiftSheet {
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }.addOnFailureListener {
             Toast.makeText(activity, "Gagal memuat koin", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Satu putaran kirim ke semua penerima terpilih. Selesai -> onFinished(daftar teks, jumlah penerima yang berhasil).
+     * combo > 1 menambahkan keterangan "combo xN" di pesan.
+     */
+    private fun sendRound(
+        activity: AppCompatActivity,
+        db: FirebaseFirestore,
+        myUid: String,
+        myName: String,
+        targets: List<Pair<String, String>>,
+        g: Gift,
+        qty: Int,
+        roomId: String?,
+        combo: Int,
+        onFinished: (List<String>, Int) -> Unit
+    ) {
+        var ok = 0
+        var fail = 0
+        val texts = ArrayList<String>()
+        val n = targets.size
+
+        fun check() {
+            if (ok + fail < n) return
+            onFinished(texts, ok)
+        }
+
+        for (to in targets) {
+            send(activity, db, myUid, myName, to, g, qty, roomId,
+                onDone = { text ->
+                    texts.add(if (combo > 1) "$text 🔥 combo x$combo" else text)
+                    ok++
+                    check()
+                },
+                onFail = {
+                    fail++
+                    check()
+                }
+            )
+        }
+    }
+
+    /**
+     * Tombol COMBO melayang di pojok kanan bawah setelah hadiah terkirim.
+     * Cincin emas = sisa waktu (4 detik). Tiap ketukan mengirim lagi dan mengulang hitung mundur.
+     */
+    private object ComboOverlay {
+        private const val TAG = "hayu_combo_button"
+        private const val WINDOW_MS = 4000L
+
+        /** send(nomorCombo, selesai): kirim ulang satu putaran, lalu panggil selesai(true/false). */
+        fun show(activity: AppCompatActivity, send: (Int, (Boolean) -> Unit) -> Unit) {
+            if (activity.isFinishing || activity.isDestroyed) return
+            val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
+            for (i in content.childCount - 1 downTo 0) {
+                if (content.getChildAt(i).tag == TAG) content.removeViewAt(i)
+            }
+            val d = { v: Int -> Ui.dp(activity, v) }
+            val size = d(86)
+
+            val btn = FrameLayout(activity)
+            btn.tag = TAG
+            btn.elevation = d(10).toFloat()
+            btn.background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.parseColor("#E8590C"))
+            }
+
+            val ring = ComboRingView(activity)
+            btn.addView(ring, FrameLayout.LayoutParams(size, size))
+
+            val label = LinearLayout(activity)
+            label.orientation = LinearLayout.VERTICAL
+            label.gravity = Gravity.CENTER
+            val tvTop = Ui.text(activity, "COMBO", 10f, Color.WHITE, true)
+            val tvNum = Ui.text(activity, "x1", 24f, Color.parseColor("#FFE082"), true)
+            tvTop.gravity = Gravity.CENTER
+            tvNum.gravity = Gravity.CENTER
+            label.addView(tvTop)
+            label.addView(tvNum)
+            btn.addView(label, FrameLayout.LayoutParams(size, size))
+
+            var comboNo = 1
+            var busy = false
+            var animator: ValueAnimator? = null
+
+            fun dismiss() {
+                animator?.cancel()
+                (btn.parent as? ViewGroup)?.removeView(btn)
+            }
+
+            fun startCountdown() {
+                animator?.cancel()
+                val a = ValueAnimator.ofFloat(1f, 0f)
+                a.duration = WINDOW_MS
+                a.interpolator = LinearInterpolator()
+                a.addUpdateListener {
+                    ring.progress = it.animatedValue as Float
+                    ring.invalidate()
+                }
+                a.addListener(object : AnimatorListenerAdapter() {
+                    private var cancelled = false
+                    override fun onAnimationCancel(animation: Animator) {
+                        cancelled = true
+                    }
+
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (!cancelled) dismiss()
+                    }
+                })
+                animator = a
+                a.start()
+            }
+
+            btn.setOnClickListener {
+                if (busy) return@setOnClickListener
+                busy = true
+                animator?.cancel()
+                comboNo++
+                tvNum.text = "x$comboNo"
+                btn.animate().scaleX(1.18f).scaleY(1.18f).setDuration(90).withEndAction {
+                    btn.animate().scaleX(1f).scaleY(1f).setDuration(90).start()
+                }.start()
+                send(comboNo) { ok ->
+                    busy = false
+                    if (ok) startCountdown() else dismiss()
+                }
+            }
+
+            btn.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {}
+                override fun onViewDetachedFromWindow(v: View) {
+                    animator?.cancel()
+                }
+            })
+
+            val lp = FrameLayout.LayoutParams(size, size, Gravity.BOTTOM or Gravity.END)
+            lp.rightMargin = d(14)
+            lp.bottomMargin = d(84)
+            content.addView(btn, lp)
+
+            btn.alpha = 0f
+            btn.scaleX = 0.6f
+            btn.scaleY = 0.6f
+            btn.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(160).start()
+            startCountdown()
         }
     }
 
@@ -624,5 +777,29 @@ object GiftSheet {
             Toast.makeText(activity, "Gagal: ${it.message}", Toast.LENGTH_LONG).show()
             onFail()
         }
+    }
+}
+
+/** Cincin hitung mundur untuk tombol COMBO (progress 1 -> 0). */
+private class ComboRingView(ctx: Context) : View(ctx) {
+    var progress: Float = 1f
+
+    private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        color = Color.parseColor("#55FFFFFF")
+    }
+    private val arc = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        color = Color.parseColor("#FFD54F")
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        val sw = width * 0.07f
+        track.strokeWidth = sw
+        arc.strokeWidth = sw
+        val r = RectF(sw / 2, sw / 2, width - sw / 2, height - sw / 2)
+        canvas.drawArc(r, 0f, 360f, false, track)
+        canvas.drawArc(r, -90f, 360f * progress, false, arc)
     }
 }

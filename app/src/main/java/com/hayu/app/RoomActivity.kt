@@ -615,7 +615,14 @@ class RoomActivity : AppCompatActivity() {
             frame.isClickable = false
             frame.isFocusable = false
             frame.visibility = android.view.View.GONE
-            wrap.addView(frame, FrameLayout.LayoutParams(dpi(78), dpi(78), Gravity.CENTER))
+            // Kotak pemotong: animasi bingkai yang meluber tidak boleh keluar dari kotak ini
+            // (supaya tidak menabrak header). Ubah angka 90 kalau bingkai terlihat terpotong.
+            val frameClip = FrameLayout(this)
+            frameClip.clipChildren = true
+            frameClip.isClickable = false
+            frameClip.isFocusable = false
+            frameClip.addView(frame, FrameLayout.LayoutParams(dpi(78), dpi(78), Gravity.CENTER))
+            wrap.addView(frameClip, FrameLayout.LayoutParams(dpi(90), dpi(90), Gravity.CENTER))
 
             val mute = TextView(this)
             mute.text = "🔇"
