@@ -1,27 +1,43 @@
 package com.hayu.app
 
 import android.app.Application
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 
-class HayuApp : Application() {
+class HayuApp : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
         FirebaseApp.initializeApp(this)
-
-        // Unduh aset VIP/SVIP di latar belakang; aset APK tetap menjadi cadangan.
-        HayuAssetManager.ensureDownloaded(this)
 
         val settings = FirebaseFirestoreSettings.Builder()
             .setPersistenceEnabled(true)
             .build()
         FirebaseFirestore.getInstance().firestoreSettings = settings
 
+        // Alamat hosting aset VIP/SVIP (bisa diganti lewat Firestore app_config/assets.baseUrl)
+        VipAssets.refreshConfig()
+
         // Cleanup room lama saat app dibuka
         cleanupRooms()
     }
+
+    // Batasi cache gambar supaya penyimpanan app tidak membengkak (bawaan Coil bisa sampai 250MB)
+    override fun newImageLoader(): ImageLoader =
+        ImageLoader.Builder(this)
+            .memoryCache { MemoryCache.Builder(this).maxSizePercent(0.20).build() }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("image_cache"))
+                    .maxSizeBytes(100L * 1024 * 1024)
+                    .build()
+            }
+            .build()
 
     // Tutup room yang tidak aktif > 5 menit
     private fun cleanupRooms() {

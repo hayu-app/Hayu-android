@@ -1,21 +1,47 @@
 package com.hayu.app
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.view.ViewGroup
 import android.widget.ImageView
+import coil.imageLoader
 import coil.load
+import coil.request.ImageRequest
+import coil.size.Dimension
+import coil.size.Size
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 
 /**
- * Aset VIP & SVIP (logo, medali, bingkai, banner, dll) yang ada di app/src/main/assets/{vip,svip}.
- * Animasi .svga diputar lewat SvgaPlayer dengan URL "asset://vip/frame/3.svga".
+ * Aset VIP & SVIP (logo, medali, bingkai, banner, dll).
+ *
+ * Filenya TIDAK lagi di dalam APK (supaya APK kecil). Letaknya di folder remote-assets/{vip,svip}
+ * di repo GitHub dan diambil online lewat baseUrl, lalu di-cache otomatis (Coil & SVGAParser).
+ *  - Animasi .svga diputar lewat SvgaPlayer dengan URL logis "asset://vip/frame/3.svga"
+ *  - Daftar file yang ada: assets/remote_index.txt (kecil, dibuat otomatis oleh pasang-aset-remote.sh)
+ *  - baseUrl bisa diganti tanpa update app: Firestore  app_config/assets  field  baseUrl
  */
 object VipAssets {
     const val PREFIX = "asset://"
-    private const val ANDROID_ASSET = "file:///android_asset/"
     const val MAX_LEVEL = 8
+
+    private const val DEFAULT_BASE_URL = "https://cdn.jsdelivr.net/gh/hayu-app/Hayu-android@main/remote-assets/"
+
+    @Volatile
+    var baseUrl: String = DEFAULT_BASE_URL
+        private set
+
+    /** Ganti alamat hosting aset lewat Firestore (app_config/assets.baseUrl), tanpa perlu rilis app baru. */
+    fun refreshConfig() {
+        FirebaseFirestore.getInstance().collection("app_config").document("assets").get()
+            .addOnSuccessListener { d ->
+                val u = d.getString("baseUrl")?.trim().orEmpty()
+                if (u.startsWith("http")) baseUrl = if (u.endsWith("/")) u else "$u/"
+            }
+    }
+
+    /** URL lengkap untuk path aset, mis. "svip/frame/3.svga". */
+    fun url(path: String): String = baseUrl + path
 
     fun vipLevel(doc: DocumentSnapshot): Int =
         (doc.getLong("vipLevel") ?: 0L).toInt().coerceIn(0, MAX_LEVEL)
@@ -47,22 +73,31 @@ object VipAssets {
         return if (v > 0) "VIP $v" else ""
     }
 
-    fun exists(ctx: Context, path: String): Boolean {
-        if (HayuAssetManager.getFile(ctx, path)?.isFile == true) return true
-        return try {
-            ctx.assets.open(path).use { true }
+    // Daftar file yang tersedia online (dibaca sekali dari assets/remote_index.txt)
+    @Volatile
+    private var index: Set<String>? = null
+
+    private fun index(ctx: Context): Set<String> {
+        index?.let { return it }
+        val set: Set<String> = try {
+            ctx.applicationContext.assets.open("remote_index.txt").bufferedReader().useLines { lines ->
+                lines.map { it.trim() }.filter { it.isNotEmpty() }.toHashSet()
+            }
         } catch (e: Exception) {
-            false
+            emptySet()
         }
+        index = set
+        return set
+    }
+
+    /** Apakah aset ada? Kalau daftar tidak ditemukan, dianggap ada. */
+    fun exists(ctx: Context, path: String): Boolean {
+        val idx = index(ctx)
+        return idx.isEmpty() || path in idx
     }
 
     fun load(view: ImageView, path: String) {
-        val downloaded = HayuAssetManager.getFile(view.context, path)
-        if (downloaded != null) {
-            view.load(downloaded)
-        } else {
-            view.load(ANDROID_ASSET + path)
-        }
+        view.load(url(path))
     }
 
     private fun image(ctx: Context, path: String, w: Int, h: Int): ImageView {
@@ -91,22 +126,20 @@ object VipAssets {
     fun topCrop(ctx: Context, path: String, widthPx: Int, heightPx: Int): ImageView {
         val iv = ImageView(ctx)
         iv.layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
-        try {
-            val downloaded = HayuAssetManager.getFile(ctx, path)
-            val bmp = if (downloaded != null) {
-                downloaded.inputStream().use { BitmapFactory.decodeStream(it) }
-            } else {
-                ctx.assets.open(path).use { BitmapFactory.decodeStream(it) }
-            }
-            if (bmp != null) {
-                iv.scaleType = ImageView.ScaleType.MATRIX
-                iv.setImageBitmap(bmp)
-                val s = widthPx.toFloat() / bmp.width
-                iv.imageMatrix = Matrix().apply { setScale(s, s) }
-            }
-        } catch (e: Exception) {
-            // Jika aset gagal dibaca, biarkan kosong.
-        }
+        iv.scaleType = ImageView.ScaleType.MATRIX
+        val request = ImageRequest.Builder(ctx)
+            .data(url(path))
+            .size(Size(widthPx, Dimension.Undefined))
+            .target(onSuccess = { drawable ->
+                iv.setImageDrawable(drawable)
+                val w = drawable.intrinsicWidth
+                if (w > 0) {
+                    val s = widthPx.toFloat() / w
+                    iv.imageMatrix = Matrix().apply { setScale(s, s) }
+                }
+            })
+            .build()
+        ctx.imageLoader.enqueue(request)
         return iv
     }
 }
