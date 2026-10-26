@@ -180,6 +180,14 @@ class DevPanelActivity : AppCompatActivity() {
             startActivity(Intent(this, LuckyConfigActivity::class.java))
             return
         }
+        if (key == "vip") {
+            startActivity(Intent(this, VipConfigActivity::class.java))
+            return
+        }
+        if (key == "notif") {
+            startActivity(Intent(this, NotifAdminActivity::class.java))
+            return
+        }
         if (key == "banner") {
             startActivity(Intent(this, BannerAdminActivity::class.java))
             return

@@ -75,4 +75,7 @@ dependencies {
 
     // Agora RTC SDK — voice room realtime
     implementation("io.agora.rtc:full-sdk:4.3.2")
+
+    // Firebase Cloud Messaging — push notification
+    implementation("com.google.firebase:firebase-messaging-ktx")
 }

@@ -152,5 +152,26 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <!-- Panel Developer: konfigurasi VIP & SVIP -->
+        <activity
+            android:name=".VipConfigActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Panel Developer: kirim notifikasi push -->
+        <activity
+            android:name=".NotifAdminActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- FCM: terima push notification -->
+        <service
+            android:name=".HayuFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
