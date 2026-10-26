@@ -72,4 +72,7 @@ dependencies {
 
     // SVGA player (animasi frame, car, gift) - dari JitPack
     implementation("com.github.yyued:SVGAPlayer-Android:2.6.1")
+
+    // Agora RTC SDK — voice room realtime
+    implementation("io.agora.rtc:full-sdk:4.3.2")
 }

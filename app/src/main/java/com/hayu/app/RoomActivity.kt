@@ -43,6 +43,8 @@ import com.hayu.app.adapter.RoomMessageAdapter
 import com.hayu.app.model.RoomMessage
 import com.hayu.app.util.SessionManager
 import com.opensource.svgaplayer.SVGAImageView
+import com.hayu.app.AgoraVoiceEngine
+import com.hayu.app.AgoraVoiceCallback
 
 // struktur slot mic di Firestore:
 // rooms/{roomId}/micSlots/{slotIndex}
@@ -112,6 +114,7 @@ class RoomActivity : AppCompatActivity() {
     private lateinit var btnGameView: TextView
     private var micSlotListener: ListenerRegistration? = null
     private var redPacketManager: RedPacketManager? = null
+    private var agoraEngine: AgoraVoiceEngine? = null
 
     private val MIC_SLOT_COUNT = 5
     private val REQ_RECORD_AUDIO = 1001
@@ -124,6 +127,20 @@ class RoomActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         session = SessionManager(this)
         roomId = intent.getStringExtra("roomId")
+
+        // Inisialisasi Agora voice engine
+        agoraEngine = AgoraVoiceEngine(this, object : AgoraVoiceCallback {
+            override fun onRemoteUserJoined(uid: Int) {
+                // User lain join channel — tidak perlu action khusus, auto play suara mereka
+            }
+            override fun onRemoteUserLeft(uid: Int) {
+                // User lain keluar channel
+            }
+            override fun onError(code: Int, message: String) {
+                Toast.makeText(this@RoomActivity, "⚠️ Voice error: $message", Toast.LENGTH_SHORT).show()
+            }
+        })
+        agoraEngine?.init()
 
         if (roomId.isNullOrEmpty()) {
             Toast.makeText(this, "Room tidak ditemukan", Toast.LENGTH_SHORT).show()
@@ -192,8 +209,11 @@ class RoomActivity : AppCompatActivity() {
                     .addOnSuccessListener { userDoc ->
                         myNickname = userDoc.getString("nickname") ?: "Pengguna HAYU"
                         myPhotoUrl = userDoc.getString("photoUrl") ?: ""
-                        myFrameUrl = VipAssets.frameUrl(userDoc)
+                        myFrameUrl = userDoc.getString("equippedFrameUrl") ?: ""
                         setupMicSlots()
+                        // Bergabung ke channel Agora sebagai audience (hanya dengarkan)
+                        // Akan upgrade jadi broadcaster saat naik mic
+                        agoraEngine?.joinChannel(roomId!!, asPublisher = false)
                         listenMicSlots()
                         listenGiftPoints()
                         updateAllMicSeats()
@@ -216,6 +236,7 @@ class RoomActivity : AppCompatActivity() {
         btnVolume.setOnClickListener {
             soundOn = !soundOn
             updateSpeakerIcon()
+            agoraEngine?.setSpeakerEnabled(soundOn)  // sinkronkan dengan Agora
             Toast.makeText(
                 this,
                 if (soundOn) "🔊 Suara room dinyalakan" else "🔇 Suara room dimatikan — kamu tidak mendengar orang lain",
@@ -369,7 +390,7 @@ class RoomActivity : AppCompatActivity() {
                     slotIndex, uid,
                     u.getString("nickname") ?: myNickname,
                     u.getString("photoUrl") ?: "",
-                    VipAssets.frameUrl(u)
+                    u.getString("equippedFrameUrl") ?: ""
                 )
             }
             .addOnFailureListener { writeMicSlot(slotIndex, uid, myNickname, "", "") }
@@ -388,8 +409,10 @@ class RoomActivity : AppCompatActivity() {
             .set(slotData)
             .addOnSuccessListener {
                 Toast.makeText(this, "🎙️ Kamu on mic di slot ${slotIndex + 1}!", Toast.LENGTH_SHORT).show()
-                // broadcast ke chat
                 sendSystemMessage("🎙️ $myNickname naik ke slot mic ${slotIndex + 1}")
+                // Upgrade ke broadcaster → mic lokal mulai dikirim ke semua orang
+                agoraEngine?.updateRole(asPublisher = true)
+                agoraEngine?.setMicMuted(false)
             }
     }
 
@@ -438,6 +461,11 @@ class RoomActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 val msg = if (mute) "🔇 Kamu mute" else "🔊 Kamu unmute"
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                // Sinkronkan mute Agora (hanya untuk slot milik sendiri)
+                val myUid = auth.currentUser?.uid ?: return@addOnSuccessListener
+                if (micSlots[slotIndex].uid == myUid) {
+                    agoraEngine?.setMicMuted(mute)
+                }
             }
     }
 
@@ -448,6 +476,9 @@ class RoomActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 Toast.makeText(this, "⬇️ Kamu turun dari mic", Toast.LENGTH_SHORT).show()
                 sendSystemMessage("⬇️ $myNickname turun dari slot mic ${slotIndex + 1}")
+                // Downgrade ke audience → mic lokal berhenti dikirim
+                agoraEngine?.setMicMuted(true)
+                agoraEngine?.updateRole(asPublisher = false)
             }
     }
 
@@ -699,7 +730,7 @@ class RoomActivity : AppCompatActivity() {
         if (uid.isEmpty() || !liveFramePending.add(uid)) return
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                liveFrames[uid] = VipAssets.frameUrl(doc)
+                liveFrames[uid] = doc.getString("equippedFrameUrl") ?: ""
                 for (i in 0 until MIC_SLOT_COUNT) if (micSlots[i].uid == uid) updateMicSlotView(i)
             }
             .addOnFailureListener {
@@ -1031,6 +1062,7 @@ class RoomActivity : AppCompatActivity() {
         micFrameViews.forEach { it?.stopAnimation() }
         redPacketManager?.stop()
         leaveMicIfOn()
+        agoraEngine?.release()  // lepas Agora engine
         updateLastActive()
     }
 
@@ -1062,11 +1094,10 @@ class RoomActivity : AppCompatActivity() {
 
     /** Kalau punya mobil terpasang: putar animasinya & umumkan ke semua orang di room. */
     private fun announceCarEntrance(userDoc: DocumentSnapshot) {
-        val carUrl = userDoc.getString("equippedCarUrl") ?: ""
-        val url = if (carUrl.isNotEmpty()) carUrl else VipAssets.entryUrl(userDoc)
+        val url = userDoc.getString("equippedCarUrl") ?: ""
         if (url.isEmpty()) return
         val uid = auth.currentUser?.uid ?: return
-        val carName = if (carUrl.isNotEmpty()) (userDoc.getString("equippedCarName") ?: "kendaraan") else VipAssets.tierName(userDoc)
+        val carName = userDoc.getString("equippedCarName") ?: "kendaraan"
         SvgaOverlay.show(this, url)
         val msg = hashMapOf<String, Any>(
             "senderUid"  to uid,
