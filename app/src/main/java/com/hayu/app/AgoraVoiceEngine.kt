@@ -6,7 +6,11 @@ package com.hayu.app
 
 import android.content.Context
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import io.agora.rtc2.ChannelMediaOptions
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import io.agora.rtc2.Constants
 import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcEngine
@@ -15,6 +19,8 @@ import io.agora.rtc2.RtcEngineConfig
 private const val TAG = "AgoraVoiceEngine"
 
 // App ID Agora — jangan di-hardcode di production, pakai BuildConfig / server token
+private const val TOKEN_URL = "https://hayu-android-token-server.vercel.app/api/token"
+
 private const val AGORA_APP_ID = "02b1a0caeb97457c9a39c51e9d9e416d"
 
 /**
@@ -37,6 +43,11 @@ class AgoraVoiceEngine(
 
     private var engine: RtcEngine? = null
     private var joined = false
+    private var joining = false
+    private var currentChannel = ""
+    private var wantPublisher = false
+    private val http = OkHttpClient()
+    private val main = android.os.Handler(android.os.Looper.getMainLooper())
 
     // ── Inisialisasi ────────────────────────────────────────────────────────
 
@@ -74,31 +85,85 @@ class AgoraVoiceEngine(
      * Di production: generate token dari server dan isi di sini.
      */
     fun joinChannel(channelId: String, asPublisher: Boolean) {
-        val eng = engine ?: return
-        if (joined) return
+        if (engine == null || joined || joining) return
+        joining = true
+        currentChannel = channelId
+        wantPublisher = asPublisher
 
-        val options = ChannelMediaOptions().apply {
-            clientRoleType = if (asPublisher)
-                Constants.CLIENT_ROLE_BROADCASTER
-            else
-                Constants.CLIENT_ROLE_AUDIENCE
-            autoSubscribeAudio = true
-            publishMicrophoneTrack = asPublisher
-        }
-
-        // Token kosong = mode testing (tidak perlu token server).
-        // Ganti dengan token asli dari servermu sebelum publish ke Play Store.
-        val ret = eng.joinChannel("", channelId, 0, options)
-        if (ret != 0) {
-            Log.e(TAG, "joinChannel gagal: $ret")
-            callback.onError(ret, "Gagal join channel Agora (kode $ret)")
-        } else {
-            joined = true
-            Log.d(TAG, "Bergabung ke channel: $channelId (publisher=$asPublisher)")
+        fetchToken(channelId) { token, err ->
+            joining = false
+            val eng = engine
+            if (eng == null || currentChannel != channelId) return@fetchToken
+            if (token == null) {
+                callback.onError(-2, "Gagal ambil token suara: $err")
+                return@fetchToken
+            }
+            val options = ChannelMediaOptions().apply {
+                clientRoleType = if (wantPublisher)
+                    Constants.CLIENT_ROLE_BROADCASTER
+                else
+                    Constants.CLIENT_ROLE_AUDIENCE
+                autoSubscribeAudio = true
+                publishMicrophoneTrack = wantPublisher
+            }
+            val ret = eng.joinChannel(token, channelId, 0, options)
+            if (ret != 0) {
+                Log.e(TAG, "joinChannel gagal: $ret")
+                callback.onError(ret, "Gagal join channel Agora (kode $ret)")
+            } else {
+                joined = true
+                Log.d(TAG, "Bergabung ke channel: $channelId (publisher=$wantPublisher)")
+            }
         }
     }
 
+    private fun fetchToken(channel: String, onResult: (String?, String?) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            main.post { onResult(null, "belum login") }
+            return
+        }
+        user.getIdToken(false)
+            .addOnSuccessListener { r ->
+                val req = Request.Builder()
+                    .url("$TOKEN_URL?channel=$channel")
+                    .header("Authorization", "Bearer ${r.token}")
+                    .build()
+                http.newCall(req).enqueue(object : okhttp3.Callback {
+                    override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
+                        main.post { onResult(null, e.message ?: "jaringan bermasalah") }
+                    }
+
+                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                        response.use { resp ->
+                            val body = resp.body?.string().orEmpty()
+                            val ok = resp.isSuccessful
+                            val code = resp.code
+                            val token = try {
+                                JSONObject(body).optString("token", "")
+                            } catch (e: Exception) {
+                                ""
+                            }
+                            main.post {
+                                if (ok && token.isNotEmpty()) onResult(token, null)
+                                else onResult(null, "server $code")
+                            }
+                        }
+                    }
+                })
+            }
+            .addOnFailureListener { main.post { onResult(null, it.message ?: "gagal login") } }
+    }
+
+    private fun renewToken() {
+        val ch = currentChannel
+        if (ch.isEmpty()) return
+        fetchToken(ch) { t, _ -> if (t != null) engine?.renewToken(t) }
+    }
+
     fun leaveChannel() {
+        currentChannel = ""
+        joining = false
         if (!joined) return
         engine?.leaveChannel()
         joined = false
@@ -124,6 +189,8 @@ class AgoraVoiceEngine(
 
     /** Ubah peran: audience → broadcaster (naik mic) atau sebaliknya (turun mic) */
     fun updateRole(asPublisher: Boolean) {
+        wantPublisher = asPublisher
+        if (!joined) return
         val options = ChannelMediaOptions().apply {
             clientRoleType = if (asPublisher)
                 Constants.CLIENT_ROLE_BROADCASTER
@@ -172,6 +239,14 @@ class AgoraVoiceEngine(
             (context as? android.app.Activity)?.runOnUiThread {
                 callback.onError(err, "Agora error kode $err")
             }
+        }
+
+        override fun onTokenPrivilegeWillExpire(token: String?) {
+            renewToken()
+        }
+
+        override fun onRequestToken() {
+            renewToken()
         }
 
         override fun onLeaveChannel(stats: RtcStats) {
