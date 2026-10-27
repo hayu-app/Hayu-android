@@ -90,6 +90,10 @@ class SvipActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        VipActivity.loadConfig { loadSvipData() }
+    }
+
+    private fun loadSvipData() {
         val uid = auth.currentUser?.uid ?: return finish()
         db.collection("users").document(uid).get().addOnSuccessListener { d ->
             points = d.getLong("svipPoints") ?: 0L

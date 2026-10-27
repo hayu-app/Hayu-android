@@ -24,6 +24,9 @@ class HayuApp : Application(), ImageLoaderFactory {
         // Alamat hosting aset VIP/SVIP (bisa diganti lewat Firestore app_config/assets.baseUrl)
         VipAssets.refreshConfig()
 
+        // Harga VIP & poin SVIP dari panel Developer
+        VipActivity.loadConfig()
+
         // Cleanup room lama saat app dibuka
         cleanupRooms()
     }

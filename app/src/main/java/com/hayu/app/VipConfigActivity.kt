@@ -23,8 +23,8 @@ class VipConfigActivity : AppCompatActivity() {
     private val db by lazy { FirebaseFirestore.getInstance() }
     private val configRef get() = db.collection("app_config").document("vip_config")
 
-    private val vipFields by lazy { Array(7) { EditText(this) } }
-    private val svipFields by lazy { Array(7) { EditText(this) } }
+    private val vipFields by lazy { Array(8) { EditText(this) } }
+    private val svipFields by lazy { Array(8) { EditText(this) } }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
@@ -65,14 +65,14 @@ class VipConfigActivity : AppCompatActivity() {
         // ── Harga VIP ─────────────────────────────────────────────────────────
         container.addView(sectionHeader("💎 Harga VIP per Level (koin)"))
         container.addView(hint("Berapa koin yang harus dibayar user untuk naik ke level VIP tsb."))
-        for (i in 0..6) {
+        for (i in 0..7) {
             container.addView(fieldRow("VIP ${i + 1}", vipFields[i]))
         }
 
         // ── Threshold SVIP ────────────────────────────────────────────────────
         container.addView(sectionHeader("👑 Poin Top-Up untuk SVIP (poin)"))
         container.addView(hint("Berapa total poin top-up yang dibutuhkan untuk mencapai level SVIP tsb."))
-        for (i in 0..6) {
+        for (i in 0..7) {
             container.addView(fieldRow("SVIP ${i + 1}", svipFields[i]))
         }
 
@@ -108,13 +108,13 @@ class VipConfigActivity : AppCompatActivity() {
             val points = (doc.get("svip_points") as? List<Long>)?.map { it.toInt() }
                 ?: VipActivity.SVIP_POINTS.toList()
 
-            for (i in 0..6) {
-                vipFields[i].setText(prices.getOrNull(i)?.toString() ?: "")
-                svipFields[i].setText(points.getOrNull(i)?.toString() ?: "")
+            for (i in 0..7) {
+                vipFields[i].setText((prices.getOrNull(i) ?: VipActivity.VIP_PRICES[i]).toString())
+                svipFields[i].setText((points.getOrNull(i) ?: VipActivity.SVIP_POINTS[i]).toString())
             }
         }.addOnFailureListener {
             // Isi default kalau gagal load
-            for (i in 0..6) {
+            for (i in 0..7) {
                 vipFields[i].setText(VipActivity.VIP_PRICES[i].toString())
                 svipFields[i].setText(VipActivity.SVIP_POINTS[i].toString())
             }
@@ -126,7 +126,7 @@ class VipConfigActivity : AppCompatActivity() {
         val vipPrices = mutableListOf<Long>()
         val svipPoints = mutableListOf<Long>()
 
-        for (i in 0..6) {
+        for (i in 0..7) {
             val v = vipFields[i].text.toString().trim().toLongOrNull()
             val s = svipFields[i].text.toString().trim().toLongOrNull()
             if (v == null || v <= 0) { toast("Harga VIP ${i + 1} tidak valid"); return }
@@ -142,6 +142,7 @@ class VipConfigActivity : AppCompatActivity() {
             "svip_points" to svipPoints,
             "updatedAt"   to System.currentTimeMillis()
         )).addOnSuccessListener {
+            VipActivity.loadConfig()
             toast("✅ Konfigurasi VIP & SVIP tersimpan!")
         }.addOnFailureListener {
             toast("❌ Gagal simpan: ${it.message}")

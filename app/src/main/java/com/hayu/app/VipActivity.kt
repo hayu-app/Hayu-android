@@ -17,8 +17,25 @@ import com.opensource.svgaplayer.SVGAImageView
 class VipActivity : AppCompatActivity() {
 
     companion object {
-        val VIP_PRICES = intArrayOf(100, 300, 600, 1000, 1500, 2200, 3000, 4500)
-        val SVIP_POINTS = intArrayOf(1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000)
+        private val DEFAULT_VIP_PRICES = intArrayOf(100, 300, 600, 1000, 1500, 2200, 3000, 4500)
+        private val DEFAULT_SVIP_POINTS = intArrayOf(1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000)
+
+        // Nilai yang dipakai aplikasi. Bawaan di atas, lalu ditimpa dari Firestore (panel Developer).
+        @Volatile var VIP_PRICES: IntArray = DEFAULT_VIP_PRICES.copyOf()
+        @Volatile var SVIP_POINTS: IntArray = DEFAULT_SVIP_POINTS.copyOf()
+
+        /** Ambil harga VIP & poin SVIP dari Firestore app_config/vip_config (diatur di panel Developer). */
+        fun loadConfig(onDone: (() -> Unit)? = null) {
+            FirebaseFirestore.getInstance().collection("app_config").document("vip_config").get()
+                .addOnSuccessListener { d ->
+                    val p = (d.get("vip_prices") as? List<*>)?.map { (it as? Number)?.toInt() }
+                    val s = (d.get("svip_points") as? List<*>)?.map { (it as? Number)?.toInt() }
+                    VIP_PRICES = IntArray(DEFAULT_VIP_PRICES.size) { i -> p?.getOrNull(i) ?: DEFAULT_VIP_PRICES[i] }
+                    SVIP_POINTS = IntArray(DEFAULT_SVIP_POINTS.size) { i -> s?.getOrNull(i) ?: DEFAULT_SVIP_POINTS[i] }
+                    onDone?.invoke()
+                }
+                .addOnFailureListener { onDone?.invoke() }
+        }
 
         fun svipLevel(points: Long): Int {
             var lv = 0
@@ -136,7 +153,7 @@ class VipActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        reload()
+        loadConfig { reload() }
     }
 
     private fun reload() {
