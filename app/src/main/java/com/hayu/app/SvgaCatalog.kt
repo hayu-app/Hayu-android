@@ -10,6 +10,7 @@ object SvgaCatalog {
     const val GIFT = "gift"
     const val FRAME = "frame"
     const val CAR = "car"
+    const val ENTRY = "entry"
     const val OTHER = "other"
 
     /** Tambah jenis baru cukup di sini. */
@@ -17,6 +18,7 @@ object SvgaCatalog {
         GIFT to "🎁 Gift",
         FRAME to "🖼️ Frame",
         CAR to "🚗 Car",
+        ENTRY to "🏅 Efek Masuk",
         OTHER to "✨ Lainnya"
     )
 

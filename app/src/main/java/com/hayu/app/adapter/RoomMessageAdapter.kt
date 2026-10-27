@@ -29,7 +29,7 @@ class RoomMessageAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private companion object {
         const val T_SYSTEM = 0
         const val T_USER = 1
-        val SPECIAL_NAMES = setOf("🔔 Sistem", "🎁 GIFT", "🎲 DADU", "🚗 MASUK", "🧧 RED PACKET")
+        val SPECIAL_NAMES = setOf("🔔 Sistem", "🎁 GIFT", "🎲 DADU", "🚗 MASUK", "✨ MASUK", "🧧 RED PACKET")
     }
 
     private val messages = mutableListOf<RoomMessage>()

@@ -37,6 +37,7 @@ class TokoActivity : AppCompatActivity() {
     private val tabs = listOf(
         ShopUtil.Tab("car", "🚗", "Kendaraan"),
         ShopUtil.Tab("frame", "🖼️", "Bingkai"),
+        ShopUtil.Tab("entry", "🏅", "Efek Masuk"),
         ShopUtil.Tab("title", "🏷️", "Gelar"),
         ShopUtil.Tab("room", "🎨", "Tema Ruangan"),
         ShopUtil.Tab("bond", "💞", "Hubungan")
@@ -146,7 +147,7 @@ class TokoActivity : AppCompatActivity() {
 
         when (tab) {
             "title" -> renderTitles(u)
-            "car", "frame" -> renderAssets(u)
+            "car", "frame", "entry" -> renderAssets(u)
             else -> content.addView(
                 ShopUtil.emptyState(this, "Segera hadir ✨\nKategori ini belum tersedia di toko.", null) {}
             )
@@ -196,7 +197,7 @@ class TokoActivity : AppCompatActivity() {
 
         val stage = FrameLayout(this)
         val fallback = TextView(this)
-        fallback.text = a.emoji.ifBlank { if (a.type == SvgaCatalog.FRAME) "🖼️" else "🚗" }
+        fallback.text = a.emoji.ifBlank { when (a.type) { SvgaCatalog.FRAME -> "🖼️"; SvgaCatalog.ENTRY -> "🏅"; else -> "🚗" } }
         fallback.textSize = 48f
         fallback.gravity = Gravity.CENTER
         stage.addView(

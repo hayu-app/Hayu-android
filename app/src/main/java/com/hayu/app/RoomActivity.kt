@@ -62,9 +62,7 @@ data class MicSlot(
     val photoUrl: String = "",
     val frameUrl: String = "",
     val emoji: String = "",
-    val emojiAt: Long = 0L,
-    val lastSeen: Long = 0L,
-    val agoraUid: Long = 0L
+    val emojiAt: Long = 0L
 )
 
 class RoomActivity : AppCompatActivity() {
@@ -121,30 +119,6 @@ class RoomActivity : AppCompatActivity() {
     private val MIC_SLOT_COUNT = 5
     private val REQ_RECORD_AUDIO = 1001
 
-    companion object {
-        // Room yang sedang hidup (termasuk yang di-minimize). Hanya satu room aktif sekaligus.
-        private var activeInstance: RoomActivity? = null
-        private const val HEARTBEAT_MS = 30_000L           // detak kursi mic (hanya yang sedang on mic)
-        private const val SLOT_STALE_MS = 90_000L          // kursi dianggap "hantu" kalau detaknya berhenti segini lama
-        private const val MEMBER_BEAT_EVERY = 10           // detak anggota tiap 10 detak kursi (= 5 menit) supaya hemat kuota
-        private const val MEMBER_ALIVE_MS = 12 * 60_000L   // anggota dihitung ada kalau detaknya masih baru
-        private const val MEMBER_DROP_MS = 20 * 60_000L    // dokumen anggota dihapus kalau detaknya berhenti segini lama
-        private const val SPEAK_THRESHOLD = 30
-    }
-
-    private var iAmPublishing = false
-    private val myAgoraUid: Int by lazy { AgoraVoiceEngine.uidFor(auth.currentUser?.uid ?: "") }
-    private val presenceHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var presenceRunning = false
-    private val micSeenValue = LongArray(5) { -1L }     // lastSeen terakhir per kursi
-    private val micSeenAt = LongArray(5) { 0L }         // kapan (jam HP ini) lastSeen itu terlihat berubah
-    private var membersListener: ListenerRegistration? = null
-    private val memberSeenValue = HashMap<String, Long>()
-    private val memberSeenAt = HashMap<String, Long>()
-    private var lastWrittenCount = -1
-    private var tickCount = 0
-    private val micSpeakRings = arrayOfNulls<android.view.View>(5)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_room)
@@ -153,11 +127,6 @@ class RoomActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         session = SessionManager(this)
         roomId = intent.getStringExtra("roomId")
-
-        // Kalau ada room lain yang masih di-minimize, tutup dulu (hanya satu mesin suara)
-        val prev = activeInstance
-        if (prev != null && prev !== this) prev.shutdownForReplace()
-        activeInstance = this
 
         // Inisialisasi Agora voice engine
         agoraEngine = AgoraVoiceEngine(this, object : AgoraVoiceCallback {
@@ -168,10 +137,7 @@ class RoomActivity : AppCompatActivity() {
                 // User lain keluar channel
             }
             override fun onError(code: Int, message: String) {
-                Toast.makeText(this@RoomActivity, "⚠️ Voice error: $message", Toast.LENGTH_LONG).show()
-            }
-            override fun onVolume(volumes: Map<Int, Int>) {
-                showSpeaking(volumes)
+                Toast.makeText(this@RoomActivity, "⚠️ Voice error: $message", Toast.LENGTH_SHORT).show()
             }
         })
         agoraEngine?.init()
@@ -243,17 +209,15 @@ class RoomActivity : AppCompatActivity() {
                     .addOnSuccessListener { userDoc ->
                         myNickname = userDoc.getString("nickname") ?: "Pengguna HAYU"
                         myPhotoUrl = userDoc.getString("photoUrl") ?: ""
-                        myFrameUrl = userDoc.getString("equippedFrameUrl") ?: ""
+                        myFrameUrl = VipAssets.frameUrl(userDoc)
                         setupMicSlots()
                         // Bergabung ke channel Agora sebagai audience (hanya dengarkan)
                         // Akan upgrade jadi broadcaster saat naik mic
-                        agoraEngine?.joinChannel(roomId!!, asPublisher = false, uid = myAgoraUid)
+                        agoraEngine?.joinChannel(roomId!!, asPublisher = false)
                         listenMicSlots()
                         listenGiftPoints()
                         updateAllMicSeats()
-                        announceCarEntrance(userDoc)
-                        startPresence()
-                        ensureVoiceService()
+                        announceEntrance(userDoc)
                     }
             }
             .addOnFailureListener {
@@ -362,9 +326,7 @@ class RoomActivity : AppCompatActivity() {
                     "nickname" to (src.getString("nickname") ?: myNickname),
                     "isMuted" to (src.getBoolean("isMuted") ?: false),
                     "photoUrl" to (src.getString("photoUrl") ?: ""),
-                    "frameUrl" to (src.getString("frameUrl") ?: ""),
-                    "agoraUid" to myAgoraUid.toLong(),
-                    "lastSeen" to System.currentTimeMillis()
+                    "frameUrl" to (src.getString("frameUrl") ?: "")
                 )
             )
             tx.set(fromRef, emptySlotData())
@@ -428,42 +390,30 @@ class RoomActivity : AppCompatActivity() {
                     slotIndex, uid,
                     u.getString("nickname") ?: myNickname,
                     u.getString("photoUrl") ?: "",
-                    u.getString("equippedFrameUrl") ?: ""
+                    VipAssets.frameUrl(u)
                 )
             }
             .addOnFailureListener { writeMicSlot(slotIndex, uid, myNickname, "", "") }
     }
 
     private fun writeMicSlot(slotIndex: Int, uid: String, nick: String, photo: String, frame: String) {
-        val ref = db.collection("rooms").document(roomId!!)
-            .collection("micSlots").document(slotIndex.toString())
         val slotData = hashMapOf<String, Any>(
             "uid"      to uid,
             "nickname" to nick,
             "isMuted"  to false,
             "photoUrl" to photo,
-            "frameUrl" to frame,
-            "agoraUid" to myAgoraUid.toLong(),
-            "lastSeen" to System.currentTimeMillis()
+            "frameUrl" to frame
         )
-        // Transaksi: kalau dua orang menekan kursi kosong yang sama, hanya satu yang berhasil
-        db.runTransaction { tx ->
-            val cur = tx.get(ref)
-            val curUid = cur.getString("uid") ?: ""
-            if (curUid.isNotEmpty() && curUid != uid) throw IllegalStateException("Kursi sudah diambil orang lain")
-            tx.set(ref, slotData)
-            Unit
-        }.addOnSuccessListener {
-            Toast.makeText(this, "🎙️ Kamu on mic di slot ${slotIndex + 1}!", Toast.LENGTH_SHORT).show()
-            sendSystemMessage("🎙️ $myNickname naik ke slot mic ${slotIndex + 1}")
-            // Upgrade ke broadcaster → mic lokal mulai dikirim ke semua orang
-            iAmPublishing = true
-            agoraEngine?.updateRole(asPublisher = true)
-            agoraEngine?.setMicMuted(false)
-            ensureVoiceService()
-        }.addOnFailureListener {
-            Toast.makeText(this, "Gagal naik mic: ${it.message}", Toast.LENGTH_SHORT).show()
-        }
+        db.collection("rooms").document(roomId!!)
+            .collection("micSlots").document(slotIndex.toString())
+            .set(slotData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "🎙️ Kamu on mic di slot ${slotIndex + 1}!", Toast.LENGTH_SHORT).show()
+                sendSystemMessage("🎙️ $myNickname naik ke slot mic ${slotIndex + 1}")
+                // Upgrade ke broadcaster → mic lokal mulai dikirim ke semua orang
+                agoraEngine?.updateRole(asPublisher = true)
+                agoraEngine?.setMicMuted(false)
+            }
     }
 
     private fun showMySlotOptions(slotIndex: Int) {
@@ -527,7 +477,6 @@ class RoomActivity : AppCompatActivity() {
                 Toast.makeText(this, "⬇️ Kamu turun dari mic", Toast.LENGTH_SHORT).show()
                 sendSystemMessage("⬇️ $myNickname turun dari slot mic ${slotIndex + 1}")
                 // Downgrade ke audience → mic lokal berhenti dikirim
-                iAmPublishing = false
                 agoraEngine?.setMicMuted(true)
                 agoraEngine?.updateRole(asPublisher = false)
             }
@@ -579,11 +528,8 @@ class RoomActivity : AppCompatActivity() {
                         photoUrl = doc.getString("photoUrl") ?: "",
                         frameUrl = doc.getString("frameUrl") ?: "",
                         emoji    = doc.getString("emoji") ?: "",
-                        emojiAt  = doc.getLong("emojiAt") ?: 0L,
-                        lastSeen = doc.getLong("lastSeen") ?: 0L,
-                        agoraUid = doc.getLong("agoraUid") ?: 0L
+                        emojiAt  = doc.getLong("emojiAt") ?: 0L
                     )
-                    observeMicSeen(i, ns)
                     micSlots[i] = ns
                     // reaksi emoji baru dari orang yang sedang on mic (snapshot pertama diabaikan)
                     if (!micFirstSnapshot && ns.uid.isNotEmpty() && ns.uid == old.uid &&
@@ -593,7 +539,6 @@ class RoomActivity : AppCompatActivity() {
                     }
                 }
                 micFirstSnapshot = false
-                syncAgoraWithSlots()
                 updateAllMicSeats()
                 for ((i, e) in bubbles) showEmojiBubble(i, e)
             }
@@ -664,19 +609,6 @@ class RoomActivity : AppCompatActivity() {
             avatar.isFocusable = false
             avatar.visibility = android.view.View.GONE
             wrap.addView(avatar, FrameLayout.LayoutParams(dpi(54), dpi(54), Gravity.CENTER))
-
-            // cincin hijau yang berdenyut saat orang di kursi ini sedang bicara
-            val ring = android.view.View(this)
-            ring.background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.TRANSPARENT)
-                setStroke(dpi(3), Color.parseColor("#34D399"))
-            }
-            ring.isClickable = false
-            ring.isFocusable = false
-            ring.visibility = android.view.View.GONE
-            wrap.addView(ring, FrameLayout.LayoutParams(dpi(62), dpi(62), Gravity.CENTER))
-            micSpeakRings[i] = ring
 
             val frame = SVGAImageView(this)
             frame.scaleType = ImageView.ScaleType.FIT_CENTER
@@ -805,7 +737,7 @@ class RoomActivity : AppCompatActivity() {
         if (uid.isEmpty() || !liveFramePending.add(uid)) return
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
-                liveFrames[uid] = doc.getString("equippedFrameUrl") ?: ""
+                liveFrames[uid] = VipAssets.frameUrl(doc)
                 for (i in 0 until MIC_SLOT_COUNT) if (micSlots[i].uid == uid) updateMicSlotView(i)
             }
             .addOnFailureListener {
@@ -1106,209 +1038,14 @@ class RoomActivity : AppCompatActivity() {
             }
     }
 
-    // ────────────────────────────────────────────
-    // SINKRON SUARA · PRESENCE · DETAK JANTUNG
-    // ────────────────────────────────────────────
-
-    private fun hasMicPermission() =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-
-    /** Jaga proses tetap hidup (notifikasi "kamu masih di room") supaya suara tidak putus di background. */
-    private fun ensureVoiceService() {
-        val rid = roomId ?: return
-        try {
-            VoiceService.start(this, rid, roomName, hasMicPermission())
-        } catch (e: Exception) {
-            android.util.Log.e("RoomActivity", "VoiceService gagal start", e)
-        }
-    }
-
-    /** Status Agora selalu mengikuti kursi di Firestore (kick, pindah kursi, masuk lagi). */
-    private fun syncAgoraWithSlots() {
-        val me = auth.currentUser?.uid ?: return
-        val mine = micSlots.firstOrNull { it.uid == me }
-        if (mine != null) {
-            if (!iAmPublishing) {
-                iAmPublishing = true
-                agoraEngine?.updateRole(asPublisher = true)
-                ensureVoiceService()
-            }
-            agoraEngine?.setMicMuted(mine.isMuted)
-        } else if (iAmPublishing) {
-            // kursi sudah kosong (di-kick / dibersihkan) → berhenti mengirim suara
-            iAmPublishing = false
-            agoraEngine?.setMicMuted(true)
-            agoraEngine?.updateRole(asPublisher = false)
-        }
-    }
-
-    private fun observeMicSeen(i: Int, ns: MicSlot) {
-        if (ns.uid.isEmpty()) {
-            micSeenValue[i] = -1L
-            return
-        }
-        if (ns.lastSeen != micSeenValue[i]) {
-            micSeenValue[i] = ns.lastSeen
-            micSeenAt[i] = System.currentTimeMillis()
-        }
-    }
-
-    private val presenceTick = object : Runnable {
-        override fun run() {
-            if (!presenceRunning) return
-            heartbeat()
-            sweepGhosts()
-            presenceHandler.postDelayed(this, HEARTBEAT_MS)
-        }
-    }
-
-    private fun startPresence() {
-        if (presenceRunning) return
-        val me = auth.currentUser?.uid ?: return
-        val rid = roomId ?: return
-        val members = db.collection("rooms").document(rid).collection("members")
-        members.document(me).set(
-            hashMapOf<String, Any>(
-                "uid" to me, "nickname" to myNickname, "lastSeen" to System.currentTimeMillis()
-            )
-        )
-        membersListener = members.addSnapshotListener { snap, _ ->
-            if (snap == null) return@addSnapshotListener
-            val now = System.currentTimeMillis()
-            val ids = HashSet<String>()
-            for (d in snap.documents) {
-                ids.add(d.id)
-                val ls = d.getLong("lastSeen") ?: 0L
-                if (memberSeenValue[d.id] != ls) {
-                    memberSeenValue[d.id] = ls
-                    memberSeenAt[d.id] = now
-                }
-            }
-            memberSeenValue.keys.retainAll(ids)
-            memberSeenAt.keys.retainAll(ids)
-            refreshUserCount()
-        }
-        presenceRunning = true
-        presenceHandler.postDelayed(presenceTick, HEARTBEAT_MS)
-    }
-
-    private fun stopPresence() {
-        presenceRunning = false
-        presenceHandler.removeCallbacks(presenceTick)
-        membersListener?.remove()
-        membersListener = null
-        val me = auth.currentUser?.uid ?: return
-        val rid = roomId ?: return
-        db.collection("rooms").document(rid).collection("members").document(me).delete()
-    }
-
-    private fun heartbeat() {
-        val me = auth.currentUser?.uid ?: return
-        val rid = roomId ?: return
-        val now = System.currentTimeMillis()
-        tickCount++
-        if (tickCount % MEMBER_BEAT_EVERY == 0) {
-            db.collection("rooms").document(rid).collection("members").document(me)
-                .set(
-                    hashMapOf<String, Any>("uid" to me, "nickname" to myNickname, "lastSeen" to now),
-                    com.google.firebase.firestore.SetOptions.merge()
-                )
-        }
-        val idx = micSlots.indexOfFirst { it.uid == me }
-        if (idx >= 0) {
-            db.collection("rooms").document(rid).collection("micSlots").document(idx.toString())
-                .update("lastSeen", now)
-        }
-    }
-
-    /** Bersihkan kursi "hantu" (aplikasi ditutup paksa / sinyal putus) dan anggota yang sudah hilang. */
-    private fun sweepGhosts() {
-        val me = auth.currentUser?.uid ?: return
-        val rid = roomId ?: return
-        val now = System.currentTimeMillis()
-
-        for (i in 0 until MIC_SLOT_COUNT) {
-            val s = micSlots[i]
-            if (s.uid.isEmpty() || s.uid == me || s.lastSeen == 0L) continue
-            if (micSeenValue[i] == s.lastSeen && now - micSeenAt[i] > SLOT_STALE_MS) {
-                clearGhostSlot(rid, i, s.uid, s.lastSeen)
-            }
-        }
-        for ((uid, seenAt) in memberSeenAt.entries.toList()) {
-            if (uid == me) continue
-            if (now - seenAt > MEMBER_DROP_MS) {
-                db.collection("rooms").document(rid).collection("members").document(uid).delete()
-            }
-        }
-        refreshUserCount()
-    }
-
-    private fun clearGhostSlot(rid: String, i: Int, uid: String, lastSeen: Long) {
-        val ref = db.collection("rooms").document(rid).collection("micSlots").document(i.toString())
-        db.runTransaction { tx ->
-            val cur = tx.get(ref)
-            // hanya kosongkan kalau masih orang yang sama dan detaknya memang tidak bergerak
-            if ((cur.getString("uid") ?: "") == uid && (cur.getLong("lastSeen") ?: 0L) == lastSeen) {
-                tx.set(ref, emptySlotData())
-            }
-            Unit
-        }
-    }
-
-    private fun refreshUserCount() {
-        val rid = roomId ?: return
-        val now = System.currentTimeMillis()
-        val n = memberSeenAt.count { now - it.value <= MEMBER_ALIVE_MS }.coerceAtLeast(1)
-        findViewById<TextView>(R.id.tv_room_users)?.text = "👤 $n"
-        if (n != lastWrittenCount) {
-            lastWrittenCount = n
-            db.collection("rooms").document(rid).update("currentUsers", n)
-        }
-    }
-
-    /** Volume dari Agora → cincin berdenyut di kursi yang sedang bicara. */
-    private fun showSpeaking(volumes: Map<Int, Int>) {
-        val me = auth.currentUser?.uid ?: return
-        for (i in 0 until MIC_SLOT_COUNT) {
-            val s = micSlots[i]
-            if (s.uid.isEmpty() || s.isMuted) continue
-            val vol = if (s.uid == me) (volumes[0] ?: 0) else (volumes[s.agoraUid.toInt()] ?: 0)
-            if (vol >= SPEAK_THRESHOLD) pulseRing(i)
-        }
-    }
-
-    private fun pulseRing(i: Int) {
-        val ring = micSpeakRings[i] ?: return
-        ring.animate().cancel()
-        ring.visibility = android.view.View.VISIBLE
-        ring.alpha = 0.9f
-        ring.scaleX = 1f
-        ring.scaleY = 1f
-        ring.animate().scaleX(1.22f).scaleY(1.22f).alpha(0f).setDuration(450).start()
-    }
-
-    /** Dipanggil saat room lain dibuka: tutup room ini beserta suaranya. */
-    private fun shutdownForReplace() {
-        stopPresence()
-        leaveMicIfOn()
-        agoraEngine?.release()
-        agoraEngine = null
-        finish()
-    }
-
     private fun showLeaveDialog() {
         val options = arrayOf("🔽  Minimize", "🚪  Keluar Room")
         AlertDialog.Builder(this)
             .setTitle("Keluar dari Room?")
             .setItems(options) { _, which ->
                 if (which == 0) {
-                    Toast.makeText(this, "Room di-minimize — suara tetap jalan 🎧", Toast.LENGTH_SHORT).show()
-                    ensureVoiceService()
-                    // Room tetap hidup di belakang; layar utama dibawa ke depan
-                    startActivity(
-                        android.content.Intent(this, MainActivity::class.java)
-                            .addFlags(android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                    )
+                    Toast.makeText(this, "Room di-minimize.", Toast.LENGTH_SHORT).show()
+                    finish()
                 } else {
                     leaveMicIfOn()
                     session.clearActiveRoom()
@@ -1331,14 +1068,8 @@ class RoomActivity : AppCompatActivity() {
         giftPointsListener?.remove()
         micFrameViews.forEach { it?.stopAnimation() }
         redPacketManager?.stop()
-        stopPresence()
         leaveMicIfOn()
         agoraEngine?.release()  // lepas Agora engine
-        agoraEngine = null
-        if (activeInstance === this) {
-            activeInstance = null
-            VoiceService.stop(this)
-        }
         updateLastActive()
     }
 
@@ -1364,21 +1095,35 @@ class RoomActivity : AppCompatActivity() {
             val url = doc.getString("svgaUrl") ?: continue
             if (doc.getString("senderUid") == me) continue
             if (now - (doc.getLong("timestamp") ?: 0L) > 15_000L) continue
-            SvgaOverlay.show(this, url)
+            SvgaOverlay.enqueue(this, url)
         }
     }
 
-    /** Kalau punya mobil terpasang: putar animasinya & umumkan ke semua orang di room. */
-    private fun announceCarEntrance(userDoc: DocumentSnapshot) {
-        val url = userDoc.getString("equippedCarUrl") ?: ""
-        if (url.isEmpty()) return
+    /**
+     * Efek masuk (yang dipasang, atau bawaan SVIP) lalu kendaraan: diputar berurutan
+     * di layar sendiri dan diumumkan ke semua orang di room.
+     */
+    private fun announceEntrance(userDoc: DocumentSnapshot) {
         val uid = auth.currentUser?.uid ?: return
+        val entryUrl = (userDoc.getString("equippedEntryUrl") ?: "").ifEmpty { VipAssets.entryUrl(userDoc) }
+        val entryName = (userDoc.getString("equippedEntryName") ?: "").ifEmpty { VipAssets.tierName(userDoc) }
+        val carUrl = userDoc.getString("equippedCarUrl") ?: ""
         val carName = userDoc.getString("equippedCarName") ?: "kendaraan"
-        SvgaOverlay.show(this, url)
+
+        if (entryUrl.isNotEmpty()) {
+            announceEffect(uid, entryUrl, "✨ MASUK", "$myNickname masuk dengan efek ${entryName.ifEmpty { "spesial" }}")
+        }
+        if (carUrl.isNotEmpty()) {
+            announceEffect(uid, carUrl, "🚗 MASUK", "$myNickname masuk dengan $carName")
+        }
+    }
+
+    private fun announceEffect(uid: String, url: String, label: String, text: String) {
+        SvgaOverlay.enqueue(this, url)
         val msg = hashMapOf<String, Any>(
             "senderUid"  to uid,
-            "senderName" to "🚗 MASUK",
-            "text"       to "$myNickname masuk dengan $carName",
+            "senderName" to label,
+            "text"       to text,
             "timestamp"  to System.currentTimeMillis(),
             "svgaUrl"    to url
         )

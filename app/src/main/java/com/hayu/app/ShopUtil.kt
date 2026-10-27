@@ -35,12 +35,14 @@ object ShopUtil {
     /** Kategori yang sudah punya data/fungsi: key = jenis aset SVGA, atau "title" untuk gelar. */
     fun svgaTypeOf(tabKey: String): String? = when (tabKey) {
         "car" -> SvgaCatalog.CAR
+        "entry" -> SvgaCatalog.ENTRY
         "frame" -> SvgaCatalog.FRAME
         else -> null
     }
 
     fun equippedField(tabKey: String): String? = when (tabKey) {
         "car" -> "equippedCar"
+        "entry" -> "equippedEntry"
         "frame" -> "equippedFrame"
         else -> null
     }
@@ -118,7 +120,7 @@ object ShopUtil {
         val expiry = expiryMap(user)
         val upd = HashMap<String, Any>()
         val cleared = HashSet<String>()
-        for (field in listOf("equippedFrame", "equippedCar")) {
+        for (field in listOf("equippedFrame", "equippedCar", "equippedEntry")) {
             val url = user.getString("${field}Url") ?: ""
             if (url.isEmpty()) continue
             val a = assets.firstOrNull { it.url == url } ?: continue

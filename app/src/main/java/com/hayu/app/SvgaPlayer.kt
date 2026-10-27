@@ -15,6 +15,18 @@ import java.io.FileInputStream
 import java.net.URL
 
 object SvgaPlayer {
+    private var lastToast = 0L
+
+    /** Pesan gagal unduh aset online (maks. 1x per 15 detik supaya tidak membanjiri layar). */
+    internal fun toastOnce(ctx: Context, msg: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastToast < 15_000L) return
+        lastToast = now
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(ctx.applicationContext, msg, android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+
     /** loops = 1 sekali putar, 0 = berulang terus. File diunduh & di-cache oleh SVGAParser. */
     fun play(
         view: SVGAImageView,
@@ -43,8 +55,15 @@ object SvgaPlayer {
             }
             val parser = SVGAParser(view.context)
             if (url.startsWith(VipAssets.PREFIX)) {
-                // aset bawaan app (VIP / SVIP) di folder assets
-                parser.decodeFromURL(URL(VipAssets.url(url.removePrefix(VipAssets.PREFIX))), completion)
+                // aset VIP / SVIP: di-host online (bukan di dalam APK)
+                val remote = VipAssets.url(url.removePrefix(VipAssets.PREFIX))
+                parser.decodeFromURL(URL(remote), object : SVGAParser.ParseCompletion {
+                    override fun onComplete(videoItem: SVGAVideoEntity) = completion.onComplete(videoItem)
+                    override fun onError() {
+                        toastOnce(view.context, "Aset efek tidak bisa diunduh:\n$remote")
+                        completion.onError()
+                    }
+                })
             } else if (SvgaStore.isStored(url)) {
                 // Aset disimpan di Firestore (potongan) -> susun jadi file cache lalu putar
                 val id = url.removePrefix(SvgaStore.PREFIX)
@@ -74,10 +93,45 @@ object SvgaPlayer {
 object SvgaOverlay {
     private const val TAG = "hayu_svga_overlay"
 
-    fun show(context: Context, url: String) {
-        val activity = context.findActivity() ?: return
-        if (activity.isFinishing || activity.isDestroyed) return
-        val root = activity.window.decorView as? ViewGroup ?: return
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val pending = java.util.ArrayDeque<Pair<Context, String>>()
+    private var busy = false
+
+    /** Antre: efek diputar satu per satu (masuk room, kendaraan, dll) supaya tidak saling memotong. */
+    fun enqueue(context: Context, url: String) {
+        pending.add(context to url)
+        if (!busy) playNext()
+    }
+
+    private fun playNext() {
+        val item = pending.poll()
+        if (item == null) {
+            busy = false
+            return
+        }
+        busy = true
+        var advanced = false
+        val advance = {
+            if (!advanced) {
+                advanced = true
+                playNext()
+            }
+        }
+        show(item.first, item.second, advance)
+        handler.postDelayed({ advance() }, 15_000L) // pengaman kalau animasi macet / terpotong
+    }
+
+    fun show(context: Context, url: String, onDone: (() -> Unit)? = null) {
+        val activity = context.findActivity()
+        if (activity == null || activity.isFinishing || activity.isDestroyed) {
+            onDone?.invoke()
+            return
+        }
+        val root = activity.window.decorView as? ViewGroup
+        if (root == null) {
+            onDone?.invoke()
+            return
+        }
 
         for (i in root.childCount - 1 downTo 0) {
             if (root.getChildAt(i).tag == TAG) root.removeViewAt(i)
@@ -94,7 +148,15 @@ object SvgaOverlay {
             )
         )
 
-        val remove = { view.post { (view.parent as? ViewGroup)?.removeView(view) }; Unit }
+        var done = false
+        val remove = {
+            view.post { (view.parent as? ViewGroup)?.removeView(view) }
+            if (!done) {
+                done = true
+                onDone?.invoke()
+            }
+            Unit
+        }
         SvgaPlayer.play(view, url, 1, onFinish = remove, onError = remove)
         view.postDelayed({ remove() }, 20_000L) // pengaman kalau animasi macet
     }
@@ -142,6 +204,6 @@ object SvgaFrame {
         }
         parent.addView(view, frameLp)
 
-        SvgaPlayer.play(view, url, 0)
+        SvgaPlayer.play(view, url, 0, onError = { SvgaPlayer.toastOnce(avatar.context, "Bingkai gagal dimuat") })
     }
 }
