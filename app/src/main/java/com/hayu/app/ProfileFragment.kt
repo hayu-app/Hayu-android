@@ -163,7 +163,7 @@ class ProfileFragment : Fragment() {
                     tvUserId.text = "ID: -"
                 }
 
-                val coins = (doc.getLong("coins") ?: 100L).toInt()
+                val coins = doc.getLong("coins") ?: 100L
                 tvCoins.text = "🪙 $coins"
 
                 val level = LevelCurve.levelForExp((doc.getLong("exp") ?: 0L).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())

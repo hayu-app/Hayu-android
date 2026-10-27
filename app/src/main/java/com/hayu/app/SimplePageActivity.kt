@@ -64,7 +64,7 @@ abstract class SimplePageActivity : AppCompatActivity() {
     }
 
     private fun show(doc: DocumentSnapshot, following: Int, followers: Int) {
-        val coins = (doc.getLong("coins") ?: 0L).toInt()
+        val coins = doc.getLong("coins") ?: 0L
         tvCoins.text = "🪙 $coins"
         container.removeAllViews()
         render(doc, following, followers)
