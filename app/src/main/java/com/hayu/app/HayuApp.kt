@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 class HayuApp : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
+        CrashReporter.install(this)
 
         FirebaseApp.initializeApp(this)
 
