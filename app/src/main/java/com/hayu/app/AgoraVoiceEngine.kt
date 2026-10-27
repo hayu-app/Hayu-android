@@ -34,12 +34,22 @@ interface AgoraVoiceCallback {
     fun onRemoteUserLeft(uid: Int)
     /** Terjadi error (misal token kedaluwarsa) */
     fun onError(code: Int, message: String)
+    /** Volume tiap pembicara (key = uid Agora, 0 = diri sendiri). Dipanggil di main thread. */
+    fun onVolume(volumes: Map<Int, Int>) {}
 }
 
 class AgoraVoiceEngine(
     private val context: Context,
     private val callback: AgoraVoiceCallback
 ) {
+
+    companion object {
+        /** uid Agora tetap & unik per akun, supaya suara bisa dipetakan ke kursi. */
+        fun uidFor(firebaseUid: String): Int {
+            val h = firebaseUid.hashCode() and 0x7FFFFFFF
+            return if (h == 0) 1 else h
+        }
+    }
 
     private var engine: RtcEngine? = null
     private var joined = false
@@ -66,6 +76,7 @@ class AgoraVoiceEngine(
                 Constants.AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO,
                 Constants.AUDIO_SCENARIO_GAME_STREAMING
             )
+            engine?.enableAudioVolumeIndication(500, 3, true)
             Log.d(TAG, "Agora engine siap")
         } catch (e: Throwable) {
             val where = e.stackTrace.firstOrNull()?.toString() ?: "?"
@@ -84,7 +95,7 @@ class AgoraVoiceEngine(
      * Untuk demo / development tanpa token server, token dikosongkan ("").
      * Di production: generate token dari server dan isi di sini.
      */
-    fun joinChannel(channelId: String, asPublisher: Boolean) {
+    fun joinChannel(channelId: String, asPublisher: Boolean, uid: Int = 0) {
         if (engine == null || joined || joining) return
         joining = true
         currentChannel = channelId
@@ -106,7 +117,7 @@ class AgoraVoiceEngine(
                 autoSubscribeAudio = true
                 publishMicrophoneTrack = wantPublisher
             }
-            val ret = eng.joinChannel(token, channelId, 0, options)
+            val ret = eng.joinChannel(token, channelId, uid, options)
             if (ret != 0) {
                 Log.e(TAG, "joinChannel gagal: $ret")
                 callback.onError(ret, "Gagal join channel Agora (kode $ret)")
@@ -239,6 +250,15 @@ class AgoraVoiceEngine(
             (context as? android.app.Activity)?.runOnUiThread {
                 callback.onError(err, "Agora error kode $err")
             }
+        }
+
+        override fun onAudioVolumeIndication(
+            speakers: Array<out IRtcEngineEventHandler.AudioVolumeInfo>?, totalVolume: Int
+        ) {
+            val list = speakers ?: return
+            val map = HashMap<Int, Int>()
+            for (s in list) map[s.uid] = s.volume
+            main.post { callback.onVolume(map) }
         }
 
         override fun onTokenPrivilegeWillExpire(token: String?) {

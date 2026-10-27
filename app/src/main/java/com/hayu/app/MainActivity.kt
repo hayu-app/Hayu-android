@@ -66,11 +66,24 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        // Ada room yang di-minimize: tombol Back menyembunyikan aplikasi (bukan membuka room di bawahnya)
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (!session.getActiveRoomId().isNullOrEmpty()) {
+                    moveTaskToBack(true)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
         floatingIcon.setOnClickListener {
             val roomId = session.getActiveRoomId()
             if (!roomId.isNullOrEmpty()) {
                 val intent = Intent(this, RoomActivity::class.java)
                 intent.putExtra("roomId", roomId)
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)  // kembali ke room yang masih hidup
                 startActivity(intent)
             }
         }
