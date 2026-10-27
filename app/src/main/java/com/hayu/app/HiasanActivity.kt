@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import coil.load
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
@@ -123,9 +124,10 @@ class HiasanActivity : AppCompatActivity() {
 
         val label = tabs.firstOrNull { it.key == tab }?.label ?: ""
         val cards: List<View> = when (tab) {
-            "car", "frame" -> assetCards(u)
+            "car" -> assetCards(u)
+            "frame" -> assetCards(u) + vipFrameCards(u)
             "title" -> titleCards(u)
-            else -> emptyList()
+            else -> perkCards(u)
         }
         if (cards.isEmpty()) {
             val lower = label.lowercase()
@@ -163,7 +165,9 @@ class HiasanActivity : AppCompatActivity() {
             }
     }
 
-    private fun titleCards(u: DocumentSnapshot): List<View> {
+    private fun titleCards(u: DocumentSnapshot): List<View> = shopTitleCards(u) + vipTitleCards(u)
+
+    private fun shopTitleCards(u: DocumentSnapshot): List<View> {
         val owned = ShopUtil.ownedSet(u)
         val equipped = u.getString("equippedTitle") ?: ""
         return ShopUtil.TITLES.filter { it.id in owned }.map { t ->
@@ -179,7 +183,8 @@ class HiasanActivity : AppCompatActivity() {
     }
 
     private fun itemCard(
-        status: String, emoji: String, name: String, svgaUrl: String?, on: Boolean, onToggle: () -> Unit
+        status: String, emoji: String, name: String, svgaUrl: String?, on: Boolean,
+        imgUrl: String? = null, onToggle: (() -> Unit)?
     ): View {
         val card = LinearLayout(this)
         card.orientation = LinearLayout.VERTICAL
@@ -206,6 +211,12 @@ class HiasanActivity : AppCompatActivity() {
             players.add(anim)
             SvgaPlayer.play(anim, svgaUrl, 0)
         }
+        if (imgUrl != null) {
+            val iv = ImageView(this)
+            iv.scaleType = ImageView.ScaleType.FIT_CENTER
+            iv.load(imgUrl)
+            stage.addView(iv, FrameLayout.LayoutParams(-1, -1))
+        }
         card.addView(stage, LinearLayout.LayoutParams(-1, d(110)).apply { topMargin = d(6) })
 
         val n = TextView(this)
@@ -218,15 +229,94 @@ class HiasanActivity : AppCompatActivity() {
         card.addView(n, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d(6) })
 
         val btn = TextView(this)
-        btn.text = if (on) "Dipakai • Lepas" else "Pakai"
+        btn.text = if (onToggle == null) "Aktif otomatis ✓" else if (on) "Dipakai • Lepas" else "Pakai"
         btn.textSize = 14f
         btn.gravity = Gravity.CENTER
         btn.setTextColor(Color.WHITE)
         btn.setTypeface(btn.typeface, Typeface.BOLD)
-        btn.setBackgroundResource(if (on) R.drawable.bg_shop_pill else R.drawable.bg_button_orange)
-        btn.setOnClickListener { onToggle() }
+        btn.setBackgroundResource(if (on || onToggle == null) R.drawable.bg_shop_pill else R.drawable.bg_button_orange)
+        btn.setOnClickListener { onToggle?.invoke() }
         card.addView(btn, LinearLayout.LayoutParams(-1, d(38)).apply { topMargin = d(8) })
         return card
+    }
+
+    // ───────── hadiah VIP / SVIP (otomatis dimiliki sesuai level) ─────────
+
+    private fun vipFrameCards(u: DocumentSnapshot): List<View> {
+        val equippedUrl = if ("equippedFrame" in clearedFields) "" else (u.getString("equippedFrameUrl") ?: "")
+        val out = ArrayList<View>()
+        for ((tier, lvl) in listOf("svip" to VipAssets.svipLevel(u), "vip" to VipAssets.vipLevel(u))) {
+            for (l in 1..lvl) {
+                val path = "$tier/frame/$l.svga"
+                if (!VipAssets.exists(this, path)) continue
+                val url = "${VipAssets.PREFIX}$path"
+                val on = equippedUrl == url
+                val name = "Bingkai ${tier.uppercase()} $l"
+                out.add(itemCard("Dari ${tier.uppercase()} $l", "🖼️", name, url, on) {
+                    if (on) equipSvga("equippedFrame", "", "") else equipSvga("equippedFrame", url, name)
+                })
+            }
+        }
+        return out
+    }
+
+    private fun setTitle(label: String) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid).update("equippedTitle", label)
+            .addOnSuccessListener { load() }
+            .addOnFailureListener { toast("Gagal: ${it.message}") }
+    }
+
+    private fun vipTitleCards(u: DocumentSnapshot): List<View> {
+        val equipped = u.getString("equippedTitle") ?: ""
+        val defs = ArrayList<Triple<String, String, String>>()
+        for (l in 1..VipAssets.vipLevel(u)) defs.add(Triple("⭐ VIP$l", "⭐", "VIP $l"))
+        for (l in 1..VipAssets.svipLevel(u)) defs.add(Triple("👑 SVIP$l", "👑", "SVIP $l"))
+        return defs.map { (label, emoji, name) ->
+            val on = equipped == label
+            itemCard("Dari $name", emoji, "Gelar $name", null, on) { setTitle(if (on) "" else label) }
+        }
+    }
+
+    // tier, folder, ekstensi
+    private fun perkSpecs(): List<Triple<String, String, String>> = when (tab) {
+        "entry" -> listOf(Triple("svip", "entry", "svga"), Triple("vip", "entry", "webp"))
+        "room" -> listOf(Triple("svip", "room", "svga"))
+        "bubble" -> listOf(Triple("svip", "chat", "webp"))
+        "profilfx" -> listOf(Triple("svip", "profile", "svga"))
+        "wave" -> listOf(
+            Triple("svip", "ring", "svga"), Triple("svip", "mic", "svga"), Triple("vip", "mic", "svga")
+        )
+        else -> emptyList()
+    }
+
+    private fun perkCards(u: DocumentSnapshot): List<View> {
+        val labels = mapOf(
+            "entry" to "Efek Masuk", "room" to "Tema Ruangan", "chat" to "Bubble Chat",
+            "profile" to "Efek Profil", "ring" to "Ring Mic", "mic" to "Efek Mic"
+        )
+        val out = ArrayList<View>()
+        for ((tier, folder, ext) in perkSpecs()) {
+            val lvl = if (tier == "svip") VipAssets.svipLevel(u) else VipAssets.vipLevel(u)
+            for (l in 1..lvl) {
+                val path = "$tier/$folder/$l.$ext"
+                if (!VipAssets.exists(this, path)) continue
+                val svga = if (ext == "svga") "${VipAssets.PREFIX}$path" else null
+                val img = if (ext != "svga") VipAssets.url(path) else null
+                out.add(
+                    itemCard(
+                        status = "Dari ${tier.uppercase()} $l",
+                        emoji = "🎁",
+                        name = "${labels[folder] ?: folder} ${tier.uppercase()} $l",
+                        svgaUrl = svga,
+                        on = false,
+                        imgUrl = img,
+                        onToggle = null
+                    )
+                )
+            }
+        }
+        return out
     }
 
     private fun equipSvga(field: String, url: String, name: String) {
