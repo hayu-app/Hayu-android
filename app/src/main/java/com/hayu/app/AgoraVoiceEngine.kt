@@ -15,7 +15,7 @@ import io.agora.rtc2.RtcEngineConfig
 private const val TAG = "AgoraVoiceEngine"
 
 // App ID Agora — jangan di-hardcode di production, pakai BuildConfig / server token
-private const val AGORA_APP_ID = "883ce86dfc7f4e6ca8eaeac12cd74c54"
+private const val AGORA_APP_ID = "02b1a0caeb97457c9a39c51e9d9e416d"
 
 /**
  * Callback yang dipakai RoomActivity untuk merespons event Agora.
