@@ -25,7 +25,10 @@ object VipAssets {
     const val PREFIX = "asset://"
     const val MAX_LEVEL = 8
 
-    private const val DEFAULT_BASE_URL = "https://cdn.jsdelivr.net/gh/hayu-app/Hayu-android@main/remote-assets/"
+    // Alamat utama (raw.githubusercontent.com) dan cadangan (jsDelivr). jsDelivr menolak repo > 50MB,
+    // jadi raw GitHub dipakai lebih dulu. Keduanya diisi otomatis oleh pasang-aset-host.sh.
+    private const val DEFAULT_BASE_URL = "https://raw.githubusercontent.com/hayu-app/Hayu-android/main/remote-assets/"
+    private const val FALLBACK_BASE_URL = "https://cdn.jsdelivr.net/gh/hayu-app/Hayu-android@main/remote-assets/"
 
     @Volatile
     var baseUrl: String = DEFAULT_BASE_URL
@@ -42,6 +45,9 @@ object VipAssets {
 
     /** URL lengkap untuk path aset, mis. "svip/frame/3.svga". */
     fun url(path: String): String = baseUrl + path
+
+    /** Alamat cadangan, dipakai otomatis kalau alamat utama gagal. */
+    fun fallbackUrl(path: String): String = FALLBACK_BASE_URL + path
 
     fun vipLevel(doc: DocumentSnapshot): Int =
         (doc.getLong("vipLevel") ?: 0L).toInt().coerceIn(0, MAX_LEVEL)
@@ -97,7 +103,9 @@ object VipAssets {
     }
 
     fun load(view: ImageView, path: String) {
-        view.load(url(path))
+        view.load(url(path)) {
+            listener(onError = { _, _ -> view.load(fallbackUrl(path)) })
+        }
     }
 
     private fun image(ctx: Context, path: String, w: Int, h: Int): ImageView {
@@ -127,19 +135,23 @@ object VipAssets {
         val iv = ImageView(ctx)
         iv.layoutParams = ViewGroup.LayoutParams(widthPx, heightPx)
         iv.scaleType = ImageView.ScaleType.MATRIX
-        val request = ImageRequest.Builder(ctx)
-            .data(url(path))
-            .size(Size(widthPx, Dimension.Undefined))
-            .target(onSuccess = { drawable ->
-                iv.setImageDrawable(drawable)
-                val w = drawable.intrinsicWidth
-                if (w > 0) {
-                    val s = widthPx.toFloat() / w
-                    iv.imageMatrix = Matrix().apply { setScale(s, s) }
-                }
-            })
-            .build()
-        ctx.imageLoader.enqueue(request)
+        fun request(u: String, canRetry: Boolean) {
+            val r = ImageRequest.Builder(ctx)
+                .data(u)
+                .size(Size(widthPx, Dimension.Undefined))
+                .target(onSuccess = { drawable ->
+                    iv.setImageDrawable(drawable)
+                    val w = drawable.intrinsicWidth
+                    if (w > 0) {
+                        val s = widthPx.toFloat() / w
+                        iv.imageMatrix = Matrix().apply { setScale(s, s) }
+                    }
+                })
+                .listener(onError = { _, _ -> if (canRetry) request(fallbackUrl(path), false) })
+                .build()
+            ctx.imageLoader.enqueue(r)
+        }
+        request(url(path), true)
         return iv
     }
 }

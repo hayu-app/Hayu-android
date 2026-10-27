@@ -56,14 +56,24 @@ object SvgaPlayer {
             val parser = SVGAParser(view.context)
             if (url.startsWith(VipAssets.PREFIX)) {
                 // aset VIP / SVIP: di-host online (bukan di dalam APK)
-                val remote = VipAssets.url(url.removePrefix(VipAssets.PREFIX))
-                parser.decodeFromURL(URL(remote), object : SVGAParser.ParseCompletion {
-                    override fun onComplete(videoItem: SVGAVideoEntity) = completion.onComplete(videoItem)
-                    override fun onError() {
-                        toastOnce(view.context, "Aset efek tidak bisa diunduh:\n$remote")
-                        completion.onError()
-                    }
-                })
+                val path = url.removePrefix(VipAssets.PREFIX)
+                val backup = VipAssets.fallbackUrl(path)
+
+                // coba alamat utama; kalau gagal coba alamat cadangan; kalau gagal juga baru tampilkan pesan
+                fun fetch(u: String, canRetry: Boolean) {
+                    parser.decodeFromURL(URL(u), object : SVGAParser.ParseCompletion {
+                        override fun onComplete(videoItem: SVGAVideoEntity) = completion.onComplete(videoItem)
+                        override fun onError() {
+                            if (canRetry && backup != u) {
+                                fetch(backup, false)
+                            } else {
+                                toastOnce(view.context, "Aset efek tidak bisa diunduh:\n$u")
+                                completion.onError()
+                            }
+                        }
+                    })
+                }
+                fetch(VipAssets.url(path), true)
             } else if (SvgaStore.isStored(url)) {
                 // Aset disimpan di Firestore (potongan) -> susun jadi file cache lalu putar
                 val id = url.removePrefix(SvgaStore.PREFIX)
