@@ -107,6 +107,7 @@ class GatesOfOlympusActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        GameMusic.attach(this, R.raw.bgm_olympus)
         window.statusBarColor = bgDark
         val me = uid ?: run { finish(); return }
 

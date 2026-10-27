@@ -146,6 +146,7 @@ class FruitPartyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        GameMusic.attach(this, R.raw.bgm_fruit)
         window.statusBarColor = purpleDark
         val me = uid ?: run { finish(); return }
 

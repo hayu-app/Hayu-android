@@ -144,6 +144,7 @@ class GreedyEatActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        GameMusic.attach(this, R.raw.bgm_greedy)
         val me = uid
         if (me == null) {
             Toast.makeText(this, "Silakan login dulu", Toast.LENGTH_SHORT).show()
