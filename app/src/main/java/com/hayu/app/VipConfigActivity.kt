@@ -23,8 +23,8 @@ class VipConfigActivity : AppCompatActivity() {
     private val db by lazy { FirebaseFirestore.getInstance() }
     private val configRef get() = db.collection("app_config").document("vip_config")
 
-    private val vipFields = Array(7) { EditText(this) }
-    private val svipFields = Array(7) { EditText(this) }
+    private val vipFields by lazy { Array(7) { EditText(this) } }
+    private val svipFields by lazy { Array(7) { EditText(this) } }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
