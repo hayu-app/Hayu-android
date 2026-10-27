@@ -148,7 +148,7 @@ class HiasanActivity : AppCompatActivity() {
         val expiry = ShopUtil.expiryMap(u)
         val equippedUrl = if (field in clearedFields) "" else (u.getString("${field}Url") ?: "")
 
-        return assets
+        val catalogCards: List<View> = assets
             .filter { it.type == type && (it.price == 0 || ShopUtil.isActive("svga_${it.id}", owned, expiry)) }
             .map { a ->
                 val on = equippedUrl == a.url
@@ -161,12 +161,43 @@ class HiasanActivity : AppCompatActivity() {
                     on = on
                 ) { if (on) equipSvga(field, "", "") else equipSvga(field, a.url, a.name) }
             }
+        return vipCards(u, field, equippedUrl) + catalogCards
+    }
+
+    /** Bingkai VIP / SVIP dan Efek Masuk SVIP yang sudah didapat: masuk Milikku, dipakai manual. */
+    private fun vipCards(u: DocumentSnapshot, field: String, equippedUrl: String): List<View> {
+        val kind = when (tab) {
+            "frame" -> "frame"
+            "entry" -> "entry"
+            else -> return emptyList()
+        }
+        val out = ArrayList<View>()
+        fun add(tier: String, lv: Int) {
+            val base = "${tier.lowercase()}/$kind/$lv"
+            if (!VipAssets.exists(this, "$base.svga") && !VipAssets.exists(this, "$base.webp")) return
+            val url = VipAssets.PREFIX + "$base.svga"
+            val on = equippedUrl == url
+            val label = if (kind == "frame") "Bingkai $tier $lv" else "Efek Masuk $tier $lv"
+            out.add(
+                itemCard(
+                    status = "$tier $lv",
+                    emoji = if (tier == "SVIP") "👑" else "⭐",
+                    name = label,
+                    svgaUrl = null,
+                    on = on,
+                    imagePath = "$base.webp"
+                ) { if (on) equipSvga(field, "", "") else equipSvga(field, url, label) }
+            )
+        }
+        for (lv in VipAssets.svipLevel(u) downTo 1) add("SVIP", lv)
+        if (kind == "frame") for (lv in VipAssets.vipLevel(u) downTo 1) add("VIP", lv)
+        return out
     }
 
     private fun titleCards(u: DocumentSnapshot): List<View> {
         val owned = ShopUtil.ownedSet(u)
         val equipped = u.getString("equippedTitle") ?: ""
-        return ShopUtil.TITLES.filter { it.id in owned }.map { t ->
+        val shopTitles: List<View> = ShopUtil.TITLES.filter { it.id in owned }.map { t ->
             val on = equipped == t.label
             itemCard("Permanen", t.emoji, t.name, null, on) {
                 val uid = auth.currentUser?.uid ?: return@itemCard
@@ -176,10 +207,29 @@ class HiasanActivity : AppCompatActivity() {
                     .addOnFailureListener { toast("Gagal: ${it.message}") }
             }
         }
+        return vipTitleCards(u, equipped) + shopTitles
+    }
+
+    /** Gelar VIP yang sudah didapat: dipakai manual. */
+    private fun vipTitleCards(u: DocumentSnapshot, equipped: String): List<View> {
+        val out = ArrayList<View>()
+        for (lv in VipAssets.vipLevel(u) downTo 1) {
+            val label = "⭐ VIP$lv"
+            val on = equipped == label
+            out.add(itemCard("Sesuai level VIP", "⭐", "VIP $lv", null, on) {
+                val uid = auth.currentUser?.uid ?: return@itemCard
+                db.collection("users").document(uid)
+                    .update("equippedTitle", if (on) "" else label)
+                    .addOnSuccessListener { load() }
+                    .addOnFailureListener { toast("Gagal: ${it.message}") }
+            })
+        }
+        return out
     }
 
     private fun itemCard(
-        status: String, emoji: String, name: String, svgaUrl: String?, on: Boolean, onToggle: () -> Unit
+        status: String, emoji: String, name: String, svgaUrl: String?, on: Boolean,
+        imagePath: String? = null, onToggle: () -> Unit
     ): View {
         val card = LinearLayout(this)
         card.orientation = LinearLayout.VERTICAL
@@ -198,6 +248,12 @@ class HiasanActivity : AppCompatActivity() {
         fb.textSize = 48f
         fb.gravity = Gravity.CENTER
         stage.addView(fb, FrameLayout.LayoutParams(-1, -1))
+        if (imagePath != null) {
+            val img = ImageView(this)
+            img.scaleType = ImageView.ScaleType.FIT_CENTER
+            VipAssets.load(img, imagePath)
+            stage.addView(img, FrameLayout.LayoutParams(-1, -1))
+        }
         if (svgaUrl != null) {
             val anim = SVGAImageView(this)
             anim.scaleType = ImageView.ScaleType.FIT_CENTER

@@ -55,22 +55,11 @@ object VipAssets {
     fun svipLevel(doc: DocumentSnapshot): Int =
         VipActivity.svipLevel(doc.getLong("svipPoints") ?: 0L).coerceIn(0, MAX_LEVEL)
 
-    /** Bingkai yang tampil: bingkai pasangan sendiri dulu; kalau kosong pakai bingkai bawaan SVIP / VIP. */
-    fun frameUrl(doc: DocumentSnapshot): String {
-        val own = doc.getString("equippedFrameUrl") ?: ""
-        if (own.isNotEmpty()) return own
-        val sv = svipLevel(doc)
-        if (sv > 0) return "${PREFIX}svip/frame/$sv.svga"
-        val v = vipLevel(doc)
-        if (v > 0) return "${PREFIX}vip/frame/$v.svga"
-        return ""
-    }
+    /** Bingkai yang tampil: hanya yang DIPAKAI user lewat Milikku (tidak lagi otomatis dari VIP / SVIP). */
+    fun frameUrl(doc: DocumentSnapshot): String = doc.getString("equippedFrameUrl") ?: ""
 
-    /** Efek masuk room (hanya SVIP yang punya animasi .svga). */
-    fun entryUrl(doc: DocumentSnapshot): String {
-        val sv = svipLevel(doc)
-        return if (sv > 0) "${PREFIX}svip/entry/$sv.svga" else ""
-    }
+    /** Efek masuk room: hanya yang DIPAKAI user lewat Milikku (tidak lagi otomatis dari SVIP). */
+    fun entryUrl(doc: DocumentSnapshot): String = doc.getString("equippedEntryUrl") ?: ""
 
     fun tierName(doc: DocumentSnapshot): String {
         val sv = svipLevel(doc)

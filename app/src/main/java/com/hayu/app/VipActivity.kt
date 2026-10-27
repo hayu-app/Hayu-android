@@ -306,8 +306,6 @@ class VipActivity : AppCompatActivity() {
             if (level != cur + 1) throw IllegalStateException("Beli VIP ${cur + 1} dulu")
             if (c < price) throw IllegalStateException("Koin tidak cukup")
             val upd = hashMapOf<String, Any>("coins" to (c - price), "vipLevel" to level.toLong())
-            val title = s.getString("equippedTitle") ?: ""
-            if (title.isBlank() || title.startsWith("⭐ VIP")) upd["equippedTitle"] = "⭐ VIP$level"
             tx.update(ref, upd)
             null
         }.addOnSuccessListener { toast("Berhasil! VIP $level aktif 🎉"); reload() }
