@@ -112,7 +112,7 @@ class FruitPartyActivity : AppCompatActivity() {
 
     // state
     private var clockOffset  = 0L
-    private var balance      = 0
+    private var balance      = 0L
     private var profit       = 0
     private var myName       = "Player"
     private var myPhoto      = ""
@@ -778,7 +778,7 @@ class FruitPartyActivity : AppCompatActivity() {
         coinListener = db.collection("users").document(me)
             .addSnapshotListener { snap, _ ->
                 if (snap == null || isDestroyed) return@addSnapshotListener
-                balance = (snap.getLong("coins") ?: 0L).toInt()
+                balance = (snap.getLong("coins") ?: 0L)
                 myName  = snap.getString("nickname") ?: myName
                 val ph  = snap.getString("photoUrl") ?: ""
                 myPhoto = ph

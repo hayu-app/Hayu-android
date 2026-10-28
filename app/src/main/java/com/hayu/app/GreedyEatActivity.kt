@@ -76,7 +76,7 @@ class GreedyEatActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
 
     private var clockOffset = 0L
-    private var balance = 0
+    private var balance = 0L
     private var profit = 0
     private var myName = "Player"
     private var myPhoto = ""
@@ -464,7 +464,7 @@ class GreedyEatActivity : AppCompatActivity() {
     private fun listenCoins(me: String) {
         coinListener = db.collection("users").document(me).addSnapshotListener { snap, err ->
             if (err != null || snap == null) return@addSnapshotListener
-            balance = (snap.getLong("coins") ?: 0L).toInt()
+            balance = (snap.getLong("coins") ?: 0L)
             myName = snap.getString("nickname") ?: myName
             val photo = snap.getString("photoUrl") ?: ""
             myPhoto = photo

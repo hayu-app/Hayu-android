@@ -75,7 +75,7 @@ class GatesOfOlympusActivity : AppCompatActivity() {
     private var coinListener: ListenerRegistration? = null
 
     // State
-    private var balance    = 0
+    private var balance    = 0L
     private var currentBet = 1_000
     private var myName     = "Player"
     private var myPhoto    = ""
@@ -566,7 +566,7 @@ class GatesOfOlympusActivity : AppCompatActivity() {
         coinListener = db.collection("users").document(me)
             .addSnapshotListener { snap, _ ->
                 if (snap == null || isDestroyed) return@addSnapshotListener
-                balance = (snap.getLong("coins") ?: 0L).toInt()
+                balance = (snap.getLong("coins") ?: 0L)
                 myName  = snap.getString("nickname") ?: myName
                 val ph  = snap.getString("photoUrl") ?: ""
                 if (ph.isNotEmpty()) ivAvatar.load(ph)
