@@ -48,8 +48,8 @@ jobs:
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.7
 
-      - name: Build APK Debug
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build APK Release
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Verify Google Web Client ID
         run: |
@@ -69,7 +69,7 @@ jobs:
         run: |
           set -e
 
-          APK="app/build/outputs/apk/debug/app-debug.apk"
+          APK="app/build/outputs/apk/release/app-release.apk"
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" \
             -type f -name apksigner | sort -V | tail -n 1)
 
@@ -108,12 +108,15 @@ jobs:
 
       - name: Ukuran APK
         run: |
-          ls -lh app/build/outputs/apk/debug/app-debug.apk
-          unzip -l app/build/outputs/apk/debug/app-debug.apk | sort -n -r | head -12
+          ls -lh app/build/outputs/apk/release/app-release.apk
+          unzip -l app/build/outputs/apk/release/app-release.apk | sort -n -r | head -12
+
+      - name: Siapkan nama APK release
+        run: cp app/build/outputs/apk/release/app-release.apk Hayu-v1.0.2-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: hayu-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: hayu-release-apk
+          path: Hayu-v1.0.2-release.apk
           retention-days: 30
