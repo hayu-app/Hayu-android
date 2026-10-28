@@ -78,6 +78,9 @@ class ProfileFragment : Fragment() {
         }
 
         view.findViewById<View>(R.id.menu_tugas).setOnClickListener { startActivity(Intent(requireContext(), TugasActivity::class.java)) }
+        view.findViewById<View>(R.id.menu_id_eksklusif)?.setOnClickListener {
+            startActivity(Intent(requireContext(), IdEksklusifActivity::class.java))
+        }
         view.findViewById<View>(R.id.menu_family).setOnClickListener { notif("Family segera hadir! 👨‍👩‍👧") }
         view.findViewById<View>(R.id.menu_kartu_pass).setOnClickListener { notif("Kartu Pass segera hadir! 🎫") }
         view.findViewById<View>(R.id.menu_invite).setOnClickListener { startActivity(Intent(requireContext(), InviteFriendsActivity::class.java)) }
@@ -158,7 +161,7 @@ class ProfileFragment : Fragment() {
 
                 val userId = doc.getLong("userId") ?: 0L
                 if (userId > 0) {
-                    tvUserId.text = "ID: $userId"
+                    tvUserId.text = "ID: ${doc.getString("customId")?.takeIf { it.isNotEmpty() } ?: userId}"
                 } else {
                     tvUserId.text = "ID: -"
                 }

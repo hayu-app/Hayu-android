@@ -131,7 +131,7 @@ class UserProfileActivity : AppCompatActivity() {
                 tvCountry.text = if (country.isEmpty()) "🌏 -" else country
 
                 if (userId > 0) {
-                    tvUserId.text = "ID: $userId"
+                    tvUserId.text = "ID: ${doc.getString("customId")?.takeIf { it.isNotEmpty() } ?: userId}"
                 } else {
                     tvUserId.text = "ID: -"
                 }

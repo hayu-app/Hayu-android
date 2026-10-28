@@ -125,7 +125,7 @@ class SettingsActivity : AppCompatActivity() {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 val id = doc.getLong("userId") ?: 0L
-                idValue.text = if (id > 0L) id.toString() else "-"
+                idValue.text = doc.getString("customId")?.takeIf { it.isNotEmpty() } ?: if (id > 0L) id.toString() else "-"
             }
             .addOnFailureListener { idValue.text = "-" }
     }

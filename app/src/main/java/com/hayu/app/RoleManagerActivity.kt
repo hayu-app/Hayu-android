@@ -111,6 +111,7 @@ class RoleManagerActivity : AppCompatActivity() {
         val users = db.collection("users")
         val tasks = mutableListOf<Task<QuerySnapshot>>()
         query.toLongOrNull()?.let { tasks.add(users.whereEqualTo("userId", it).limit(10).get()) }
+        tasks.add(users.whereEqualTo("customIdKey", query.lowercase()).limit(10).get())
         if (query.length >= 20 && !query.contains(' ')) {
             tasks.add(users.whereEqualTo(FieldPath.documentId(), query).get())
         }

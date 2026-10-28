@@ -62,6 +62,11 @@ class UserAdminActivity : AppCompatActivity() {
                 } else {
                     ready = true
                     tvInfo.text = "Login sebagai ${Role.label(myRole)}"
+                    if (mode == "setid") {
+                        // akun sendiri langsung tampil, cari user lain lewat kolom di atas
+                        db.collection("users").document(uid).get()
+                            .addOnSuccessListener { me -> render(listOf(me)) }
+                    }
                 }
             }
             .addOnFailureListener { toast("Gagal cek akses"); finish() }
@@ -72,6 +77,7 @@ class UserAdminActivity : AppCompatActivity() {
         "verify" -> Role.canAccessAny(myRoles, "verify") || Role.canAccessAny(myRoles, "user")
         "coin" -> Role.canAccessAny(myRoles, "coin")
         "recover" -> Role.canAccessAny(myRoles, "recovery")
+        "setid" -> Role.canAccessAny(myRoles, "system")
         else -> Role.canAccessAny(myRoles, "dashboard")
     }
 
@@ -135,6 +141,7 @@ class UserAdminActivity : AppCompatActivity() {
         val users = db.collection("users")
         val tasks = mutableListOf<Task<QuerySnapshot>>()
         q.toLongOrNull()?.let { tasks.add(users.whereEqualTo("userId", it).limit(10).get()) }
+        tasks.add(users.whereEqualTo("customIdKey", q.lowercase()).limit(10).get())
         if (q.length >= 20 && !q.contains(' ')) {
             tasks.add(users.whereEqualTo(FieldPath.documentId(), q).get())
         }
@@ -185,7 +192,7 @@ class UserAdminActivity : AppCompatActivity() {
             row.background = gd
 
             val t1 = TextView(this)
-            t1.text = "$nick • ID ${num(doc, "userId")}  ${Role.badgeShort(role) ?: ""}"
+            t1.text = "$nick • ID ${IdTools.display(doc)}  ${Role.badgeShort(role) ?: ""}"
             t1.textSize = 14f
             t1.setTextColor(Color.parseColor("#F1F5F9"))
             val t2 = TextView(this)
@@ -208,13 +215,14 @@ class UserAdminActivity : AppCompatActivity() {
             "verify" -> verifyDialog(doc)
             "coin" -> coinDialog(doc)
             "recover" -> recoverDialog(doc)
+            "setid" -> idDialog(doc)
             else -> infoDialog(doc)
         }
     }
 
     private fun infoDialog(doc: DocumentSnapshot) {
         val msg = "UID: ${doc.id}\n" +
-            "UserID: ${num(doc, "userId")}\n" +
+            "UserID: ${IdTools.display(doc)}\n" +
             "Email: ${doc.getString("email").orEmpty()}\n" +
             "Role: ${Role.rolesOf(doc).joinToString(", ") { Role.label(it) }.ifEmpty { Role.label(Role.USER) }}\n" +
             "Level: ${num(doc, "level")}\n" +
@@ -225,6 +233,57 @@ class UserAdminActivity : AppCompatActivity() {
             .setTitle(doc.getString("nickname").orEmpty().ifEmpty { "User" })
             .setMessage(msg)
             .setPositiveButton("Tutup", null)
+            .show()
+    }
+
+    // ---------- UBAH ID ----------
+    private fun idDialog(doc: DocumentSnapshot) {
+        val actorUid = auth.currentUser?.uid ?: return
+        val self = doc.id == actorUid
+        if (!self && Role.rankOf(Role.top(myRoles)) <= Role.rankOf(Role.top(Role.rolesOf(doc)))) {
+            toast("Pangkat target setara/lebih tinggi dari kamu"); return
+        }
+        val old = IdTools.display(doc)
+        val et = EditText(this)
+        et.inputType = InputType.TYPE_CLASS_TEXT
+        et.setSingleLine(true)
+        et.hint = "angka atau teks, mis. 8888888 / HAYU_KING"
+        et.setText(if (old == "-") "" else old)
+        val pad = d(20)
+        et.setPadding(pad, pad, pad, pad)
+        AlertDialog.Builder(this)
+            .setTitle(if (self) "Ubah ID saya" else "Ubah ID ${doc.getString("nickname").orEmpty()}")
+            .setMessage("ID sekarang: $old\n\nAngka -> jadi UserID. Teks (huruf, angka, _ . -, 3-20 karakter) -> jadi ID teks.")
+            .setView(et)
+            .setPositiveButton("Simpan") { _, _ ->
+                val raw = et.text.toString().trim()
+                val err = IdTools.validateAdmin(raw)
+                if (err != null) { toast(err); return@setPositiveButton }
+                if (IdTools.key(raw) == IdTools.key(old)) { toast("ID sama dengan yang sekarang"); return@setPositiveButton }
+                IdTools.checkFree(db, raw, doc.id,
+                    onResult = { free ->
+                        if (!free) {
+                            toast("ID \"$raw\" sudah dipakai")
+                        } else {
+                            IdTools.apply(db, doc.id, raw, 0L, false,
+                                onOk = {
+                                    db.collection("admin_logs").add(
+                                        mapOf<String, Any>(
+                                            "action" to "setid", "targetUid" to doc.id,
+                                            "oldValue" to old, "newValue" to raw,
+                                            "byUid" to actorUid, "at" to Timestamp.now()
+                                        )
+                                    )
+                                    toast("✅ ID diubah ke $raw")
+                                    db.collection("users").document(doc.id).get()
+                                        .addOnSuccessListener { render(listOf(it)) }
+                                },
+                                onFail = { toast("Gagal: $it") })
+                        }
+                    },
+                    onErr = { toast("Gagal cek ID: $it") })
+            }
+            .setNegativeButton("Batal", null)
             .show()
     }
 

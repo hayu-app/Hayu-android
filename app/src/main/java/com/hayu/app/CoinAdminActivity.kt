@@ -563,6 +563,7 @@ class CoinAdminActivity : AppCompatActivity() {
         val users = db.collection("users")
         val tasks = mutableListOf<Task<QuerySnapshot>>()
         q.toLongOrNull()?.let { tasks.add(users.whereEqualTo("userId", it).limit(10).get()) }
+        tasks.add(users.whereEqualTo("customIdKey", q.lowercase()).limit(10).get())
         if (q.length >= 20 && !q.contains(' ')) {
             tasks.add(users.whereEqualTo(FieldPath.documentId(), q).get())
         }

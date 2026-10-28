@@ -196,7 +196,8 @@ class PanelDetailActivity : AppCompatActivity() {
             "💾 Backup & Restore",
             "🛠️ Maintenance Mode",
             "📱 Versi Aplikasi",
-            "🏳️ Feature Flags"
+            "🏳️ Feature Flags",
+            "🆔 Ubah ID User"
         ),
         "report" to listOf(
             "👥 Total User Terdaftar",
@@ -258,7 +259,7 @@ class PanelDetailActivity : AppCompatActivity() {
         val adminModes = mapOf(
             "Cari User by UID" to "search", "Cari UID Customer" to "search", "Status Akun" to "search",
             "Ban & Suspension" to "ban", "Temporary Ban" to "ban", "Warning & Ban" to "ban",
-            "Verifikasi Akun" to "verify", "Saldo Koin User" to "coin", "Pemulihan Akun" to "recover"
+            "Verifikasi Akun" to "verify", "Saldo Koin User" to "coin", "Pemulihan Akun" to "recover", "Ubah ID User" to "setid"
         )
         val coinModes = mapOf(
             "Paket & Harga Koin" to "packages", "Paket Koin" to "packages",
